@@ -11,12 +11,12 @@
     <link rel="stylesheet"
           href="{% static 'output.css' %}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css?family=Poppins:400,800" rel="stylesheet" />
-    <link href="{% static 'css/main.css' %}" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Poppins:400,800" rel="stylesheet"/>
+    <link href="{% static 'css/main.css' %}" rel="stylesheet"/>
 </head>
 <body class="bg-green-50">
 {% include 'navbar.html' %}
-<div>
+<div class="margin-8" style="margin-top: 400px;">
     {% block content %}
     {% endblock content %}
 </div>
