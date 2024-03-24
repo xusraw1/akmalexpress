@@ -63,6 +63,7 @@ class Order(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     slug = models.SlugField(unique=True, blank=True, null=True)
     receipt_number = models.PositiveIntegerField(validators=[MaxValueValidator(1500)])
+    track_number = models.CharField(max_length=50, null=True, blank=True)
     first_name = models.CharField(max_length=100, verbose_name='Mijoz Ismi')
     last_name = models.CharField(max_length=100, verbose_name='Mijoz Familiyasi', blank=True)
     phone1 = models.PositiveIntegerField(verbose_name='Raqam #1', blank=True,

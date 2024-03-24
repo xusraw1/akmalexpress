@@ -3,9 +3,18 @@ from .forms import CreateProductForm, CreateOrderForm
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from .models import Product, Order
+from django.db.models import Q
 
 
 def index(request):
+    if request.GET.get('search'):
+        search = request.GET.get('search')
+        orders = Order.objects.filter(Q(receipt_number__icontains=search) | Q(track_number__icontains=search) |
+                                      Q(first_name__icontains=search) | Q(last_name__icontains=search))
+        if orders:
+            return render(request, 'index.html', {'orders': orders})
+        messages.info(request, f"По вашему запросу '{search}' ничего не найдено")
+
     return render(request, 'index.html')
 
 
