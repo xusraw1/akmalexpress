@@ -14,9 +14,15 @@
     <link href="https://fonts.googleapis.com/css?family=Poppins:400,800" rel="stylesheet"/>
     <link href="{% static 'css/main.css' %}" rel="stylesheet"/>
 </head>
-<body class="bg-green-50">
+<body>
 {% include 'navbar.html' %}
-<div class="margin-8" style="margin-top: 400px;">
+{% include 'sidebar.html' %}
+{% if messages %}
+<div class="container mx-auto flex justify-center" style="margin-top: 100px">
+    {% include 'messages.html' %}
+    {% endif %}
+</div>
+<div class="margin-8 container mx-auto" style="margin-top: 100px;">
     {% block content %}
     {% endblock content %}
 </div>

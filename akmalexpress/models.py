@@ -20,7 +20,7 @@ class Product(models.Model):
         PINDUODUO = 'Pinduoduo', 'Pinduoduo'
         SIX = '1688', '1688'
 
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name='Admin')
     product_name = models.CharField(max_length=100, verbose_name='Mahsulot Nomi')
     product_quantity = models.PositiveIntegerField(default=1, verbose_name='Mahsulot Soni')
     product_price_currency = models.CharField(max_length=3, choices=Currency.choices, default=Currency.UZS,
