@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from .models import Product, Order
 from django.db.models import Q
+from django.contrib.auth.models import User
 
 
 def index(request):
@@ -19,6 +20,7 @@ def index(request):
 
 
 def create_order(request):
+    last_order = Order.objects.last().receipt_number
     form = CreateOrderForm()
     if request.method == 'POST':
         form = CreateOrderForm(request.POST)
@@ -31,8 +33,8 @@ def create_order(request):
             messages.success(request, 'Заказ успешно создан')
             return redirect('/')
         messages.warning(request, 'Форма заполнено неправильно')
-        return render(request, 'akmalexpress/create_order.html', {'form': form})
-    return render(request, 'akmalexpress/create_order.html', {'form': form})
+        return render(request, 'akmalexpress/create_order.html', {'form': form, 'last_order': last_order})
+    return render(request, 'akmalexpress/create_order.html', {'form': form, 'last_order': last_order})
 
 
 def create_product(request):
@@ -55,6 +57,12 @@ def order_list(request):
     orders = Order.objects.all().order_by('-created_at')
     context = {'orders': orders}
     return render(request, 'akmalexpress/orders.html', context)
+
+
+def profile_view(request, user):
+    profile = User.objects.get(username=user)
+    orders = Order.objects.filter(user=profile)
+    return render(request, 'akmalexpress/profile.html', {'profile': profile, 'orders': orders})
 
 
 def login_view(request):

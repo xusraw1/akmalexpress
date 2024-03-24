@@ -7,6 +7,7 @@ urlpatterns = [
     path('create/order/', create_order, name='create_order'),
     path('order/', order_list, name='orders'),
 
+    path('profile/<str:user>/', profile_view, name='profile'),
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),
 ]
