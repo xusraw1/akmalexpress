@@ -65,10 +65,10 @@ class Order(models.Model):
     receipt_number = models.PositiveIntegerField(validators=[MaxValueValidator(1500)])
     first_name = models.CharField(max_length=100, verbose_name='Mijoz Ismi')
     last_name = models.CharField(max_length=100, verbose_name='Mijoz Familiyasi')
-    phone1 = models.PositiveIntegerField(validators=[MaxValueValidator(9)], verbose_name='Raqam #1', blank=True,
+    phone1 = models.PositiveIntegerField(verbose_name='Raqam #1', blank=True,
                                          null=True,
                                          default=999999999)
-    phone2 = models.PositiveIntegerField(validators=[MaxValueValidator(9)], verbose_name='Raqam #2', blank=True,
+    phone2 = models.PositiveIntegerField(verbose_name='Raqam #2', blank=True,
                                          null=True,
                                          default=999999999)
     debt = models.DecimalField(validators=[MinValueValidator(0.0)], decimal_places=2, max_digits=7, verbose_name='Qarz',

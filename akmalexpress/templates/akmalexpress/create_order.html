@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% load tailwind_filters %}
+{% block content %}
+<div style="margin-left: 300px;">
+    <form method="post"> {% csrf_token %}
+        {{ form|crispy }}
+        <button type="submit"
+                class="text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-lg text-md px-5 py-2.5 text-center me-2 mb-2">
+            СОЗДАТЬ
+        </button>
+    </form>
+</div>
+{% endblock %}

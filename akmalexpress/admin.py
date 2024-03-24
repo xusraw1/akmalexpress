@@ -7,3 +7,10 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ['id', 'product_name', 'product_quantity', 'product_price', 'store', 'created_at']
     list_filter = ['store', 'created_at', 'updated_at']
     list_editable = ['product_name', 'store', 'product_quantity', 'product_price']
+
+
+@admin.register(Order)
+class ProductAdmin(admin.ModelAdmin):
+    list_display = ['id', 'product', 'first_name', 'phone1', 'status']
+    list_filter = ['created_at', 'updated_at', 'user']
+    list_editable = ['product', 'first_name', 'phone1', 'status']
