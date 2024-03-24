@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from .forms import CreateProductForm, CreateOrderForm
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
-from .models import Product
+from .models import Product, Order
 
 
 def index(request):
@@ -40,6 +40,12 @@ def create_product(request):
         messages.error(request, "Форма заполнена неверно")
         return render(request, 'akmalexpress/create_product.html', context)
     return render(request, 'akmalexpress/create_product.html', context)
+
+
+def order_list(request):
+    orders = Order.objects.all().order_by('-created_at')
+    context = {'orders': orders}
+    return render(request, 'akmalexpress/orders.html', context)
 
 
 def login_view(request):

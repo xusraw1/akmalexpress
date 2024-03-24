@@ -53,18 +53,18 @@ class Order(models.Model):
     class Status(models.TextChoices):
         NO = 'none', 'None'  # BERILMADI
 
-        berildi = 'start', 'Berildi'  # ZAKAZ BERILDI
-        yolda = 'continue', 'Tranzit'  # ZAKAZ YO`LDA
-        keldi = 'end', 'Keldi'  # ZAKAZ KELDI
+        berildi = 'start', 'Начат'  # ZAKAZ BERILDI
+        yolda = 'continue', 'В пути'  # ZAKAZ YO`LDA
+        keldi = 'end', 'Пришел'  # ZAKAZ KELDI
 
-        force = 'force', 'Otmen'  # ZAKAZ OTMEN BO`LDI
+        force = 'force', 'Отменен'  # ZAKAZ OTMEN BO`LDI
 
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     slug = models.SlugField(unique=True, blank=True, null=True)
     receipt_number = models.PositiveIntegerField(validators=[MaxValueValidator(1500)])
     first_name = models.CharField(max_length=100, verbose_name='Mijoz Ismi')
-    last_name = models.CharField(max_length=100, verbose_name='Mijoz Familiyasi')
+    last_name = models.CharField(max_length=100, verbose_name='Mijoz Familiyasi', blank=True)
     phone1 = models.PositiveIntegerField(verbose_name='Raqam #1', blank=True,
                                          null=True,
                                          default=999999999)
