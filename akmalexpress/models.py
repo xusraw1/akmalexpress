@@ -35,7 +35,7 @@ class Product(models.Model):
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name='O`zgartirilgan Sana')
 
     def __str__(self):
-        return f"{self.product_name} | @{self.user}"
+        return f"{self.product_name} | {self.store}"
 
 
 class ProductDetail(models.Model):

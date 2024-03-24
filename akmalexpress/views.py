@@ -1,10 +1,31 @@
 from django.shortcuts import render, redirect
 from .forms import CreateProductForm
 from django.contrib import messages
+from django.contrib.auth import login, logout, authenticate
 
 
 def index(request):
     return render(request, 'index.html')
+
+
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            messages.success(request, 'Вы вошли в свой аккаунт')
+            return redirect('/')
+        messages.error(request, 'Пользователь не найден, попробуйте заново')
+        return redirect('login')
+    return render(request, 'akmalexpress/login.html')
+
+
+def logout_view(request):
+    logout(request)
+    messages.warning(request, "Вы вышли из аккаунта")
+    return redirect('login')
 
 
 def create_product(request):
