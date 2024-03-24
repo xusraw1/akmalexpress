@@ -10,9 +10,14 @@ from django.contrib.auth.models import User
 def index(request):
     if request.GET.get('search'):
         search = request.GET.get('search')
-        orders = Order.objects.filter(Q(receipt_number__icontains=search) | Q(track_number__icontains=search) |
-                                      Q(first_name__icontains=search) | Q(last_name__icontains=search))
+        orders = Order.objects.filter(Q(receipt_number__icontains=search) |
+                                      Q(track_number__icontains=search) |
+                                      Q(first_name__icontains=search) |
+                                      Q(last_name__icontains=search) |
+                                      Q(product__product_name__icontains=search))
+
         if orders:
+            messages.success(request, f"Заказы по вашему запросу '{search}' найдены")
             return render(request, 'index.html', {'orders': orders})
         messages.info(request, f"По вашему запросу '{search}' ничего не найдено")
 

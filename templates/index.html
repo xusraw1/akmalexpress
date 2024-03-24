@@ -21,7 +21,7 @@
 </form>
 {% if orders %}
 <div class="margin-8 container mx-auto" style="margin-left: 100px;">
-    <h1 class="text-5xl text-center text-blue-600 font-bold text-blue-100 dark:text-blue">Список Заказов</h1>
+    <br>
     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
         <table class="w-full text-color-white">
             <thead class="text-white uppercase bg-gray-800">
@@ -60,8 +60,8 @@
                 <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
 
                     <button type="button"
-                            class="text-gray-900 bg-gradient-to-r from-teal-200 to-lime-200 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-200 focus:ring-4 focus:outline-none focus:ring-lime-200 dark:focus:ring-teal-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">
-                        <a href="">№{{ order.receipt_number }}</a></button>
+                            class="text-gray-900 bg-gradient-to-r from-teal-200 to-lime-200 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-200 focus:ring-4 focus:outline-none focus:ring-lime-200 dark:focus:ring-teal-700 font-medium rounded-lg text-md px-5 py-2.5 text-center me-2 mb-2">
+                        <a href="">№<b>{{ order.receipt_number }}</b></a></button>
                 </th>
                 <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                     {{ order.first_name }} {{ order.last_name }}
@@ -69,12 +69,41 @@
                 <td class="px-6 py-4">
                     {{ order.product }}
                 </td>
-                <td class="px-6 py-4">
-                    {{ order.created_at }}
+                <td class="px-7 py-4">
+                    {{ order.created_at|date }}
                 </td>
                 <td class="px-8 py-4">
-                    {{ order.get_status_display }}
+                    {% if order.get_status_display == 'Начат' %}
+                    <button class="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-green-400 to-blue-600 group-hover:from-green-400 group-hover:to-blue-600 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-green-200 dark:focus:ring-green-800"
+                            style="cursor: default;">
+                        <span class="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0">
+                        {{ order.get_status_display }}
+                        </span>
+                    </button>
+                    {% elif order.get_status_display == 'В пути' %}
+                    <button class="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-sm font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-teal-300 to-lime-300 group-hover:from-teal-300 group-hover:to-lime-300 dark:text-white dark:hover:text-gray-900 focus:ring-4 focus:outline-none focus:ring-lime-200 dark:focus:ring-lime-800"
+                            style="cursor: default;">
+                        <span class="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0">
+                        {{ order.get_status_display }}
+                        </span>
+                    </button>
+                    {% elif order.get_status_display == 'Пришел' %}
+                    <button class="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-purple-600 to-blue-500 group-hover:from-purple-600 group-hover:to-blue-500 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800"
+                            style="cursor: default;">
+                        <span class="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0">
+                        {{ order.get_status_display }}
+                        </span>
+                    </button>
+                    {% elif order.get_status_display == 'Отменен' %}
+                    <button class="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-pink-500 to-orange-400 group-hover:from-pink-500 group-hover:to-orange-400 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-pink-200 dark:focus:ring-pink-800"
+                            style="cursor: default;">
+                        <span class="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0">
+                        {{ order.get_status_display }}
+                        </span>
+                    </button>
+                    {% endif %}
                 </td>
+
                 <td class="px-6 py-4">
                     {{ order.phone1 }}
                 </td>
