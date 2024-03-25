@@ -26,6 +26,15 @@ def index(request):
     return render(request, 'index.html')
 
 
+def delete_order(request, slug):
+    order = get_object_or_404(Order, slug=slug)
+    if request.method == 'POST':
+        order.delete()
+        messages.success(request, f"Заказ с номером №{order.receipt_number} успешно удалено")
+        return redirect('/')
+    return render(request, 'akmalexpress/delete_order.html', {'order': order})
+
+
 def change_order(request, slug):
     orderr = get_object_or_404(Order, slug=slug)
     form = ChangeOrderForm(instance=orderr)
