@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load tailwind_filters %}
+{% block content %}
+<div style="margin-left: 300px;">
+    <div class="margin-2 container mx-auto" style="margin-left: auto;">
+        <br>
+        <p class="text-center text-5xl font-black text-gray-600 dark:text-white">
+            Обновление Заказа - {{ orderr.receipt_number }}
+        </p>
+    </div>
+    <br>
+    <form method="post">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <button type="submit"
+                class="text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-lg text-md px-5 py-2.5 text-center me-2 mb-2">
+            Изменить
+        </button>
+    </form>
+</div>
+{% endblock %}

@@ -46,7 +46,8 @@
 
 <div class="margin-2 container mx-auto" style="margin-left: 100px;">
     <br>
-    <p class="text-center text-5xl font-black text-red-600 dark:text-white">Заказы пользователя @<span class="uppercase"><a
+    <p class="text-center text-5xl font-black text-red-600 dark:text-white">Заказы пользователя @<span
+            class="uppercase"><a
             href="{% url 'profile' profile%}">{{ profile }}</a></span></p>
 
     <hr class="h-1 mx-auto my-4 bg-gray-500 border-0 rounded md:my-10 dark:bg-gray-100">
@@ -84,9 +85,9 @@
             {% for order in orders %}
             <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                 <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    {{ forloop.counter }}) {{ order.receipt_number }}
+                    {{ forloop.counter }}) <b>{{ order.receipt_number }}</b>
                 </th>
-                <td class="px-6 py-4">
+                <td class="px-8 py-4">
                     {{ order.first_name }} {{ order.last_name }}
                 </td>
                 <td class="px-6 py-4">
@@ -95,8 +96,36 @@
                 <td class="px-6 py-4">
                     {{ order.created_at }}
                 </td>
-                <td class="px-6 py-4">
-                    {{ order.get_status_display }}
+                <td class="px-4 py-2">
+                    {% if order.get_status_display == 'Начат' %}
+                    <button class="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-green-400 to-blue-600 group-hover:from-green-400 group-hover:to-blue-600 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-green-200 dark:focus:ring-green-800"
+                            style="cursor: default;">
+                        <span class="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0">
+                        {{ order.get_status_display }}
+                        </span>
+                    </button>
+                    {% elif order.get_status_display == 'В пути' %}
+                    <button class="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-sm font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-teal-300 to-lime-300 group-hover:from-teal-300 group-hover:to-lime-300 dark:text-white dark:hover:text-gray-900 focus:ring-4 focus:outline-none focus:ring-lime-200 dark:focus:ring-lime-800"
+                            style="cursor: default;">
+                        <span class="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0">
+                        {{ order.get_status_display }}
+                        </span>
+                    </button>
+                    {% elif order.get_status_display == 'Пришел' %}
+                    <button class="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-purple-600 to-blue-500 group-hover:from-purple-600 group-hover:to-blue-500 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800"
+                            style="cursor: default;">
+                        <span class="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0">
+                        {{ order.get_status_display }}
+                        </span>
+                    </button>
+                    {% elif order.get_status_display == 'Отменен' %}
+                    <button class="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-pink-500 to-orange-400 group-hover:from-pink-500 group-hover:to-orange-400 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-pink-200 dark:focus:ring-pink-800"
+                            style="cursor: default;">
+                        <span class="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0">
+                        {{ order.get_status_display }}
+                        </span>
+                    </button>
+                    {% endif %}
                 </td>
                 <td class="px-6 py-4">
                     {{ order.phone1 }}
@@ -104,8 +133,9 @@
                 <td class="px-6 py-4">
                     @{{ order.user }}
                 </td>
-                <td class="flex items-center px-6 py-4">
-                    <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Изменить</a>
+                <td class="flex items-center px-4 py-8">
+                    <a href="{% url 'change_order' order.slug %}"
+                       class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Изменить</a>
                     <a href="#" class="font-medium text-red-600 dark:text-red-500 hover:underline ms-3">Удалить</a>
                 </td>
             </tr>
@@ -113,5 +143,71 @@
             </tbody>
         </table>
     </div>
+</div>
+<br>
+<div class="margin-8 container mx-auto" style="margin-left: 700px;">
+    <nav aria-label="Page navigation example">
+        <ul class="flex items-center -space-x-px h-10 text-base">
+            {% if orders.has_previous %}
+            <li>
+                <a href="?page={{ orders.previous_page_number }}"
+                   class="flex items-center justify-center px-4 h-10 ms-0 leading-tight text-gray-500 bg-white border border-e-0 border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                    <span class="sr-only">Previous</span>
+                    <svg class="w-3 h-3 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                         fill="none" viewBox="0 0 6 10">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M5 1 1 5l4 4"/>
+                    </svg>
+                </a>
+            </li>
+            {% endif %}
+            {% for page_number in orders.paginator.page_range %}
+            {% if page_number == orders.number %}
+            <li>
+                <span class="flex items-center justify-center px-4 h-10 leading-tight text-blue-600 border border-blue-300 bg-blue-50">{{ page_number }}</span>
+            </li>
+            {% elif page_number >= orders.number|add:"-2" and page_number <= orders.number|add:"2" %}
+            <li>
+                <a href="?page={{ page_number }}"
+                   class="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">{{ page_number }}</a>
+            </li>
+            {% elif page_number == orders.number|add:"-3" or page_number == orders.number|add:"3" %}
+            <li><span
+                    class="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white">...</span>
+            </li>
+            {% elif page_number == orders.paginator.num_pages %}
+            <li>
+                <span class="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white total-pages">{{ orders.paginator.num_pages }}</span>
+            </li>
+            {% endif %}
+            {% endfor %}
+            {% if orders.has_next %}
+            <li>
+                <a href="?page={{ orders.next_page_number }}"
+                   class="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                    <span class="sr-only">Next</span>
+                    <svg class="w-3 h-3 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                         fill="none" viewBox="0 0 6 10">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="m1 9 4-4-4-4"/>
+                    </svg>
+                </a>
+            </li>
+            {% endif %}
+            <div class="px-6">
+                <form action="" method="get" class="flex items-center space-x-2">
+                    <input type="number" name="page" class="form-input w-16 rounded-md" min="1"
+                           max="{{ orders.paginator.num_pages }}">
+                    <button type="submit" class="p-1 rounded-md bg-gray-200 hover:bg-gray-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                             stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </ul>
+    </nav>
 </div>
 {% endblock %}
