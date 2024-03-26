@@ -8,6 +8,7 @@ urlpatterns = [
     path('order/', order_list, name='orders'),
     path('order/<slug:slug>/change/', change_order, name='change_order'),
     path('order/<slug:slug>/delete/', delete_order, name='delete_order'),
+    path('order/<slug:slug>/detail/', detail_order, name='detail_order'),
 
     path('profile/<str:user>/', profile_view, name='profile'),
     path('login/', login_view, name='login'),

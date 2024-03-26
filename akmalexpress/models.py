@@ -88,3 +88,11 @@ class Order(models.Model):
 
     def __str__(self):
         return f"{self.receipt_number} {self.last_name} {self.first_name}"
+
+    @property
+    def get_total_price(self):
+        return self.product.product_quantity * self.product.product_price
+
+    @property
+    def get_current(self):
+        return self.product.product_price_currency

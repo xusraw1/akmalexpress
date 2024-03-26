@@ -26,6 +26,11 @@ def index(request):
     return render(request, 'index.html')
 
 
+def detail_order(request, slug):
+    order = get_object_or_404(Order, slug=slug)
+    return render(request, 'akmalexpress/detail_order.html', {'order': order})
+
+
 def delete_order(request, slug):
     order = get_object_or_404(Order, slug=slug)
     if request.method == 'POST':

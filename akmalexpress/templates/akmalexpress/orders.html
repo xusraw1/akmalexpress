@@ -42,7 +42,7 @@
 
                     <button type="button"
                             class="text-gray-900 bg-gradient-to-r from-teal-200 to-lime-200 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-200 focus:ring-4 focus:outline-none focus:ring-lime-200 dark:focus:ring-teal-700 font-medium rounded-lg text-md px-5 py-2.5 text-center me-2 mb-2">
-                        <a href="">№<b>{{ order.receipt_number }}</b></a></button>
+                        <a href="{% url 'detail_order' order.slug %}">№<b>{{ order.receipt_number }}</b></a></button>
                 </th>
                 <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                     {{ order.first_name }} {{ order.last_name }}
