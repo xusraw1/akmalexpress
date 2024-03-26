@@ -10,6 +10,8 @@ urlpatterns = [
     path('order/<slug:slug>/delete/', delete_order, name='delete_order'),
     path('order/<slug:slug>/detail/', detail_order, name='detail_order'),
 
+    path('toggle_status/<int:user_id>/', toggle_status, name='toggle_status'),
+    path('create/admin/', create_admin, name='create_admin'),
     path('profile/<str:user>/', profile_view, name='profile'),
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),

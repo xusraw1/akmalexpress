@@ -152,3 +152,33 @@ def logout_view(request):
     logout(request)
     messages.warning(request, "Вы вышли из аккаунта")
     return redirect('login')
+
+
+def toggle_status(request, user_id):
+    if request.method == 'GET':
+        action = request.GET.get('action')
+        if action in ['activate', 'deactivate']:
+            user = User.objects.get(id=user_id)
+            user.is_active = (action == 'activate')
+            user.save()
+            return redirect('create_admin')
+    return HttpResponseNotAllowed(['GET'])
+
+
+
+def create_admin(request):
+    users = User.objects.all()
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password1 = request.POST.get('password1')
+        password2 = request.POST.get('password2')
+        if password1 == password2:
+            user = User.objects.create_user(username=username, password=password1)
+            user.set_password(password1)
+            user.save()
+            messages.success(request, "Успешно добавлен")
+            return redirect('create_admin')
+        else:
+            messages.warning(request, "Пароли не совпадают")
+            return redirect('create_admin')
+    return render(request, 'akmalexpress/create_admin.html', {'users': users})
