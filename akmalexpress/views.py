@@ -1,3 +1,5 @@
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpResponseNotAllowed
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import CreateProductForm, CreateOrderForm, ChangeOrderForm
 from django.contrib import messages
@@ -7,6 +9,27 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.contrib.auth.decorators import user_passes_test
+
+
+def active_superuser_required(view_func):
+    def _wrapped_view(request, *args, **kwargs):
+        if not (request.user.is_active or request.user.is_superuser):
+            messages.error(request, "У вас нет прав для доступа к этой странице")
+            return redirect('/login/')
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped_view
+
+
+def superuser_required(view_func):
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_superuser:
+            messages.error(request, "У вас нет прав для доступа к этой странице")
+            return redirect('/')
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped_view
 
 
 def index(request):
@@ -31,6 +54,7 @@ def detail_order(request, slug):
     return render(request, 'akmalexpress/detail_order.html', {'order': order})
 
 
+@active_superuser_required
 def delete_order(request, slug):
     order = get_object_or_404(Order, slug=slug)
     if request.method == 'POST':
@@ -40,6 +64,7 @@ def delete_order(request, slug):
     return render(request, 'akmalexpress/delete_order.html', {'order': order})
 
 
+@active_superuser_required
 def change_order(request, slug):
     orderr = get_object_or_404(Order, slug=slug)
     form = ChangeOrderForm(instance=orderr)
@@ -65,8 +90,14 @@ def change_order(request, slug):
     return render(request, 'akmalexpress/change_order.html', {'form': form, 'orderr': orderr})
 
 
+@active_superuser_required
 def create_order(request):
-    last_order = Order.objects.last().receipt_number
+    last_order = Order.objects.last()
+    receipt_number = None
+    if last_order is not None:
+        receipt_number = last_order.receipt_number
+    else:
+        pass
     form = CreateOrderForm()
     if request.method == 'POST':
         form = CreateOrderForm(request.POST)
@@ -79,10 +110,11 @@ def create_order(request):
             messages.success(request, 'Заказ успешно создан')
             return redirect('/')
         messages.warning(request, 'Форма заполнено неправильно')
-        return render(request, 'akmalexpress/create_order.html', {'form': form, 'last_order': last_order})
-    return render(request, 'akmalexpress/create_order.html', {'form': form, 'last_order': last_order})
+        return render(request, 'akmalexpress/create_order.html', {'form': form, 'receipt_number': receipt_number})
+    return render(request, 'akmalexpress/create_order.html', {'form': form, 'receipt_number': receipt_number})
 
 
+@active_superuser_required
 def create_product(request):
     form = CreateProductForm()
     context = {'form': form}
@@ -99,6 +131,7 @@ def create_product(request):
     return render(request, 'akmalexpress/create_product.html', context)
 
 
+@active_superuser_required
 def order_list(request):
     orders_list = Order.objects.all().order_by('-created_at')
 
@@ -117,8 +150,18 @@ def order_list(request):
     return render(request, 'akmalexpress/orders.html', context)
 
 
+@active_superuser_required
 def profile_view(request, user):
-    profile = User.objects.get(username=user)
+    try:
+        profile = User.objects.get(username=user)
+    except ObjectDoesNotExist:
+        messages.error(request, 'Пользователь не найден')
+        return redirect('index')
+
+    if not (profile.is_superuser or profile.is_staff or profile.is_active):
+        messages.warning(request, 'Вы не имеете доступ к этому профилю')
+        return redirect('index')
+
     orders = Order.objects.filter(user=profile)
 
     paginator = Paginator(orders, 10)
@@ -135,10 +178,16 @@ def profile_view(request, user):
 
 
 def login_view(request):
+    if request.user.is_authenticated:
+        messages.error(request, "Для того чтобы войти в другую учетную запись, вы должны завершить текущий сеанс")
+        return redirect('/')
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
+        print(username)
+        print(password)
         user = authenticate(request, username=username, password=password)
+        print(user)
         if user is not None:
             login(request, user)
             messages.success(request, 'Вы вошли в свой аккаунт')
@@ -154,31 +203,47 @@ def logout_view(request):
     return redirect('login')
 
 
+@superuser_required
 def toggle_status(request, user_id):
-    if request.method == 'GET':
-        action = request.GET.get('action')
-        if action in ['activate', 'deactivate']:
-            user = User.objects.get(id=user_id)
-            user.is_active = (action == 'activate')
+    if request.method == 'POST':
+        user = User.objects.get(id=user_id)
+        action = request.POST.get('action')
+        if action == 'activate':
+            user.is_active = True
+            user.is_staff = True
             user.save()
-            return redirect('create_admin')
-    return HttpResponseNotAllowed(['GET'])
+            messages.success(request, f"Модератор {user} активирован")
+        elif action == 'deactivate':
+            user.is_active = False
+            user.is_staff = False
+            user.save()
+            messages.info(request, f"Модератор {user} деактивирован")
+            if not user.is_superuser:
+                return redirect('create_admin')
+            else:
+                return redirect('/')
+        return redirect('create_admin')
+    else:
+        return HttpResponseNotAllowed(['POST'])
 
 
-
+@superuser_required
 def create_admin(request):
-    users = User.objects.all()
+    users = User.objects.exclude(is_superuser=True)
     if request.method == 'POST':
         username = request.POST.get('username')
         password1 = request.POST.get('password1')
         password2 = request.POST.get('password2')
-        if password1 == password2:
-            user = User.objects.create_user(username=username, password=password1)
-            user.set_password(password1)
-            user.save()
-            messages.success(request, "Успешно добавлен")
-            return redirect('create_admin')
-        else:
-            messages.warning(request, "Пароли не совпадают")
-            return redirect('create_admin')
+        user = User.objects.filter(username=username)
+        if not user:
+            if username and password1 == password2:
+                user = User.objects.create_user(username=username, password=password1)
+                user.save()
+                messages.success(request, "Успешно добавлен")
+                return redirect('create_admin')
+            else:
+                messages.warning(request, "Пароли не совпадают или не указано имя пользователя")
+                return redirect('create_admin')
+        messages.warning(request, f"Пользователь с ником {username} уже существует!")
+        return redirect('create_admin')
     return render(request, 'akmalexpress/create_admin.html', {'users': users})

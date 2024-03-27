@@ -63,7 +63,7 @@ class Order(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     slug = models.SlugField(unique=True, blank=True, null=True)
     receipt_number = models.PositiveIntegerField(validators=[MaxValueValidator(1500)], verbose_name='Kvitansiya Raqam')
-    track_number = models.CharField(max_length=50, null=True, blank=True)
+    track_number = models.CharField(max_length=100, null=True, blank=True)
     first_name = models.CharField(max_length=100, verbose_name='Mijoz Ismi')
     last_name = models.CharField(max_length=100, verbose_name='Mijoz Familiyasi', blank=True)
     phone1 = models.PositiveIntegerField(verbose_name='Raqam #1', blank=True,
@@ -74,7 +74,7 @@ class Order(models.Model):
                                          default='')
     debt = models.DecimalField(validators=[MinValueValidator(0.0)], decimal_places=2, max_digits=7, verbose_name='Qarz',
                                blank=True, null=True)
-    description = models.TextField(max_length=500, verbose_name='Tarif', default='')
+    description = models.TextField(max_length=500, verbose_name='Tarif', default='', blank=True)
     status = models.CharField(max_length=8, choices=Status.choices, default=Status.NO, verbose_name='Status')
     come = models.DateTimeField(default=timezone.now, blank=True, null=True, verbose_name='Kelgan Sana')
 
