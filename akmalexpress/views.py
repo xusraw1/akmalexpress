@@ -1,3 +1,4 @@
+from functools import wraps
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseNotAllowed
 from django.shortcuts import render, redirect, get_object_or_404
@@ -12,12 +13,24 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.decorators import user_passes_test
 
 
-def active_superuser_required(view_func):
+def is_active_superuser(user):
+    return user.is_staff or user.is_superuser
+
+
+def user_is_order_creator(view_func):
+    @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
-        if not (request.user.is_active or request.user.is_superuser):
-            messages.error(request, "У вас нет прав для доступа к этой странице")
-            return redirect('/login/')
-        return view_func(request, *args, **kwargs)
+        slug = kwargs.get('slug')
+        order = Order.objects.filter(slug=slug).first()
+        if not order:
+            return redirect('/')
+        if request.user == order.user:
+            return view_func(request, *args, **kwargs)
+
+        if request.user.is_superuser:
+            return view_func(request, *args, **kwargs)
+        messages.error(request, "У вас нет прав для доступа к этой странице")
+        return redirect('/')
 
     return _wrapped_view
 
@@ -54,7 +67,8 @@ def detail_order(request, slug):
     return render(request, 'akmalexpress/detail_order.html', {'order': order})
 
 
-@active_superuser_required
+@user_passes_test(is_active_superuser)
+@user_is_order_creator
 def delete_order(request, slug):
     order = get_object_or_404(Order, slug=slug)
     if request.method == 'POST':
@@ -64,7 +78,8 @@ def delete_order(request, slug):
     return render(request, 'akmalexpress/delete_order.html', {'order': order})
 
 
-@active_superuser_required
+@user_passes_test(is_active_superuser)
+@user_is_order_creator
 def change_order(request, slug):
     orderr = get_object_or_404(Order, slug=slug)
     form = ChangeOrderForm(instance=orderr)
@@ -90,7 +105,7 @@ def change_order(request, slug):
     return render(request, 'akmalexpress/change_order.html', {'form': form, 'orderr': orderr})
 
 
-@active_superuser_required
+@user_passes_test(is_active_superuser)
 def create_order(request):
     last_order = Order.objects.last()
     receipt_number = None
@@ -114,7 +129,7 @@ def create_order(request):
     return render(request, 'akmalexpress/create_order.html', {'form': form, 'receipt_number': receipt_number})
 
 
-@active_superuser_required
+@user_passes_test(is_active_superuser)
 def create_product(request):
     form = CreateProductForm()
     context = {'form': form}
@@ -131,12 +146,10 @@ def create_product(request):
     return render(request, 'akmalexpress/create_product.html', context)
 
 
-@active_superuser_required
+@user_passes_test(is_active_superuser)
 def order_list(request):
     orders_list = Order.objects.all().order_by('-created_at')
-
     paginator = Paginator(orders_list, 10)
-
     page_number = request.GET.get('page')
 
     try:
@@ -150,7 +163,7 @@ def order_list(request):
     return render(request, 'akmalexpress/orders.html', context)
 
 
-@active_superuser_required
+@user_passes_test(is_active_superuser)
 def profile_view(request, user):
     try:
         profile = User.objects.get(username=user)
@@ -179,15 +192,12 @@ def profile_view(request, user):
 
 def login_view(request):
     if request.user.is_authenticated:
-        messages.error(request, "Для того чтобы войти в другую учетную запись, вы должны завершить текущий сеанс")
+        messages.error(request, "Ошибка")
         return redirect('/')
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        print(username)
-        print(password)
         user = authenticate(request, username=username, password=password)
-        print(user)
         if user is not None:
             login(request, user)
             messages.success(request, 'Вы вошли в свой аккаунт')
