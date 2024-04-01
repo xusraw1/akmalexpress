@@ -1,26 +1,37 @@
-<button data-drawer-target="sidebar-multi-level-sidebar" data-drawer-toggle="sidebar-multi-level-sidebar"
-        aria-controls="sidebar-multi-level-sidebar" type="button"
-        class="inline-flex items-center p-2 mt-2 ms-3 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
-    <span class="sr-only">Open sidebar</span>
-    <svg class="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-        <path clip-rule="evenodd" fill-rule="evenodd"
-              d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"></path>
-    </svg>
-</button>
-<style>
+<!-- <style>
     /* Стили для элементов списка */
     ul.flex.flex-col.space-y-2.font-medium li {
         position: relative; /* Изменение свойства position на relative */
         padding: 10px 0; /* Добавление внутреннего отступа сверху и снизу (может потребоваться изменить в соответствии с вашими требованиями) */
     }
-</style>
+</style> -->
 <aside id="sidebar-multi-level-sidebar"
-       class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0"
-       aria-label="Sidebar">
+    class="absolute top-0 left-0 flex flex-col z-50 h-screen w-64 overflow-y-hidden bg-black duration-200 ease-linear dark:bg-boxdark lg:static -translate-x-full"
+    aria-label="Sidebar">
     <div class="h-full px-4 py-2 overflow-y-auto bg-blue-200 dark:bg-gray-800">
-        <h1 class="text-5xl font-black text-blue-600 dark:text-white">Akmal</h1>
-        <h1 class="text-5xl font-black text-red-600 dark:text-white" style="position: relative; top: -30px;">
-            Express</h1>
+        <div class="flex justify-between items-start">
+            <a href="#">
+                <h1 class="text-5xl font-black text-blue-600 dark:text-white">Akmal</h1>
+                <h1 class="text-5xl font-black text-red-600 dark:text-white" style="position: relative; top: -30px;">
+                    Express</h1>
+            </a>
+            <button class="block mt-5 lg:hidden" data-drawer-target="sidebar-multi-level-sidebar" data-drawer-toggle="sidebar-multi-level-sidebar">
+                <svg
+                    class="fill-current"
+                    width="20"
+                    height="18"
+                    viewBox="0 0 20 18"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <path
+                    d="M19 8.175H2.98748L9.36248 1.6875C9.69998 1.35 9.69998 0.825 9.36248 0.4875C9.02498 0.15 8.49998 0.15 8.16248 0.4875L0.399976 8.3625C0.0624756 8.7 0.0624756 9.225 0.399976 9.5625L8.16248 17.4375C8.31248 17.5875 8.53748 17.7 8.76248 17.7C8.98748 17.7 9.17498 17.625 9.36248 17.475C9.69998 17.1375 9.69998 16.6125 9.36248 16.275L3.02498 9.8625H19C19.45 9.8625 19.825 9.4875 19.825 9.0375C19.825 8.55 19.45 8.175 19 8.175Z"
+                    fill="#000"
+                    />
+                </svg>
+            </button>
+        </div>
+        
         <ul class="flex flex-col space-y-2 font-medium">
             <li>
                 <a href="{% url 'orders' %}"
@@ -164,10 +175,10 @@
         </ul>
     </div>
 </aside>
-<script>
-    // JavaScript функция для возвращения на предыдущую страницу
-    function goBack() {
+<!-- <script> -->
+    <!-- // JavaScript функция для возвращения на предыдущую страницу -->
+    <!-- function goBack() {
         window.history.back();
-    }
-</script>
+    } -->
+<!-- </script> -->
 
