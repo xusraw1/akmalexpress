@@ -15,19 +15,26 @@
     <link href="{% static 'css/main.css' %}" rel="stylesheet"/>
 </head>
 <body>
-{% include 'navbar.html' %}
-{% include 'sidebar.html' %}
-{% if messages %}
-<div class="container mx-auto flex justify-center" style="margin-top: 100px">
-    {% include 'messages.html' %}
-    {% endif %}
-</div>
-<div class="margin-8 container mx-auto" style="margin-top: 100px;">
-    {% block content %}
-    {% endblock content %}
+<div class="h-screen flex overflow-hidden">
+    {% include 'sidebar.html' %}
+    <div class="flex-1 flex-col overflow-y-auto overflow-x-hidden">
+        {% include 'navbar.html' %}
+        <div class="">
+            {% if messages %}
+            <div class="container mx-auto flex justify-center" style="margin-top: 100px">
+                {% include 'messages.html' %}
+                {% endif %}
+            </div>
+            <div class="margin-8 container mx-auto" style="margin-top: 100px;">
+                {% block content %}
+                {% endblock content %}
+            </div>
+        </div>
+    </div>
 </div>
 
-<script src="../path/to/flowbite/dist/flowbite.min.js"></script>
+<script type="text/html" src="../path/to/flowbite/dist/flowbite.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+<script src="../static/js/index.js"></script>
 </body>
 </html>
