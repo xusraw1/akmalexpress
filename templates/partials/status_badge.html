@@ -1,0 +1,11 @@
+{% if order.get_status_display == 'Начат' %}
+<span class="status-badge status-start">{{ order.get_status_display }}</span>
+{% elif order.get_status_display == 'В пути' %}
+<span class="status-badge status-transit">{{ order.get_status_display }}</span>
+{% elif order.get_status_display == 'Пришел' %}
+<span class="status-badge status-done">{{ order.get_status_display }}</span>
+{% elif order.get_status_display == 'Отменен' %}
+<span class="status-badge status-cancelled">{{ order.get_status_display }}</span>
+{% else %}
+<span class="status-badge status-default">{{ order.get_status_display }}</span>
+{% endif %}

@@ -1,156 +1,112 @@
 {% extends 'base.html' %}
+
+{% block title %}Профиль {{ profile.username }} | AkmalExpress{% endblock %}
+
 {% block content %}
-<div class="margin-8 container mx-auto" style="margin-left: 600px;">
-    <div class="w-full max-w-lg bg-white border border-gray-500 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-        <div class="flex flex-col items-center pb-4">
-            <br>
-            <img class="w-24 h-24 mb-3 rounded-full shadow-lg"
-                 src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAPFBMVEXk5ueutLepsLPo6uursbXJzc/p6+zj5ea2u76orrKvtbi0ubzZ3N3O0dPAxcfg4uPMz9HU19i8wcPDx8qKXtGiAAAFTElEQVR4nO2d3XqzIAyAhUD916L3f6+f1m7tVvtNINFg8x5tZ32fQAIoMcsEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQTghAJD1jWtnXJPP/54IgNzZQulSmxvTH6oYXX4WS+ivhTbqBa1r26cvCdCu6i0YXbdZ0o4A1rzV+5IcE3YE+z58T45lqo7g1Aa/JY5tgoqQF3qb382x7lNzBLcxft+O17QUYfQI4IIeklKsPSN4i6LKj/7Zm8n99RbHJpEw9gEBXNBpKIYLJqKYRwjOikf//r+J8ZsVuacbqCMNleI9TqGLGqMzhnVdBOdd6F/RlrFijiCoVMk320CBIahUxTWI0KKEcJqKbMdpdJb5QvdHq6wCI5qhKlgGMS/RBHkubWDAE+QZxB4xhCyDiDkLZxgGEVdQldzSKbTIhmZkFkSEPcVvmBn2SMuZB9od7fQDsMiDdKJjFUSCQarM5WirZ3C2TT/htYnyPcPfgrFHWz0BI74gr6J/IZiGUxAZGQLqmvQLTrtE/Go4YxhVRIpEw+sww1IIcqr5NKmUUzLF3d4/qPkYIp2T/obPuemlojFUR4t9Q2Vojhb7BmgElWHzLPH8hucfpefPNFTVgs9h1AdU/Pin96vwWbWdf+X9Absn3OdO34aMdsDnP8WgKYisTqI6CkNGqZQo1XA6Ef6AU32SJzOcBukHPF07/xNSgmHKa5BOhtezv6mA/rYJpwXNAnbRZ1XuF3BzDcO3vpA3+ny2909gbqE4hhD3LIPhLLyBNhPZvbZ3B+3tPYa18A7auSlXQayKwTPNLKDcuOB0xPYKDPFTkWsevQPRZ1J8Hji9I1KQ34r7hZhrwNwOZ97QxNx0drwn4QI0wQk1DcEsfKCWKdxVvxPSNUIp/knmAXT+nT+Ko3+0H96rcNb3m1fx7MBTJdeBJ7uFcWsc0wvgAsC4pROW0l2inbAmIBv/7GZmuhQH6API2rr8T0e6yuZJ+80A9LZeG62T3tik31XwxtwZcizKuTHkMjB1WdZde4Kmic/A5ZI3rr1ae21d08PlVHYfAaxw9G9CYRbJ+8ZdbTcMRV1XM3VdF0M32vtoTdZ0+u29s0OttJ5bz64UwinjaFMVY9vkqc3KKSxN21Xl+0L4Q3Vuv1tYl0pqnX6ms4XetFz7gdZVAgUEoJntfOUe4ZwsHd9FzqQ3Vv6xe41l0XJcqcKl6TZvlv7ClAW3BsqQW4X7ypApB8dmTgK4IX5wvqIVj33HtD2qSG4BqznxdIefL27Y4sahi0MdIdvUsDva8agGGbCtITmCY31MHD2O0uIdh/0rJDQ1VX5Zdxz3rR2QDbv6qXl9vudzqQtGm1Jv9LDXOsfvvB7VcZ8PDKD0mQ1VHPYQ9O+Yj4hR1IUD8rBnn3ho2m8oQMxbCFiKlL2ioSW5heeJqegED52CzxCtcGD3Kv8Wms9EYLyUhwaFIhSMBClevWEmiK/Iaogu4H7sg6ppQhQG8RUqivuTGOAJOg6FfgW0q0M0PQMRMEgXaeNf3SYDZ8PIMI0+wHgr/MgN7wYwpiLjCCqM6ydUDZLQiB6nDdNC8SDyig3jPPpFXGcC9O8BUBDVmgBY59E7Md/35Loe/UVEECEJwYggJjELZ4J71SaQSBeC02n4Da29CayJNA28SAhd2CQyC1Xw6pSmGSINQVuMhAZp4DClan9MgmkDDNmezqwS8sgtlXK/EPBhoaSmYVC/F7IO1jQEdHOlabpKh3+jzLQSTUiq4X2I+Ip/zU8rlaqAvkS21ElR+gqu3zbjjL+hIAiCIAiCIAiCIAiCsCf/AKrfVhSbvA+DAAAAAElFTkSuQmCC"
-                 alt="Profile"/>
-            <h5 class="mb-1 text-xl font-medium text-gray-900 dark:text-white">{{ profile.username }}</h5>
-            <span class="text-sm text-gray-500 dark:text-gray-400">Должность:
+<section class="profile-grid">
+    <article class="content-card profile-card">
+        <div class="profile-avatar">{{ profile.username|first|upper }}</div>
+        <h1 class="section-title" style="margin-bottom: 0.2rem;">@{{ profile.username }}</h1>
+
+        <p class="muted">
+            Должность:
             {% if user.is_superuser %}
-                Гланвый Админ
+                Главный админ
             {% elif user.is_staff %}
                 Модератор
             {% else %}
                 Пользователь
             {% endif %}
-            </span>
-            {% if profile.first_name and profile.last_name %}
-            <span class="text-sm text-gray-500 dark:text-gray-400">ФИО: {{ profile.first_name }} {{ profile.last_name }}</span>
-            {% endif %}
-            <hr class="w-56 h-1 mx-auto my-2 bg-gray-900 border-4 rounded md:my-2 dark:bg-gray-700">
-            <div class="flex mt-2 md:mt-2">
-                <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                    <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            <th scope="col" class="px-6 py-3">
-                                Заказы
-                            </th>
-                            <th scope="col" class="px-6 py-3">
-                                Дата создания
-                            </th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr class="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700">
-                            <th scope="row"
-                                class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                <b>{{ orders|length }}</b>
-                            </th>
-                            <td class="px-6 py-4">
-                                <b>{{ user.date_joined }}</b>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
+        </p>
+
+        {% if profile.first_name and profile.last_name %}
+        <p class="muted">ФИО: {{ profile.first_name }} {{ profile.last_name }}</p>
+        {% endif %}
+
+        <div class="profile-stats">
+            <div class="stat-pill">
+                <span>Заказы</span>
+                <b>{{ orders.paginator.count }}</b>
+            </div>
+            <div class="stat-pill">
+                <span>Регистрация</span>
+                <b>{{ user.date_joined|date:"d.m.Y" }}</b>
             </div>
         </div>
-    </div>
-</div>
+    </article>
+
+    <article class="content-card">
+        <h2 class="section-title">Краткая статистика</h2>
+        <p class="section-subtitle">Профиль администратора и история заказов.</p>
+
+        <div class="table-wrap" style="margin-top: 1rem;">
+            <table class="data-table" style="min-width: 520px;">
+                <thead>
+                <tr>
+                    <th>Показатель</th>
+                    <th>Значение</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>Всего заказов</td>
+                    <td><b>{{ orders.paginator.count }}</b></td>
+                </tr>
+                <tr>
+                    <td>Дата вступления</td>
+                    <td><b>{{ user.date_joined|date:"d.m.Y H:i" }}</b></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </article>
+</section>
+
 {% if not orders or not user.is_staff or user.is_superuser %}
 <p></p>
 {% else %}
-<div class="margin-2 container mx-auto" style="margin-left: 100px;">
-    <br>
-    <p class="text-center text-5xl font-black text-blue-600 dark:text-white">Заказы пользователя @<span
-            class="uppercase"><a
-            href="{% url 'profile' profile%}">{{ profile }}</a></span></p>
+<section class="content-card">
+    <div class="section-head">
+        <div>
+            <h2 class="section-title">Заказы пользователя @{{ profile }}</h2>
+            <p class="section-subtitle">Всего: {{ orders.paginator.count }}</p>
+        </div>
+    </div>
 
-    <hr class="h-1 mx-auto my-4 bg-gray-500 border-0 rounded md:my-10 dark:bg-gray-100">
-    <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-        <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
             <tr>
-                <th scope="col" class="px-6 py-3">
-                    Квитанция
-                </th>
-                <th scope="col" class="px-6 py-3">
-                    ФИО
-                </th>
-                <th scope="col" class="px-6 py-3">
-                    Продукт
-                </th>
-                <th scope="col" class="px-6 py-3">
-                    Дата Создания
-                </th>
-                <th scope="col" class="px-6 py-3">
-                    Статус
-                </th>
-                <th scope="col" class="px-6 py-3">
-                    Телефон
-                </th>
-                <th scope="col" class="px-6 py-3">
-                    Админ
-                </th>
-                {% if order.user == request.user %}
-                <th scope="col" class="px-6 py-3">
-                    Редактирование
-                </th>
+                <th>Квитанция</th>
+                <th>Клиент</th>
+                <th>Продукт</th>
+                <th>Дата</th>
+                <th>Статус</th>
+                <th>Телефон</th>
+                <th>Админ</th>
+                {% if request.user.is_staff or request.user.is_superuser %}
+                <th>Действия</th>
                 {% endif %}
             </tr>
             </thead>
             <tbody>
             {% for order in orders %}
-            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    {{ forloop.counter }}) <b><a href="{% url 'detail_order' order.slug %}">{{ order.receipt_number }}</a></b>
-                </th>
-                <td class="px-8 py-4">
-                    {{ order.first_name }} {{ order.last_name }}
+            <tr>
+                <td>
+                    <a class="receipt-link" href="{% url 'detail_order' order.slug %}">№{{ order.receipt_number }}</a>
                 </td>
-                <td class="px-6 py-4">
-                    {{ order.product }}
-                </td>
-                <td class="px-6 py-4">
-                    {{ order.created_at }}
-                </td>
-                <td class="px-4 py-2">
-                    {% if order.get_status_display == 'Начат' %}
-                    <button class="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-green-400 to-blue-600 group-hover:from-green-400 group-hover:to-blue-600 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-green-200 dark:focus:ring-green-800"
-                            style="cursor: default;">
-                        <span class="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0">
-                        {{ order.get_status_display }}
-                        </span>
-                    </button>
-                    {% elif order.get_status_display == 'В пути' %}
-                    <button class="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-sm font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-teal-300 to-lime-300 group-hover:from-teal-300 group-hover:to-lime-300 dark:text-white dark:hover:text-gray-900 focus:ring-4 focus:outline-none focus:ring-lime-200 dark:focus:ring-lime-800"
-                            style="cursor: default;">
-                        <span class="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0">
-                        {{ order.get_status_display }}
-                        </span>
-                    </button>
-                    {% elif order.get_status_display == 'Пришел' %}
-                    <button class="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-purple-600 to-blue-500 group-hover:from-purple-600 group-hover:to-blue-500 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800"
-                            style="cursor: default;">
-                        <span class="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0">
-                        {{ order.get_status_display }}
-                        </span>
-                    </button>
-                    {% elif order.get_status_display == 'Отменен' %}
-                    <button class="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-pink-500 to-orange-400 group-hover:from-pink-500 group-hover:to-orange-400 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-pink-200 dark:focus:ring-pink-800"
-                            style="cursor: default;">
-                        <span class="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0">
-                        {{ order.get_status_display }}
-                        </span>
-                    </button>
-                    {% endif %}
-                </td>
-                <td class="px-6 py-4">
-                    {{ order.phone1 }}
-                </td>
-                <td class="px-6 py-4">
-                    @{{ order.user }}
-                </td>
+                <td>{{ order.first_name }} {{ order.last_name }}</td>
+                <td>{{ order.product }}</td>
+                <td>{{ order.created_at|date:"d.m.Y" }}</td>
+                <td>{% include 'partials/status_badge.html' %}</td>
+                <td>{{ order.phone1 }}</td>
+                <td>@{{ order.user }}</td>
                 {% if order.user == request.user %}
-                <td class="flex items-center px-4 py-8">
-                    <a href="{% url 'change_order' order.slug %}"
-                       class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Изменить</a>
-                    <a href="{% url 'delete_order' order.slug %}"
-                       class="font-medium text-red-600 dark:text-red-500 hover:underline ms-3">Удалить</a>
+                <td>
+                    <div class="inline-actions">
+                        <a class="action-edit" href="{% url 'change_order' order.slug %}">Изменить</a>
+                        <a class="action-delete" href="{% url 'delete_order' order.slug %}">Удалить</a>
+                    </div>
                 </td>
                 {% endif %}
             </tr>
@@ -158,73 +114,8 @@
             </tbody>
         </table>
     </div>
-</div>
-<br>
-<div class="margin-8 container mx-auto" style="margin-left: 700px;">
-    <nav aria-label="Page navigation example">
-        <ul class="flex items-center -space-x-px h-10 text-base">
-            {% if orders.has_previous %}
-            <li>
-                <a href="?page={{ orders.previous_page_number }}"
-                   class="flex items-center justify-center px-4 h-10 ms-0 leading-tight text-gray-500 bg-white border border-e-0 border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
-                    <span class="sr-only">Previous</span>
-                    <svg class="w-3 h-3 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                         fill="none" viewBox="0 0 6 10">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M5 1 1 5l4 4"/>
-                    </svg>
-                </a>
-            </li>
-            {% endif %}
-            {% for page_number in orders.paginator.page_range %}
-            {% if page_number == orders.number %}
-            <li>
-                <span class="flex items-center justify-center px-4 h-10 leading-tight text-blue-600 border border-blue-300 bg-blue-50">{{ page_number }}</span>
-            </li>
-            {% elif page_number >= orders.number|add:"-2" and page_number <= orders.number|add:"2" %}
-            <li>
-                <a href="?page={{ page_number }}"
-                   class="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">{{
-                    page_number }}</a>
-            </li>
-            {% elif page_number == orders.number|add:"-3" or page_number == orders.number|add:"3" %}
-            <li><span
-                    class="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white">...</span>
-            </li>
-            {% elif page_number == orders.paginator.num_pages %}
-            <li>
-                <span class="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white total-pages">{{ orders.paginator.num_pages }}</span>
-            </li>
-            {% endif %}
-            {% endfor %}
-            {% if orders.has_next %}
-            <li>
-                <a href="?page={{ orders.next_page_number }}"
-                   class="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
-                    <span class="sr-only">Next</span>
-                    <svg class="w-3 h-3 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                         fill="none" viewBox="0 0 6 10">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="m1 9 4-4-4-4"/>
-                    </svg>
-                </a>
-            </li>
-            {% endif %}
-            <div class="px-6">
-                <form action="" method="get" class="flex items-center space-x-2">
-                    <input type="number" name="page" class="form-input w-16 rounded-md" min="1"
-                           max="{{ orders.paginator.num_pages }}">
-                    <button type="submit" class="p-1 rounded-md bg-gray-200 hover:bg-gray-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                             stroke="currentColor" class="w-6 h-6">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
-                        </svg>
-                    </button>
-                </form>
-            </div>
-        </ul>
-    </nav>
-</div>
+
+    {% include 'partials/pagination.html' with page_obj=orders %}
+</section>
 {% endif %}
 {% endblock %}

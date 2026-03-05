@@ -1,173 +1,89 @@
-<button data-drawer-target="sidebar-multi-level-sidebar" data-drawer-toggle="sidebar-multi-level-sidebar"
-        aria-controls="sidebar-multi-level-sidebar" type="button"
-        class="inline-flex items-center p-2 mt-2 ms-3 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
-    <span class="sr-only">Open sidebar</span>
-    <svg class="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-        <path clip-rule="evenodd" fill-rule="evenodd"
-              d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"></path>
-    </svg>
-</button>
-<style>
-    /* Стили для элементов списка */
-    ul.flex.flex-col.space-y-2.font-medium li {
-        position: relative; /* Изменение свойства position на relative */
-        padding: 10px 0; /* Добавление внутреннего отступа сверху и снизу (может потребоваться изменить в соответствии с вашими требованиями) */
-    }
-</style>
-<aside id="sidebar-multi-level-sidebar"
-       class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0"
-       aria-label="Sidebar">
-    <div class="h-full px-4 py-2 overflow-y-auto bg-blue-200 dark:bg-gray-800">
-        <h1 class="text-5xl font-black text-blue-600 dark:text-white">Akmal</h1>
-        <h1 class="text-5xl font-black text-red-600 dark:text-white" style="position: relative; top: -30px;">
-            Express</h1>
-        <ul class="flex flex-col space-y-2 font-medium">
-            <li>
-                <a href="{% url 'orders' %}"
-                   class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                    <svg class="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-                         aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 22 21">
-                        <path d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z"/>
-                        <path d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z"/>
-                    </svg>
-                    <span class="ms-3">Заказы</span>
-                </a>
-            </li>
-            {% if user.is_superadmin%}
-            <li>
-                <a href="#"
-                   class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                    <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-                         aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 18">
-                        <path d="M14 2a3.963 3.963 0 0 0-1.4.267 6.439 6.439 0 0 1-1.331 6.638A4 4 0 1 0 14 2Zm1 9h-1.264A6.957 6.957 0 0 1 15 15v2a2.97 2.97 0 0 1-.184 1H19a1 1 0 0 0 1-1v-1a5.006 5.006 0 0 0-5-5ZM6.5 9a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9ZM8 10H5a5.006 5.006 0 0 0-5 5v2a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-2a5.006 5.006 0 0 0-5-5Z"/>
-                    </svg>
-                    <span class="flex-1 ms-3 whitespace-nowrap">Пользователи</span>
-                </a>
-            </li>
-            {% endif %}
-            {% if user.is_staff %}
-            <li>
-                <a href="{% url 'create_product' %}"
-                   class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-                        <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"/>
-                    </svg>
+<aside id="appSidebar" class="app-sidebar" aria-label="Основное меню">
+    <div class="sidebar-scroll">
+        <div class="sidebar-brand">
+            <p class="sidebar-kicker">Логистика</p>
+            <h2>Панель управления</h2>
+        </div>
 
-                    <span class="flex-1 ms-3 whitespace-nowrap">Добавить Продукт</span>
-                </a>
-            </li>
-            <li>
-                <a href="{% url 'create_order' %}"
-                   class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-                        <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"/>
-                    </svg>
+        <nav class="sidebar-nav">
+            <a href="{% url 'index' %}" class="sidebar-link">
+                <span class="icon-wrap">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-10.5Z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+                </span>
+                <span>Главная</span>
+            </a>
 
-                    <span class="flex-1 ms-3 whitespace-nowrap">Добавить Заказ</span>
-                </a>
-            </li>
-            {% endif %}
-            <hr class="w-56 h-1 mx-auto my-4 bg-gray-800 border-0 rounded md:my-10 dark:bg-gray-700">
-            {% if user.is_authenticated %}
-            <li>
-                <a href="{% url 'logout' %}"
-                   class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                         stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75"/>
-                    </svg>
+            {% if user.is_staff or user.is_superuser %}
+            <a href="{% url 'orders' %}" class="sidebar-link">
+                <span class="icon-wrap">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                </span>
+                <span>Все заказы</span>
+            </a>
 
-                    <span class="flex-1 ms-3 whitespace-nowrap">Выход</span>
-                </a>
-            </li>
-            {% if user.is_staff %}
-            <li>
-                <a href="{% url 'profile' request.user %}"
-                   class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                         stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-                    </svg>
-                    <span class="flex-1 ms-3 whitespace-nowrap">Профиль</span>
-                </a>
-            </li>
+            <a href="{% url 'create_product' %}" class="sidebar-link">
+                <span class="icon-wrap">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                </span>
+                <span>Добавить продукт</span>
+            </a>
+
+            <a href="{% url 'create_order' %}" class="sidebar-link">
+                <span class="icon-wrap">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M4 12h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                </span>
+                <span>Добавить заказ</span>
+            </a>
             {% endif %}
+
             {% if request.user.is_superuser %}
-            <li>
-                <a href="{% url 'create_admin' %}"
-                   class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                         stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z"/>
-                    </svg>
-                    <span class="flex-1 ms-3 whitespace-nowrap">Создать Админа</span>
-                </a>
-            </li>
+            <a href="{% url 'create_admin' %}" class="sidebar-link">
+                <span class="icon-wrap">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM3.5 20a8.5 8.5 0 0 1 17 0M19 9v6M22 12h-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                </span>
+                <span>Создать админа</span>
+            </a>
             {% endif %}
-            <hr class="w-56 h-1 mx-auto my-2 bg-gray-800 border-0 rounded md:my-12 dark:bg-gray-800">
+
+            {% if user.is_authenticated %}
+                {% if user.is_staff or user.is_superuser %}
+                <a href="{% url 'profile' request.user %}" class="sidebar-link">
+                    <span class="icon-wrap">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-7.5 9a7.5 7.5 0 0 1 15 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                    </span>
+                    <span>Мой профиль</span>
+                </a>
+                {% endif %}
+                <a href="{% url 'logout' %}" class="sidebar-link">
+                    <span class="icon-wrap">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3M16 17l5-5-5-5M21 12H9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                    </span>
+                    <span>Выход</span>
+                </a>
             {% else %}
-            <li>
-                <a href="{% url 'login' %}"
-                   class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                         stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15M12 9l3 3m0 0-3 3m3-3H2.25"/>
-                    </svg>
-
-                    <span class="flex-1 ms-3 whitespace-nowrap">Вход</span>
+                <a href="{% url 'login' %}" class="sidebar-link">
+                    <span class="icon-wrap">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                    </span>
+                    <span>Вход</span>
                 </a>
-            </li>
-            <hr class="w-56 h-1 mx-auto my-2 bg-gray-800 border-0 rounded md:my-12 dark:bg-gray-800">
             {% endif %}
-            <li style="position: relative;">
-                <a href="#"
-                   class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-                        <path fill-rule="evenodd"
-                              d="M14.5 10a4.5 4.5 0 0 0 4.284-5.882c-.105-.324-.51-.391-.752-.15L15.34 6.66a.454.454 0 0 1-.493.11 3.01 3.01 0 0 1-1.618-1.616.455.455 0 0 1 .11-.494l2.694-2.692c.24-.241.174-.647-.15-.752a4.5 4.5 0 0 0-5.873 4.575c.055.873-.128 1.808-.8 2.368l-7.23 6.024a2.724 2.724 0 1 0 3.837 3.837l6.024-7.23c.56-.672 1.495-.855 2.368-.8.096.007.193.01.291.01ZM5 16a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"
-                              clip-rule="evenodd"/>
-                        <path d="M14.5 11.5c.173 0 .345-.007.514-.022l3.754 3.754a2.5 2.5 0 0 1-3.536 3.536l-4.41-4.41 2.172-2.607c.052-.063.147-.138.342-.196.202-.06.469-.087.777-.067.128.008.257.012.387.012ZM6 4.586l2.33 2.33a.452.452 0 0 1-.08.09L6.8 8.214 4.586 6H3.309a.5.5 0 0 1-.447-.276l-1.7-3.402a.5.5 0 0 1 .093-.577l.49-.49a.5.5 0 0 1 .577-.094l3.402 1.7A.5.5 0 0 1 6 3.31v1.277Z"/>
-                    </svg>
-                    <span class="flex-1 ms-3 whitespace-nowrap">Помощь</span>
-                </a>
-            </li>
+        </nav>
 
-            <li style="position: relative;">
-                <a href="#"
-                   class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                         stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M20.25 3.75v4.5m0-4.5h-4.5m4.5 0-6 6m3 12c-8.284 0-15-6.716-15-15V4.5A2.25 2.25 0 0 1 4.5 2.25h1.372c.516 0 .966.351 1.091.852l1.106 4.423c.11.44-.054.902-.417 1.173l-1.293.97a1.062 1.062 0 0 0-.38 1.21 12.035 12.035 0 0 0 7.143 7.143c.441.162.928-.004 1.21-.38l.97-1.293a1.125 1.125 0 0 1 1.173-.417l4.423 1.106c.5.125.852.575.852 1.091V19.5a2.25 2.25 0 0 1-2.25 2.25h-2.25Z"/>
-                    </svg>
+        <div class="sidebar-footer">
+            <a href="tel:+998000000000" class="sidebar-link sidebar-link--muted">
+                <span class="icon-wrap">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.5A2.5 2.5 0 0 1 7 3h2a2 2 0 0 1 2 1.7l.4 2.7a2 2 0 0 1-.6 1.7l-1.2 1.2a14.5 14.5 0 0 0 4.9 4.9l1.2-1.2a2 2 0 0 1 1.7-.6l2.7.4A2 2 0 0 1 21 15v2a2.5 2.5 0 0 1-2.5 2.5H17C9.8 19.5 4.5 14.2 4.5 7V5.5Z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                </span>
+                <span>Контакты</span>
+            </a>
 
-                    <span class="flex-1 ms-3 whitespace-nowrap">Контакты</span>
-                </a>
-            </li>
-            <li style="position: relative;">
-                <button onclick="window.history.back()">
-                    <a href="#"
-                       class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                             stroke="currentColor" class="w-6 h-6">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                  d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"/>
-                        </svg>
-                        <span class="flex-1 ms-3 whitespace-nowrap">НАЗАД</span>
-                    </a>
-                </button>
-            </li>
-        </ul>
+            <button type="button" onclick="window.history.back()" class="sidebar-link sidebar-link--muted sidebar-link--button">
+                <span class="icon-wrap">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6-6 6 6 6M4 12h10a6 6 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                </span>
+                <span>Назад</span>
+            </button>
+        </div>
     </div>
 </aside>
-<script>
-    // JavaScript функция для возвращения на предыдущую страницу
-    function goBack() {
-        window.history.back();
-    }
-</script>
-

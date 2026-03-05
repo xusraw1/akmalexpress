@@ -1,0 +1,26 @@
+{% if page_obj and page_obj.paginator.num_pages > 1 %}
+<nav class="pager" aria-label="Пагинация">
+    <div class="pager-buttons">
+        {% if page_obj.has_previous %}
+        <a class="pager-btn" href="?page={{ page_obj.previous_page_number }}">Назад</a>
+        {% endif %}
+
+        <span class="pager-current">Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+        <a class="pager-btn" href="?page={{ page_obj.next_page_number }}">Вперед</a>
+        {% endif %}
+    </div>
+
+    <form action="" method="get" class="page-jump">
+        {% for key, value in request.GET.items %}
+            {% if key != 'page' %}
+            <input type="hidden" name="{{ key }}" value="{{ value }}">
+            {% endif %}
+        {% endfor %}
+        <label for="page-jump-input" class="sr-only">Номер страницы</label>
+        <input id="page-jump-input" type="number" name="page" min="1" max="{{ page_obj.paginator.num_pages }}" placeholder="#">
+        <button type="submit">Перейти</button>
+    </form>
+</nav>
+{% endif %}

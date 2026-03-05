@@ -1,33 +1,117 @@
 <!DOCTYPE html>
 {% load static %}
-<html lang="en">
-
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content=
-            "width=device-width, initial-scale=1.0">
-    <title>Django + Tailwind CSS</title>
-    <link rel="stylesheet"
-          href="{% static 'output.css' %}">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css?family=Poppins:400,800" rel="stylesheet"/>
-    <link href="{% static 'css/main.css' %}" rel="stylesheet"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AkmalExpress{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'output.css' %}">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
 </head>
-<body>
+<body class="app-body">
+<div class="bg-orb orb-one"></div>
+<div class="bg-orb orb-two"></div>
+
 {% include 'navbar.html' %}
-{% include 'sidebar.html' %}
-{% if messages %}
-<div class="container mx-auto flex justify-center" style="margin-top: 100px">
-    {% include 'messages.html' %}
-    {% endif %}
-</div>
-<div class="margin-8 container mx-auto" style="margin-top: 100px;">
-    {% block content %}
-    {% endblock content %}
+
+<div class="app-shell">
+    {% include 'sidebar.html' %}
+
+    <main class="app-main">
+        {% if messages %}
+        <section class="alerts-wrap">
+            {% include 'messages.html' %}
+        </section>
+        {% endif %}
+
+        <section class="content-shell">
+            {% block content %}{% endblock content %}
+        </section>
+    </main>
 </div>
 
-<script src="../path/to/flowbite/dist/flowbite.min.js"></script>
+<div class="sidebar-overlay" id="sidebarOverlay" hidden></div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+<script>
+(function () {
+    const toggleButton = document.getElementById('sidebarToggle');
+    const sidebar = document.getElementById('appSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    const closeSidebar = () => {
+        if (!sidebar) return;
+        sidebar.classList.remove('is-open');
+        if (overlay) overlay.hidden = true;
+        if (toggleButton) toggleButton.setAttribute('aria-expanded', 'false');
+    };
+
+    const openSidebar = () => {
+        if (!sidebar) return;
+        sidebar.classList.add('is-open');
+        if (overlay) overlay.hidden = false;
+        if (toggleButton) toggleButton.setAttribute('aria-expanded', 'true');
+    };
+
+    if (toggleButton && sidebar) {
+        toggleButton.addEventListener('click', () => {
+            if (sidebar.classList.contains('is-open')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        });
+    }
+
+    if (overlay) {
+        overlay.addEventListener('click', closeSidebar);
+    }
+
+    document.querySelectorAll('.sidebar-link').forEach((link) => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth < 1024) {
+                closeSidebar();
+            }
+        });
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeSidebar();
+        }
+    });
+
+    document.querySelectorAll('[data-alert-close]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const alert = button.closest('.alert');
+            if (alert) alert.remove();
+        });
+    });
+
+    document.querySelectorAll('[data-copy-target]').forEach((button) => {
+        button.addEventListener('click', async () => {
+            const target = document.getElementById(button.getAttribute('data-copy-target'));
+            if (!target) return;
+
+            try {
+                await navigator.clipboard.writeText(target.value || target.textContent || '');
+                button.textContent = 'Скопировано';
+                setTimeout(() => {
+                    button.textContent = 'Копировать';
+                }, 1400);
+            } catch (error) {
+                button.textContent = 'Ошибка';
+                setTimeout(() => {
+                    button.textContent = 'Копировать';
+                }, 1400);
+            }
+        });
+    });
+})();
+</script>
 </body>
 </html>
