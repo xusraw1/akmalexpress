@@ -18,13 +18,14 @@ class Product(models.Model):
 
     class Store(models.TextChoices):
         NO = 'None', 'None'
-        TAOBAO = 'Taoboa', 'Taobao'
-        TAOBAO_FIXED = 'Taobao', 'Taobao'
+        TAOBAO = 'Taobao', 'Taobao'
         ALIBABA = 'Alibaba', 'Alibaba'
         ALIEXPRESS = 'AliExpress', 'AliExpress'
         PINDUODUO = 'Pinduoduo', 'Pinduoduo'
         POIZON = 'Poizon', 'Poizon'
         SIX = '1688', '1688'
+        NINETY_FIVE = '95', '95'
+        MADE_IN_CHINA = 'MadeChina', 'Made in China'
 
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name='Admin')
     product_name = models.CharField(max_length=100, verbose_name='Mahsulot Nomi')

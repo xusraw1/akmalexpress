@@ -13,13 +13,32 @@ class MultiFileInput(forms.ClearableFileInput):
 
 class MultiFileField(forms.FileField):
     widget = MultiFileInput(attrs={'multiple': True, 'accept': 'image/*'})
+    max_file_size_bytes = 10 * 1024 * 1024
 
     def clean(self, data, initial=None):
+        """Validate each uploaded file and return a normalized list."""
         if not data:
             return []
+
         if isinstance(data, (list, tuple)):
-            return [super(MultiFileField, self).clean(item, initial) for item in data if item]
-        return [super().clean(data, initial)]
+            files = [item for item in data if item]
+        else:
+            files = [data]
+
+        cleaned_files = []
+        for item in files:
+            cleaned_file = super(MultiFileField, self).clean(item, initial)
+            content_type = (getattr(cleaned_file, 'content_type', '') or '').lower()
+            file_size = getattr(cleaned_file, 'size', 0) or 0
+
+            if content_type and not content_type.startswith('image/'):
+                raise forms.ValidationError('Можно загружать только изображения.')
+            if file_size > self.max_file_size_bytes:
+                raise forms.ValidationError('Размер одного фото не должен превышать 10MB.')
+
+            cleaned_files.append(cleaned_file)
+
+        return cleaned_files
 
 
 class CreateOrderForm(forms.Form):

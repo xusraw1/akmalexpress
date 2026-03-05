@@ -2,10 +2,12 @@
 
 Локальная CRM/панель для учета заказов карго: создание продукта, создание заказа, отслеживание статусов, управление модераторами и поиск по квитанции/трек-номеру.
 
+Полная пошаговая настройка: [docs/SETUP.md](docs/SETUP.md)
+
 ## Что внутри
 
 - Backend: `Django`
-- Database: `PostgreSQL`
+- Database: `PostgreSQL` (или `SQLite` через env)
 - Forms: `django-crispy-forms` + `crispy-tailwind`
 - UI: `Tailwind CSS` + `Flowbite`
 - Адаптивный интерфейс (desktop/tablet/mobile)
@@ -71,27 +73,37 @@ pip install -r requirements.txt
 pip install django-crispy-forms crispy-tailwind
 ```
 
-### 3) PostgreSQL
+### 3) Конфигурация окружения (`.env`)
 
-В `config/settings.py` сейчас используется:
-
-- `NAME = AkmalExpress`
-- `USER = postgres`
-- `PASSWORD = root`
-- `HOST = localhost`
-- `PORT = 5432`
-
-Создай БД:
+Можно взять шаблон:
 
 ```bash
-createdb AkmalExpress
+cp .env.example .env
 ```
 
-или через `psql`:
+Минимум для локального запуска (PostgreSQL):
 
-```sql
-CREATE DATABASE "AkmalExpress";
+```bash
+export DJANGO_DEBUG=1
+export DJANGO_SECRET_KEY='change-me-long-random-secret'
+export DJANGO_ALLOWED_HOSTS='127.0.0.1,localhost'
+export DJANGO_ADMIN_URL='secure-admin/'
+export DB_ENGINE='django.db.backends.postgresql_psycopg2'
+export DB_NAME='AkmalExpress'
+export DB_USER='postgres'
+export DB_PASSWORD='your_db_password'
+export DB_HOST='localhost'
+export DB_PORT='5432'
 ```
+
+Если хочешь быстро стартовать без PostgreSQL:
+
+```bash
+export DJANGO_DEBUG=1
+export DB_ENGINE='django.db.backends.sqlite3'
+```
+
+Админка будет доступна не по `/admin/`, а по пути из `DJANGO_ADMIN_URL`.
 
 ### 4) Миграции
 
@@ -115,6 +127,23 @@ python manage.py runserver 127.0.0.1:8000
 
 - http://127.0.0.1:8000/
 - http://127.0.0.1:8000/login/
+- http://127.0.0.1:8000/<DJANGO_ADMIN_URL>
+
+### Запуск как локальный сервер для телефона/других устройств
+
+В проекте есть готовый скрипт:
+
+```bash
+./run_lan_server.sh
+```
+
+Или с портом:
+
+```bash
+./run_lan_server.sh 8000
+```
+
+Скрипт запускает Django на `0.0.0.0` и показывает LAN-ссылку вида `http://<your-local-ip>:8000`.
 
 ## Frontend (Tailwind)
 
@@ -124,10 +153,16 @@ python manage.py runserver 127.0.0.1:8000
 npm install
 ```
 
-Режим наблюдения за стилями:
+Сборка стилей (production):
 
 ```bash
 npm run build
+```
+
+Режим наблюдения (development):
+
+```bash
+npm run dev
 ```
 
 Используемые файлы:
@@ -177,11 +212,23 @@ pip install -r requirements.txt
 npm run build
 ```
 
-## Технические заметки
+## Безопасность
 
-- Настройки БД и `SECRET_KEY` сейчас хардкодом в `config/settings.py`.
-- Для production лучше вынести в `.env`.
-- Проект в режиме `DEBUG=True` (только для локальной разработки).
+- Для production запускай с `DJANGO_DEBUG=0`.
+- Не используй дефолтные секреты и пароли.
+- Перед релизом прогоняй:
+  - `python manage.py check --deploy`
+  - `bandit -q -r akmalexpress config`
+  - `XDG_CACHE_HOME=/tmp pip-audit`
+
+Подробный чеклист: [docs/SECURITY.md](docs/SECURITY.md)
+
+## Сброс данных (очистка БД)
+
+```bash
+DB_PASSWORD='<your_db_password>' python manage.py flush --noinput
+find media -mindepth 1 -delete 2>/dev/null || true
+```
 
 ---
 

@@ -16,8 +16,23 @@
     <form class="search-form" method="get">
         <div class="search-row">
             <label for="order-search" class="sr-only">Поиск заказа</label>
-            <input id="order-search" type="search" name="search" placeholder="{% if request.user.is_staff or request.user.is_superuser %}Квитанция, трек, клиент или товар{% else %}Квитанция, клиент или товар{% endif %}" required>
+            <input id="order-search" type="search" name="search" value="{{ search_query }}" placeholder="{% if request.user.is_staff or request.user.is_superuser %}Квитанция, трек, клиент или товар{% else %}Квитанция, клиент или товар{% endif %}">
             <button type="submit" class="btn-primary">Поиск</button>
+        </div>
+        <div class="search-filters">
+            <div class="search-date-field">
+                <label for="search-date-from">Дата с</label>
+                <input id="search-date-from" type="date" name="date_from" value="{{ date_from }}">
+            </div>
+            <div class="search-date-field">
+                <label for="search-date-to">Дата по</label>
+                <input id="search-date-to" type="date" name="date_to" value="{{ date_to }}">
+            </div>
+            <div class="search-filter-actions">
+                {% if search_query or date_from or date_to %}
+                <a href="{% url 'index' %}" class="btn-ghost">Сброс</a>
+                {% endif %}
+            </div>
         </div>
     </form>
 </section>
@@ -27,7 +42,7 @@
     <div class="section-head">
         <div>
             <h2 class="section-title">Результаты поиска</h2>
-            <p class="section-subtitle">Найдено заказов: {{ orders|length }}</p>
+            <p class="section-subtitle">Найдено заказов: {{ orders.paginator.count }} | Показано: {{ orders|length }}</p>
         </div>
     </div>
 
@@ -74,6 +89,8 @@
             </tbody>
         </table>
     </div>
+
+    {% include 'partials/pagination.html' with page_obj=orders %}
 </section>
 {% endif %}
 {% endblock %}

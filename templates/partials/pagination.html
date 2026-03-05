@@ -2,13 +2,23 @@
 <nav class="pager" aria-label="Пагинация">
     <div class="pager-buttons">
         {% if page_obj.has_previous %}
-        <a class="pager-btn" href="?page={{ page_obj.previous_page_number }}">Назад</a>
+        <a class="pager-btn" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">Назад</a>
         {% endif %}
 
         <span class="pager-current">Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
 
+        <div class="pager-pages" role="list">
+            {% for num in page_obj.paginator.page_range %}
+                {% if num == page_obj.number %}
+                <span class="pager-page is-active" role="listitem">{{ num }}</span>
+                {% else %}
+                <a class="pager-page" role="listitem" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+        </div>
+
         {% if page_obj.has_next %}
-        <a class="pager-btn" href="?page={{ page_obj.next_page_number }}">Вперед</a>
+        <a class="pager-btn" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">Вперед</a>
         {% endif %}
     </div>
 

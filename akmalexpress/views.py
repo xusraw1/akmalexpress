@@ -7,10 +7,11 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Q
-from django.http import HttpResponseNotAllowed
+from django.http import HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils import timezone
@@ -21,10 +22,12 @@ from .models import Order
 
 
 def orders_with_related(queryset):
+    """Attach related entities to reduce N+1 queries across order pages."""
     return queryset.select_related('product', 'user').prefetch_related('items', 'attachments')
 
 
 def parse_month_filter(value):
+    """Parse YYYY-MM from query params."""
     if not value:
         return None
     try:
@@ -33,7 +36,18 @@ def parse_month_filter(value):
         return None
 
 
+def parse_date_filter(value):
+    """Parse YYYY-MM-DD from query params."""
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
 def configure_order_item_formset(item_formset):
+    """Hide DELETE controls; rows are managed by custom UI buttons."""
     for form in item_formset.forms:
         if 'DELETE' in form.fields:
             form.fields['DELETE'].widget.attrs.update(
@@ -80,9 +94,30 @@ def superuser_required(view_func):
 
 
 def index(request):
+    """Global order search page with optional date range filter."""
     context = {}
-    search = request.GET.get('search')
-    if search:
+    search = (request.GET.get('search') or '').strip()
+    date_from_raw = (request.GET.get('date_from') or '').strip()
+    date_to_raw = (request.GET.get('date_to') or '').strip()
+    date_from = parse_date_filter(date_from_raw) if date_from_raw else None
+    date_to = parse_date_filter(date_to_raw) if date_to_raw else None
+
+    if date_from_raw and not date_from:
+        messages.warning(request, 'Неверный формат даты. Используйте YYYY-MM-DD.')
+    if date_to_raw and not date_to:
+        messages.warning(request, 'Неверный формат даты. Используйте YYYY-MM-DD.')
+
+    if date_from and date_to and date_from > date_to:
+        date_from, date_to = date_to, date_from
+
+    context['search_query'] = search
+    context['date_from'] = date_from.strftime('%Y-%m-%d') if date_from else ''
+    context['date_to'] = date_to.strftime('%Y-%m-%d') if date_to else ''
+
+    has_filters = bool(search or date_from or date_to)
+    if has_filters:
+        queryset = Order.objects.all()
+
         search_filter = (
             Q(receipt_number__icontains=search)
             | Q(first_name__icontains=search)
@@ -90,26 +125,66 @@ def index(request):
             | Q(items__product_name__icontains=search)
             | Q(product__product_name__icontains=search)
         )
-        if request.user.is_staff or request.user.is_superuser:
-            search_filter |= Q(track_number__icontains=search)
+        if search:
+            if request.user.is_staff or request.user.is_superuser:
+                search_filter |= Q(track_number__icontains=search)
+            queryset = queryset.filter(search_filter)
 
-        orders = orders_with_related(
-            Order.objects.filter(search_filter)
+        if date_from:
+            queryset = queryset.filter(order_date__gte=date_from)
+        if date_to:
+            queryset = queryset.filter(order_date__lte=date_to)
+
+        orders_qs = orders_with_related(
+            queryset
             .distinct()
             .order_by('-order_date', '-created_at')
         )
 
-        if orders.exists():
-            messages.success(request, f"Заказы по вашему запросу '{search}' найдены")
+        if orders_qs.exists():
+            paginator = Paginator(orders_qs, 10)
+            page_number = request.GET.get('page')
+
+            try:
+                orders = paginator.page(page_number)
+            except PageNotAnInteger:
+                orders = paginator.page(1)
+            except EmptyPage:
+                orders = paginator.page(paginator.num_pages)
+
+            if search and not page_number:
+                messages.success(request, f"Заказы по вашему запросу '{search}' найдены")
             context['orders'] = orders
         else:
-            messages.info(request, f"По вашему запросу '{search}' ничего не найдено")
+            if search:
+                messages.info(request, f"По вашему запросу '{search}' ничего не найдено")
+            else:
+                messages.info(request, 'По вашим фильтрам ничего не найдено')
 
     return render(request, 'index.html', context)
 
 
 def contacts_view(request):
     return render(request, 'akmalexpress/contacts.html')
+
+
+def robots_txt(request):
+    """Block indexing of private/admin pages for search crawlers."""
+    admin_path = f"/{settings.ADMIN_URL}".replace('//', '/')
+    private_paths = [
+        admin_path,
+        '/login/',
+        '/logout/',
+        '/order/',
+        '/create/',
+        '/toggle_status/',
+        '/delete_admin/',
+        '/profile/',
+    ]
+    lines = ['User-agent: *']
+    lines.extend(f'Disallow: {path}' for path in private_paths)
+    lines.append('')
+    return HttpResponse('\n'.join(lines), content_type='text/plain')
 
 
 def set_language_view(request, lang_code):
@@ -238,7 +313,7 @@ def order_list(request):
 
     orders_list = orders_with_related(orders_list)
 
-    paginator = Paginator(orders_list, 10)
+    paginator = Paginator(orders_list, 20)
     page_number = request.GET.get('page')
 
     try:
@@ -321,6 +396,7 @@ def order_list(request):
 
 @user_passes_test(is_active_superuser)
 def profile_view(request, user):
+    """Admin profile page with filtering/sorting over user's orders."""
     try:
         profile = User.objects.get(username=user)
     except ObjectDoesNotExist:
@@ -331,10 +407,71 @@ def profile_view(request, user):
         messages.warning(request, 'Вы не имеете доступ к этому профилю')
         return redirect('index')
 
-    profile_orders_qs = orders_with_related(
+    status_choices = list(Order.Status.choices)
+    allowed_statuses = {choice[0] for choice in status_choices}
+    allowed_sorts = {
+        'date_desc': ('-order_date', '-created_at'),
+        'date_asc': ('order_date', 'created_at'),
+        'receipt_desc': ('-receipt_number', '-created_at'),
+        'receipt_asc': ('receipt_number', 'created_at'),
+        'status_asc': ('status', '-order_date'),
+        'status_desc': ('-status', '-order_date'),
+    }
+
+    search = (request.GET.get('search') or '').strip()
+    status_filter = (request.GET.get('status') or '').strip()
+    date_from_raw = (request.GET.get('date_from') or '').strip()
+    date_to_raw = (request.GET.get('date_to') or '').strip()
+    sort = (request.GET.get('sort') or 'date_desc').strip()
+
+    date_from = parse_date_filter(date_from_raw) if date_from_raw else None
+    date_to = parse_date_filter(date_to_raw) if date_to_raw else None
+
+    if date_from_raw and not date_from:
+        messages.warning(request, 'Неверный формат даты. Используйте YYYY-MM-DD.')
+    if date_to_raw and not date_to:
+        messages.warning(request, 'Неверный формат даты. Используйте YYYY-MM-DD.')
+    if date_from and date_to and date_from > date_to:
+        date_from, date_to = date_to, date_from
+
+    if status_filter and status_filter not in allowed_statuses:
+        status_filter = ''
+
+    if sort not in allowed_sorts:
+        sort = 'date_desc'
+
+    all_profile_orders_qs = orders_with_related(
         Order.objects.filter(user=profile).order_by('-order_date', '-created_at')
     )
-    profile_total_amount = sum((o.get_final_total for o in profile_orders_qs), Decimal('0.00'))
+    profile_total_amount = sum((o.get_final_total for o in all_profile_orders_qs), Decimal('0.00'))
+    orders_total_count = all_profile_orders_qs.count()
+
+    profile_orders_qs = Order.objects.filter(user=profile)
+    if search:
+        search_filter = (
+            Q(receipt_number__icontains=search)
+            | Q(first_name__icontains=search)
+            | Q(last_name__icontains=search)
+            | Q(items__product_name__icontains=search)
+            | Q(product__product_name__icontains=search)
+        )
+        if request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser):
+            search_filter |= Q(track_number__icontains=search)
+        profile_orders_qs = profile_orders_qs.filter(search_filter)
+
+    if status_filter:
+        profile_orders_qs = profile_orders_qs.filter(status=status_filter)
+    if date_from:
+        profile_orders_qs = profile_orders_qs.filter(order_date__gte=date_from)
+    if date_to:
+        profile_orders_qs = profile_orders_qs.filter(order_date__lte=date_to)
+
+    profile_orders_qs = orders_with_related(
+        profile_orders_qs
+        .distinct()
+        .order_by(*allowed_sorts[sort])
+    )
+    filtered_total_amount = sum((o.get_final_total for o in profile_orders_qs), Decimal('0.00'))
 
     paginator = Paginator(profile_orders_qs, 10)
     page_number = request.GET.get('page')
@@ -353,6 +490,16 @@ def profile_view(request, user):
             'profile': profile,
             'orders': orders,
             'profile_total_amount': profile_total_amount,
+            'filtered_total_amount': filtered_total_amount,
+            'orders_total_count': orders_total_count,
+            'status_choices': status_choices,
+            'filters': {
+                'search': search,
+                'status': status_filter,
+                'date_from': date_from.strftime('%Y-%m-%d') if date_from else '',
+                'date_to': date_to.strftime('%Y-%m-%d') if date_to else '',
+                'sort': sort,
+            },
         },
     )
 

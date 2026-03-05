@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.utils.translation import activate
 
 from .i18n import normalize_language, translate_html_content
@@ -31,4 +32,28 @@ class LanguageMiddleware:
             except Exception:
                 return response
 
+        return response
+
+
+class NoIndexPrivateRoutesMiddleware:
+    """Mark private pages as noindex to keep them out of search engines."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        admin_prefix = f"/{getattr(settings, 'ADMIN_URL', 'admin/')}".replace('//', '/')
+        protected_prefixes = (
+            admin_prefix,
+            '/login/',
+            '/logout/',
+            '/order/',
+            '/create/',
+            '/toggle_status/',
+            '/delete_admin/',
+            '/profile/',
+        )
+        if request.path.startswith(protected_prefixes):
+            response['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
         return response

@@ -8,8 +8,8 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Manrope", "sans-serif"],
-        display: ["Space Grotesk", "sans-serif"],
+        sans: ["Nunito Sans", "sans-serif"],
+        display: ["Exo 2", "sans-serif"],
       },
       colors: {
         brand: {

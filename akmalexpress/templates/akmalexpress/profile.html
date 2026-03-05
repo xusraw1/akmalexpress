@@ -26,7 +26,7 @@
         <div class="profile-stats">
             <div class="stat-pill">
                 <span>Заказы</span>
-                <b>{{ orders.paginator.count }}</b>
+                <b>{{ orders_total_count }}</b>
             </div>
             <div class="stat-pill">
                 <span>Сумма заказов</span>
@@ -50,11 +50,15 @@
                 <tbody>
                 <tr>
                     <td>Всего заказов</td>
-                    <td><b>{{ orders.paginator.count }}</b></td>
+                    <td><b>{{ orders_total_count }}</b></td>
                 </tr>
                 <tr>
                     <td>Сумма заказов</td>
                     <td><b>{{ profile_total_amount|floatformat:2 }}</b></td>
+                </tr>
+                <tr>
+                    <td>Сумма по фильтру</td>
+                    <td><b>{{ filtered_total_amount|floatformat:2 }}</b></td>
                 </tr>
                 <tr>
                     <td>Дата регистрации</td>
@@ -66,14 +70,52 @@
     </article>
 </section>
 
-{% if orders %}
 <section class="content-card">
     <div class="section-head">
         <div>
             <h2 class="section-title">Заказы пользователя @{{ profile }}</h2>
-            <p class="section-subtitle">Всего: {{ orders.paginator.count }}</p>
+            <p class="section-subtitle">Всего: {{ orders_total_count }} | После фильтра: {{ orders.paginator.count }}</p>
         </div>
     </div>
+
+    <form method="get" class="profile-filter-bar">
+        <div class="profile-filter-field">
+            <label for="profile-search">Поиск</label>
+            <input id="profile-search" type="search" name="search" value="{{ filters.search }}" placeholder="Квитанция, клиент, товар">
+        </div>
+        <div class="profile-filter-field">
+            <label for="profile-status">Статус</label>
+            <select id="profile-status" name="status">
+                <option value="">Все статусы</option>
+                {% for value, label in status_choices %}
+                <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="profile-filter-field">
+            <label for="profile-sort">Сортировка</label>
+            <select id="profile-sort" name="sort">
+                <option value="date_desc" {% if filters.sort == 'date_desc' %}selected{% endif %}>По дате (новые)</option>
+                <option value="date_asc" {% if filters.sort == 'date_asc' %}selected{% endif %}>По дате (старые)</option>
+                <option value="receipt_desc" {% if filters.sort == 'receipt_desc' %}selected{% endif %}>По квитанции (убывание)</option>
+                <option value="receipt_asc" {% if filters.sort == 'receipt_asc' %}selected{% endif %}>По квитанции (возрастание)</option>
+                <option value="status_asc" {% if filters.sort == 'status_asc' %}selected{% endif %}>По статусу (А-Я)</option>
+                <option value="status_desc" {% if filters.sort == 'status_desc' %}selected{% endif %}>По статусу (Я-А)</option>
+            </select>
+        </div>
+        <div class="profile-filter-field">
+            <label for="profile-date-from">Дата с</label>
+            <input id="profile-date-from" type="date" name="date_from" value="{{ filters.date_from }}">
+        </div>
+        <div class="profile-filter-field">
+            <label for="profile-date-to">Дата по</label>
+            <input id="profile-date-to" type="date" name="date_to" value="{{ filters.date_to }}">
+        </div>
+        <div class="profile-filter-actions">
+            <button type="submit" class="btn-primary">Применить</button>
+            <a href="{% url 'profile' profile.username %}" class="btn-ghost">Сброс</a>
+        </div>
+    </form>
 
     <div class="table-wrap">
         <table class="data-table">
@@ -114,12 +156,17 @@
                 </td>
                 {% endif %}
             </tr>
+            {% empty %}
+            <tr>
+                <td colspan="{% if request.user.is_staff or request.user.is_superuser %}9{% else %}8{% endif %}">По выбранным фильтрам заказы не найдены.</td>
+            </tr>
             {% endfor %}
             </tbody>
         </table>
     </div>
 
+    {% if orders %}
     {% include 'partials/pagination.html' with page_obj=orders %}
+    {% endif %}
 </section>
-{% endif %}
 {% endblock %}
