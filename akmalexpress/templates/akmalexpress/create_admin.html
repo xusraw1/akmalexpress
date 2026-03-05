@@ -11,6 +11,10 @@
         </div>
     </div>
 
+    <p class="muted" style="margin-bottom: 0.85rem;">
+        Новые модераторы автоматически получают доступ к CRUD заказов и товаров, но не могут создавать других админов.
+    </p>
+
     <form method="post">
         {% csrf_token %}
         <div style="display: grid; gap: 0.85rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
@@ -38,8 +42,8 @@
 <section class="content-card">
     <div class="section-head">
         <div>
-            <h2 class="section-title">Список пользователей</h2>
-            <p class="section-subtitle">Управление активностью модераторов.</p>
+            <h2 class="section-title">Список модераторов</h2>
+            <p class="section-subtitle">Superadmin может активировать, деактивировать и удалять админов.</p>
         </div>
     </div>
 
@@ -50,34 +54,47 @@
                 <th>Ник</th>
                 <th>ФИО</th>
                 <th>Дата создания</th>
-                <th>Статус</th>
-                <th>Роль</th>
+                <th>Состояние</th>
                 <th>Заказы</th>
+                <th>Управление</th>
             </tr>
             </thead>
             <tbody>
             {% for user in users %}
             <tr>
-                <td>{{ user.username }}</td>
+                <td>@{{ user.username }}</td>
                 <td>{{ user.first_name }} {{ user.last_name }}</td>
                 <td>{{ user.date_joined|date:"d.m.Y H:i" }}</td>
                 <td>
                     {% if user.is_active %}
-                    <form method="post" action="{% url 'toggle_status' user.id %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="deactivate">
-                        <button type="submit" class="btn-danger">Деактивировать</button>
-                    </form>
+                    <span class="status-badge status-done">Активен</span>
                     {% else %}
-                    <form method="post" action="{% url 'toggle_status' user.id %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="activate">
-                        <button type="submit" class="btn-secondary">Активировать</button>
-                    </form>
+                    <span class="status-badge status-cancelled">Деактивирован</span>
                     {% endif %}
                 </td>
-                <td>Админ</td>
                 <td>{{ user.order_set.count }}</td>
+                <td>
+                    <div class="inline-actions">
+                        {% if user.is_active %}
+                        <form method="post" action="{% url 'toggle_status' user.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="deactivate">
+                            <button type="submit" class="action-delete">Деактивировать</button>
+                        </form>
+                        {% else %}
+                        <form method="post" action="{% url 'toggle_status' user.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="activate">
+                            <button type="submit" class="action-edit">Активировать</button>
+                        </form>
+                        {% endif %}
+
+                        <form method="post" action="{% url 'delete_admin' user.id %}" onsubmit="return confirm('Удалить админа @{{ user.username }}?');">
+                            {% csrf_token %}
+                            <button type="submit" class="action-delete">Удалить</button>
+                        </form>
+                    </div>
+                </td>
             </tr>
             {% endfor %}
             </tbody>

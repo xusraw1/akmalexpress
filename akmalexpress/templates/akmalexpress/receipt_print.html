@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang|default:'ru' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Квитанция №{{ order.receipt_number }}</title>
+    <style>
+        :root {
+            --ink: #0f172a;
+            --muted: #475569;
+            --line: #cbd5e1;
+            --soft: #f8fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #eef2f7;
+            font-family: "Segoe UI", "Arial", sans-serif;
+            color: var(--ink);
+            padding: 1rem;
+        }
+
+        .print-actions {
+            max-width: 820px;
+            margin: 0 auto 0.8rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.45rem;
+            flex-wrap: wrap;
+        }
+
+        .print-actions a,
+        .print-actions button {
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            color: #0f172a;
+            border-radius: 10px;
+            padding: 0.58rem 0.82rem;
+            font-size: 0.88rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .print-actions button {
+            background: #0f766e;
+            color: #fff;
+            border-color: #0f766e;
+        }
+
+        .receipt-sheet {
+            max-width: 820px;
+            margin: 0 auto;
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 1rem;
+        }
+
+        .head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.8rem;
+            border-bottom: 1px solid var(--line);
+            padding-bottom: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .head h1 {
+            margin: 0;
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+        }
+
+        .head p {
+            margin: 0.25rem 0 0;
+            color: var(--muted);
+            font-size: 0.88rem;
+        }
+
+        .receipt-meta {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.55rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .meta-item {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--soft);
+            padding: 0.55rem 0.62rem;
+            font-size: 0.9rem;
+        }
+
+        .meta-item b {
+            margin-right: 0.3rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            margin-top: 0.2rem;
+        }
+
+        th,
+        td {
+            border: 1px solid var(--line);
+            padding: 0.55rem;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: var(--soft);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        tfoot td {
+            font-weight: 700;
+            background: #f8fafc;
+        }
+
+        .delivery-note {
+            margin-top: 0.75rem;
+            border: 1px dashed #94a3b8;
+            border-radius: 10px;
+            background: #f8fafc;
+            padding: 0.6rem 0.7rem;
+            font-size: 0.92rem;
+        }
+
+        .service-flags {
+            margin-top: 0.62rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+
+        .service-flag {
+            position: relative;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            background: var(--soft);
+            padding: 0.5rem 0.55rem;
+            display: grid;
+            grid-template-columns: auto minmax(72px, auto) minmax(0, 1fr);
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.86rem;
+            cursor: pointer;
+        }
+
+        .flag-box {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 1.4px solid #64748b;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.76rem;
+            font-weight: 800;
+            line-height: 1;
+            color: transparent;
+            background: #fff;
+        }
+
+        .service-flag.is-checked .flag-box {
+            border-color: #0f766e;
+            background: #0f766e;
+            color: #fff;
+        }
+
+        .service-check {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+            width: 1px;
+            height: 1px;
+        }
+
+        .service-title {
+            font-weight: 700;
+        }
+
+        .service-value {
+            border-bottom: 1px dashed #94a3b8;
+            min-height: 1.45rem;
+            display: inline-flex;
+            align-items: center;
+            color: #1e293b;
+            padding: 0 0.2rem;
+            font-family: "Consolas", "Menlo", monospace;
+            font-size: 0.84rem;
+        }
+
+        .service-editor {
+            margin-top: 0.55rem;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.45rem;
+        }
+
+        .service-editor label {
+            display: grid;
+            gap: 0.28rem;
+            font-size: 0.78rem;
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        .service-editor input {
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font: inherit;
+            color: #0f172a;
+            padding: 0.46rem 0.55rem;
+            background: #fff;
+        }
+
+        .service-editor input:focus {
+            outline: none;
+            border-color: #0f766e;
+            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+        }
+
+        .muted {
+            margin-top: 0.65rem;
+            color: var(--muted);
+            font-size: 0.84rem;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 0.55rem;
+            }
+
+            .receipt-sheet {
+                padding: 0.72rem;
+            }
+
+            .receipt-meta {
+                grid-template-columns: 1fr;
+            }
+
+            .service-flags {
+                display: grid;
+                grid-template-columns: 1fr;
+            }
+
+            .service-editor {
+                grid-template-columns: 1fr;
+            }
+
+            th,
+            td {
+                padding: 0.45rem;
+                font-size: 0.83rem;
+            }
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .receipt-sheet {
+                border: 0;
+                border-radius: 0;
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="print-actions no-print">
+    <a href="{% url 'detail_order' order.slug %}">Назад к заказу</a>
+    <button type="button" onclick="window.print()">Печать</button>
+</div>
+
+<section class="receipt-sheet">
+    <header class="head">
+        <div>
+            <h1>Квитанция №{{ order.receipt_number }}</h1>
+            <p>AkmalExpress</p>
+        </div>
+        <p>Дата: {{ order.order_date|date:"d.m.Y" }}</p>
+    </header>
+
+    <div class="receipt-meta">
+        <div class="meta-item"><b>Клиент:</b> {{ order.first_name }} {{ order.last_name }}</div>
+        <div class="meta-item"><b>Телефон:</b> {{ order.phone1 }}</div>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Товар</th>
+            <th>Кол-во</th>
+            <th>Себестоимость</th>
+            <th>Сумма</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for item in order.items.all %}
+        <tr>
+            <td>{{ item.product_name }}</td>
+            <td>{{ item.product_quantity }}</td>
+            <td>{{ item.product_price|floatformat:3 }} {{ item.product_price_currency }}</td>
+            <td>{{ item.get_subtotal|floatformat:2 }} {{ item.product_price_currency }}</td>
+        </tr>
+        {% empty %}
+            {% if order.product %}
+            <tr>
+                <td>{{ order.product.product_name }}</td>
+                <td>{{ order.product.product_quantity }}</td>
+                <td>{{ order.product.product_price|floatformat:3 }} {{ order.product.product_price_currency }}</td>
+                <td>{{ order.get_total_price|floatformat:2 }} {{ order.product.product_price_currency }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4">Товары не указаны.</td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+        </tbody>
+        <tfoot>
+        <tr>
+            <td colspan="3">Итого себестоимость</td>
+            <td>{{ order.get_total_price|floatformat:2 }} {{ order.get_current }}</td>
+        </tr>
+        </tfoot>
+    </table>
+
+    <div class="delivery-note"><b>Общая стоимость товара:</b> {{ order.get_total_price|floatformat:2 }} {{ order.get_current }}</div>
+
+    <div class="delivery-note"><b>Доставка:</b> 30 дней +-</div>
+    <div class="service-flags" id="serviceFlags">
+        <label class="service-flag" id="cargoFlag" for="cargoCheck">
+            <input type="checkbox" id="cargoCheck" class="service-check">
+            <span class="flag-box" aria-hidden="true">✓</span>
+            <span class="service-title">Карго</span>
+            <span class="service-value" id="cargoPrintValue">________________</span>
+        </label>
+        <label class="service-flag" id="serviceFlag" for="serviceCheck">
+            <input type="checkbox" id="serviceCheck" class="service-check">
+            <span class="flag-box" aria-hidden="true">✓</span>
+            <span class="service-title">Услуга</span>
+            <span class="service-value" id="servicePrintValue">________________</span>
+        </label>
+    </div>
+    <div class="service-editor no-print">
+        <label>
+            Карго сумма (опционально)
+            <input type="text" id="cargoValueInput" placeholder="например: 120 000 UZS">
+        </label>
+        <label>
+            Услуга сумма (опционально)
+            <input type="text" id="serviceValueInput" placeholder="например: 50 000 UZS">
+        </label>
+    </div>
+    <p class="muted">Если сумма будет известна после прибытия, оставьте поле пустым.</p>
+    <p class="muted">Статус: {{ order.get_status_display }}</p>
+</section>
+
+<script>
+(() => {
+    const cargoCheck = document.getElementById('cargoCheck');
+    const serviceCheck = document.getElementById('serviceCheck');
+    const cargoFlag = document.getElementById('cargoFlag');
+    const serviceFlag = document.getElementById('serviceFlag');
+    const cargoValueInput = document.getElementById('cargoValueInput');
+    const serviceValueInput = document.getElementById('serviceValueInput');
+    const cargoPrintValue = document.getElementById('cargoPrintValue');
+    const servicePrintValue = document.getElementById('servicePrintValue');
+
+    const syncFlag = (checkEl, rowEl) => {
+        if (!checkEl || !rowEl) return;
+        rowEl.classList.toggle('is-checked', checkEl.checked);
+    };
+
+    const syncValue = (inputEl, outputEl) => {
+        if (!outputEl) return;
+        const raw = (inputEl?.value || '').trim();
+        outputEl.textContent = raw || '________________';
+    };
+
+    const bindServiceField = (checkEl, rowEl, inputEl, outputEl) => {
+        if (checkEl) {
+            checkEl.addEventListener('change', () => syncFlag(checkEl, rowEl));
+            syncFlag(checkEl, rowEl);
+        }
+        if (inputEl && outputEl) {
+            inputEl.addEventListener('input', () => syncValue(inputEl, outputEl));
+            syncValue(inputEl, outputEl);
+        }
+    };
+
+    bindServiceField(cargoCheck, cargoFlag, cargoValueInput, cargoPrintValue);
+    bindServiceField(serviceCheck, serviceFlag, serviceValueInput, servicePrintValue);
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('autoprint') === '1') {
+        window.print();
+    }
+})();
+</script>
+</body>
+</html>

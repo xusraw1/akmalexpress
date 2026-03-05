@@ -11,7 +11,71 @@
         </div>
     </div>
 
-    <div class="table-wrap">
+    {% if track_reminders_count %}
+    <article class="content-card reminder-card" style="margin-bottom: 0.9rem; box-shadow: none;">
+        <h2 class="section-title" style="font-size: 1.08rem;">{{ track_reminder_title }}</h2>
+        <p class="section-subtitle">
+            У {{ track_reminders_count }} заказ(ов) нет трек-номера уже 2+ дня.
+        </p>
+        <ul class="reminder-list">
+            {% for item in track_reminders %}
+            <li>
+                <span>№{{ item.receipt_number }} | {{ item.first_name }} {{ item.last_name }} | {{ item.order_date|date:"d.m.Y" }}</span>
+                <a class="action-edit" href="{% url 'change_order' item.slug %}">Добавить трек</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </article>
+    {% endif %}
+
+    {% if request.user.is_superuser %}
+    <form method="get" class="filter-bar">
+        <label for="month-filter">Фильтр по месяцу</label>
+        <input id="month-filter" type="month" name="month" value="{{ selected_month }}">
+        <button type="submit" class="btn-primary">Применить</button>
+        <a href="{% url 'orders' %}" class="btn-ghost">Сброс</a>
+    </form>
+
+    <div class="summary-grid">
+        <article class="summary-pill">
+            <span>Месяц</span>
+            <b>{{ month_label }}</b>
+        </article>
+        <article class="summary-pill">
+            <span>Сумма заказов</span>
+            <b>{{ monthly_total|floatformat:2 }}</b>
+        </article>
+        <article class="summary-pill">
+            <span>Количество заказов</span>
+            <b>{{ monthly_orders_count }}</b>
+        </article>
+    </div>
+
+    {% if monthly_admin_stats %}
+    <div class="table-wrap" style="margin-top: 0.9rem;">
+        <table class="data-table" style="min-width: 540px;">
+            <thead>
+            <tr>
+                <th>Админ</th>
+                <th>Заказов</th>
+                <th>Сумма</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for stat in monthly_admin_stats %}
+            <tr>
+                <td>@{{ stat.user__username|default:"-" }}</td>
+                <td>{{ stat.orders_count }}</td>
+                <td>{{ stat.total|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <div class="table-wrap" style="margin-top: 0.9rem;">
         <table class="data-table">
             <thead>
             <tr>
@@ -20,9 +84,10 @@
                 <th>Продукт</th>
                 <th>Дата</th>
                 <th>Статус</th>
+                <th>Итог</th>
                 <th>Телефон</th>
                 <th>Админ</th>
-                {% if request.user.is_superuser %}
+                {% if request.user.is_staff or request.user.is_superuser %}
                 <th>Действия</th>
                 {% endif %}
             </tr>
@@ -34,20 +99,16 @@
                     <a class="receipt-link" href="{% url 'detail_order' order.slug %}">№{{ order.receipt_number }}</a>
                 </td>
                 <td>{{ order.first_name }} {{ order.last_name }}</td>
-                <td>
-                    {% if order.product.link %}
-                    <a href="{{ order.product.link }}" target="_blank" rel="noopener">{{ order.product }}</a>
-                    {% else %}
-                    {{ order.product }}
-                    {% endif %}
-                </td>
-                <td>{{ order.created_at|date:"d.m.Y" }}</td>
+                <td>{{ order.get_display_product_name }}</td>
+                <td>{{ order.order_date|date:"d.m.Y" }}</td>
                 <td>{% include 'partials/status_badge.html' %}</td>
+                <td><b>{{ order.get_final_total|floatformat:2 }} {{ order.get_current }}</b></td>
                 <td>{{ order.phone1 }}</td>
-                <td>@{{ order.user }}</td>
-                {% if request.user.is_superuser %}
+                <td>@{{ order.user|default:"-" }}</td>
+                {% if request.user.is_staff or request.user.is_superuser %}
                 <td>
                     <div class="inline-actions">
+                        <a class="action-print" href="{% url 'print_receipt' order.slug %}" target="_blank" rel="noopener">Печать</a>
                         <a class="action-edit" href="{% url 'change_order' order.slug %}">Изменить</a>
                         <a class="action-delete" href="{% url 'delete_order' order.slug %}">Удалить</a>
                     </div>

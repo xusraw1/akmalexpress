@@ -10,10 +10,10 @@
 
         <p class="muted">
             Должность:
-            {% if user.is_superuser %}
+            {% if profile.is_superuser %}
                 Главный админ
-            {% elif user.is_staff %}
-                Модератор
+            {% elif profile.is_staff %}
+                Админ
             {% else %}
                 Пользователь
             {% endif %}
@@ -29,8 +29,8 @@
                 <b>{{ orders.paginator.count }}</b>
             </div>
             <div class="stat-pill">
-                <span>Регистрация</span>
-                <b>{{ user.date_joined|date:"d.m.Y" }}</b>
+                <span>Сумма заказов</span>
+                <b>{{ profile_total_amount|floatformat:2 }}</b>
             </div>
         </div>
     </article>
@@ -40,7 +40,7 @@
         <p class="section-subtitle">Профиль администратора и история заказов.</p>
 
         <div class="table-wrap" style="margin-top: 1rem;">
-            <table class="data-table" style="min-width: 520px;">
+            <table class="data-table" style="min-width: 560px;">
                 <thead>
                 <tr>
                     <th>Показатель</th>
@@ -53,8 +53,12 @@
                     <td><b>{{ orders.paginator.count }}</b></td>
                 </tr>
                 <tr>
-                    <td>Дата вступления</td>
-                    <td><b>{{ user.date_joined|date:"d.m.Y H:i" }}</b></td>
+                    <td>Сумма заказов</td>
+                    <td><b>{{ profile_total_amount|floatformat:2 }}</b></td>
+                </tr>
+                <tr>
+                    <td>Дата регистрации</td>
+                    <td><b>{{ profile.date_joined|date:"d.m.Y H:i" }}</b></td>
                 </tr>
                 </tbody>
             </table>
@@ -62,9 +66,7 @@
     </article>
 </section>
 
-{% if not orders or not user.is_staff or user.is_superuser %}
-<p></p>
-{% else %}
+{% if orders %}
 <section class="content-card">
     <div class="section-head">
         <div>
@@ -82,6 +84,7 @@
                 <th>Продукт</th>
                 <th>Дата</th>
                 <th>Статус</th>
+                <th>Итог</th>
                 <th>Телефон</th>
                 <th>Админ</th>
                 {% if request.user.is_staff or request.user.is_superuser %}
@@ -96,12 +99,13 @@
                     <a class="receipt-link" href="{% url 'detail_order' order.slug %}">№{{ order.receipt_number }}</a>
                 </td>
                 <td>{{ order.first_name }} {{ order.last_name }}</td>
-                <td>{{ order.product }}</td>
-                <td>{{ order.created_at|date:"d.m.Y" }}</td>
+                <td>{{ order.get_display_product_name }}</td>
+                <td>{{ order.order_date|date:"d.m.Y" }}</td>
                 <td>{% include 'partials/status_badge.html' %}</td>
+                <td><b>{{ order.get_final_total|floatformat:2 }} {{ order.get_current }}</b></td>
                 <td>{{ order.phone1 }}</td>
                 <td>@{{ order.user }}</td>
-                {% if order.user == request.user %}
+                {% if request.user.is_staff or request.user.is_superuser %}
                 <td>
                     <div class="inline-actions">
                         <a class="action-edit" href="{% url 'change_order' order.slug %}">Изменить</a>

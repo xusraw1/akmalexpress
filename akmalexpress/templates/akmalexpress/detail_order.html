@@ -7,27 +7,30 @@
     <div class="section-head">
         <div>
             <h1 class="section-title">Заказ №{{ order.receipt_number }}</h1>
-            <p class="section-subtitle">{{ order.first_name }} {{ order.last_name }}</p>
+            <p class="section-subtitle">{{ order.first_name }} {{ order.last_name }} | {{ order.order_date|date:"d.m.Y" }}</p>
         </div>
-        <div>{% include 'partials/status_badge.html' %}</div>
+        <div class="inline-actions">
+            {% include 'partials/status_badge.html' %}
+            <a href="{% url 'print_receipt' order.slug %}" target="_blank" rel="noopener" class="action-edit">Печать квитанции</a>
+        </div>
     </div>
 
     <div class="order-meta">
         <div class="meta-item">
-            <strong>Продукт</strong>
-            <span>{{ order.product.product_name }}</span>
-        </div>
-        <div class="meta-item">
-            <strong>Магазин</strong>
-            <span>{{ order.product.store }}</span>
-        </div>
-        <div class="meta-item">
-            <strong>Дата создания</strong>
-            <span>{{ order.created_at|date:"d.m.Y H:i" }}</span>
+            <strong>Товары</strong>
+            <span>{{ order.get_display_product_name }}</span>
         </div>
         <div class="meta-item">
             <strong>Администратор</strong>
             <span>@{{ order.user }}</span>
+        </div>
+        <div class="meta-item">
+            <strong>Телефон</strong>
+            <span>{{ order.phone1 }}</span>
+        </div>
+        <div class="meta-item">
+            <strong>Валюта</strong>
+            <span>{{ order.get_current }}</span>
         </div>
     </div>
 
@@ -41,23 +44,39 @@
     </div>
     {% endif %}
 
+    {% if order.attachments.all %}
     <div>
-        <p class="muted">Этап доставки</p>
-        <div class="progress-strip">
-            <div class="progress-step {% if order.get_status_display == 'Начат' or order.get_status_display == 'В пути' or order.get_status_display == 'Пришел' or order.get_status_display == 'Отменен' %}active{% endif %}">Заказ принят</div>
-            <div class="progress-step {% if order.get_status_display == 'В пути' or order.get_status_display == 'Пришел' %}active{% endif %}">В пути</div>
-            <div class="progress-step {% if order.get_status_display == 'Пришел' %}active{% endif %}">Получен</div>
+        <p class="muted">Фото заказа</p>
+        <div class="attachments-grid">
+            {% for attachment in order.attachments.all %}
+            <article class="attachment-card">
+                <a
+                    href="{{ attachment.image.url }}"
+                    class="attachment-thumb"
+                    data-lightbox-image
+                    data-lightbox-title="Фото заказа {{ forloop.counter }} | №{{ order.receipt_number }}"
+                >
+                    <img src="{{ attachment.image.url }}" alt="Фото заказа {{ forloop.counter }}">
+                </a>
+                <div class="attachment-meta">
+                    <p><b>Заказ:</b> №{{ order.receipt_number }}</p>
+                    <p><b>Клиент:</b> {{ order.first_name }} {{ order.last_name }}</p>
+                    <p><b>Статус:</b> {{ order.get_status_display }}</p>
+                    <p><b>Дата:</b> {{ order.order_date|date:"d.m.Y" }}</p>
+                </div>
+            </article>
+            {% empty %}
+            <p class="muted">Фото не добавлены.</p>
+            {% endfor %}
         </div>
-        {% if order.get_status_display == 'Отменен' %}
-        <p class="muted" style="margin-top: 0.6rem; color: #9f1239;">Заказ отмечен как отмененный.</p>
-        {% endif %}
     </div>
+    {% endif %}
 </section>
 
 <section class="content-card">
     <div class="section-head">
         <div>
-            <h2 class="section-title">Информация о продукте</h2>
+            <h2 class="section-title">Товары в заказе</h2>
         </div>
     </div>
 
@@ -66,28 +85,96 @@
             <thead>
             <tr>
                 <th>Название</th>
-                <th>Количество</th>
+                <th>Кол-во</th>
                 <th>Цена</th>
                 <th>Валюта</th>
                 <th>Магазин</th>
                 <th>Ссылка</th>
+                <th>Сумма</th>
             </tr>
             </thead>
             <tbody>
+            {% for item in order.items.all %}
+            <tr>
+                <td>{{ item.product_name }}</td>
+                <td>{{ item.product_quantity }}</td>
+                <td>{{ item.product_price }}</td>
+                <td>{{ item.product_price_currency }}</td>
+                <td>{{ item.store }}</td>
+                <td>
+                    {% if item.link %}
+                    <a href="{{ item.link }}" target="_blank" rel="noopener">Открыть</a>
+                    {% else %}-{% endif %}
+                </td>
+                <td><b>{{ item.get_subtotal|floatformat:2 }}</b></td>
+            </tr>
+            {% empty %}
+            {% if order.product %}
             <tr>
                 <td>{{ order.product.product_name }}</td>
                 <td>{{ order.product.product_quantity }}</td>
                 <td>{{ order.product.product_price }}</td>
                 <td>{{ order.product.product_price_currency }}</td>
                 <td>{{ order.product.store }}</td>
-                <td>
-                    {% if order.product.link %}
-                    <a href="{{ order.product.link }}" target="_blank" rel="noopener">Открыть</a>
-                    {% else %}
-                    -
-                    {% endif %}
-                </td>
+                <td>{% if order.product.link %}<a href="{{ order.product.link }}" target="_blank" rel="noopener">Открыть</a>{% else %}-{% endif %}</td>
+                <td><b>{{ order.get_total_price|floatformat:2 }}</b></td>
             </tr>
+            {% else %}
+            <tr>
+                <td colspan="7">Товары не указаны.</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="content-card">
+    <div class="section-head">
+        <div>
+            <h2 class="section-title">Финансовый расчет</h2>
+            <p class="section-subtitle">{{ order.pricing_note }}</p>
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table class="data-table" style="min-width: 620px;">
+            <thead>
+            <tr>
+                <th>Позиция</th>
+                <th>Сумма</th>
+                <th>Валюта</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Себестоимость товаров</td>
+                <td>{{ order.get_total_price|floatformat:2 }}</td>
+                <td>{{ order.get_current }}</td>
+            </tr>
+            <tr>
+                <td>Карго</td>
+                <td>{{ order.cargo_cost|default_if_none:0|floatformat:2 }}</td>
+                <td>{{ order.get_current }}</td>
+            </tr>
+            <tr>
+                <td>Услуга</td>
+                <td>{{ order.service_cost|default_if_none:0|floatformat:2 }}</td>
+                <td>{{ order.get_current }}</td>
+            </tr>
+            <tr>
+                <td><b>Итоговая стоимость</b></td>
+                <td><b>{{ order.get_final_total|floatformat:2 }}</b></td>
+                <td><b>{{ order.get_current }}</b></td>
+            </tr>
+            {% if order.debt %}
+            <tr>
+                <td>Долг клиента</td>
+                <td>{{ order.debt|floatformat:2 }}</td>
+                <td>{{ order.get_current }}</td>
+            </tr>
+            {% endif %}
             </tbody>
         </table>
     </div>

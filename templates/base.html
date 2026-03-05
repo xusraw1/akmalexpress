@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 {% load static %}
-<html lang="ru">
+<html lang="{{ current_lang|default:'ru' }}">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -35,6 +35,17 @@
 </div>
 
 <div class="sidebar-overlay" id="sidebarOverlay" hidden></div>
+<div class="image-lightbox" id="imageLightbox" hidden>
+    <div class="image-lightbox__panel" role="dialog" aria-modal="true" aria-label="Просмотр фото">
+        <button type="button" class="image-lightbox__close" id="imageLightboxClose" aria-label="Закрыть">
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M5 5 15 15M15 5 5 15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+        </button>
+        <img id="imageLightboxImage" class="image-lightbox__image" alt="">
+        <p id="imageLightboxCaption" class="image-lightbox__caption" hidden></p>
+    </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
 <script>
@@ -42,12 +53,35 @@
     const toggleButton = document.getElementById('sidebarToggle');
     const sidebar = document.getElementById('appSidebar');
     const overlay = document.getElementById('sidebarOverlay');
+    const imageLightbox = document.getElementById('imageLightbox');
+    const imageLightboxImage = document.getElementById('imageLightboxImage');
+    const imageLightboxCaption = document.getElementById('imageLightboxCaption');
+    const imageLightboxClose = document.getElementById('imageLightboxClose');
 
     const closeSidebar = () => {
         if (!sidebar) return;
         sidebar.classList.remove('is-open');
         if (overlay) overlay.hidden = true;
         if (toggleButton) toggleButton.setAttribute('aria-expanded', 'false');
+    };
+
+    const closeImageLightbox = () => {
+        if (!imageLightbox) return;
+        imageLightbox.hidden = true;
+        if (imageLightboxImage) imageLightboxImage.src = '';
+        document.body.classList.remove('modal-open');
+    };
+
+    const openImageLightbox = (src, caption) => {
+        if (!imageLightbox || !imageLightboxImage) return;
+        imageLightboxImage.src = src;
+        imageLightboxImage.alt = caption || 'Фото заказа';
+        if (imageLightboxCaption) {
+            imageLightboxCaption.textContent = caption || '';
+            imageLightboxCaption.hidden = !caption;
+        }
+        imageLightbox.hidden = false;
+        document.body.classList.add('modal-open');
     };
 
     const openSidebar = () => {
@@ -82,15 +116,72 @@
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
             closeSidebar();
+            closeImageLightbox();
         }
     });
+
+    if (imageLightbox) {
+        imageLightbox.addEventListener('click', (event) => {
+            if (event.target === imageLightbox) {
+                closeImageLightbox();
+            }
+        });
+    }
+
+    if (imageLightboxClose) {
+        imageLightboxClose.addEventListener('click', closeImageLightbox);
+    }
+
+    document.querySelectorAll('[data-lightbox-image]').forEach((trigger) => {
+        trigger.addEventListener('click', (event) => {
+            event.preventDefault();
+            const src = trigger.getAttribute('href');
+            const caption = trigger.getAttribute('data-lightbox-title') || '';
+            if (src) openImageLightbox(src, caption);
+        });
+    });
+
+    const hideAlert = (alertElement) => {
+        if (!alertElement || alertElement.dataset.hiding === '1') return;
+        alertElement.dataset.hiding = '1';
+        alertElement.classList.add('is-leaving');
+        window.setTimeout(() => {
+            alertElement.remove();
+        }, 260);
+    };
 
     document.querySelectorAll('[data-alert-close]').forEach((button) => {
         button.addEventListener('click', () => {
             const alert = button.closest('.alert');
-            if (alert) alert.remove();
+            hideAlert(alert);
         });
     });
+
+    document.querySelectorAll('[data-auto-dismiss="1"]').forEach((alert) => {
+        window.setTimeout(() => {
+            hideAlert(alert);
+        }, 5000);
+    });
+
+    const setupResponsiveTables = () => {
+        document.querySelectorAll('.data-table').forEach((table) => {
+            const headers = Array.from(table.querySelectorAll('thead th')).map((th) =>
+                th.textContent.replace(/\s+/g, ' ').trim()
+            );
+            if (!headers.length) return;
+
+            table.querySelectorAll('tbody tr').forEach((row) => {
+                Array.from(row.children).forEach((cell, index) => {
+                    if (!(cell instanceof HTMLTableCellElement)) return;
+                    if (!cell.dataset.label) {
+                        cell.dataset.label = headers[Math.min(index, headers.length - 1)] || '';
+                    }
+                });
+            });
+        });
+    };
+
+    setupResponsiveTables();
 
     document.querySelectorAll('[data-copy-target]').forEach((button) => {
         button.addEventListener('click', async () => {

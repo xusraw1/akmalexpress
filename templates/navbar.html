@@ -17,6 +17,10 @@
         </div>
 
         <div class="topbar-right">
+            <div class="lang-switch" aria-label="Language switch">
+                <a href="{% url 'set_language' 'ru' %}?next={{ request.get_full_path|urlencode }}" class="lang-pill {% if current_lang == 'ru' %}is-active{% endif %}">RU</a>
+                <a href="{% url 'set_language' 'uz' %}?next={{ request.get_full_path|urlencode }}" class="lang-pill {% if current_lang == 'uz' %}is-active{% endif %}">UZ</a>
+            </div>
             <a href="{% url 'index' %}" class="top-pill">Главная</a>
             {% if user.is_staff or user.is_superuser %}
             <a href="{% url 'orders' %}" class="top-pill">Заказы</a>

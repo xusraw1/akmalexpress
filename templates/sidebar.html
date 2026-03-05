@@ -21,18 +21,11 @@
                 <span>Все заказы</span>
             </a>
 
-            <a href="{% url 'create_product' %}" class="sidebar-link">
-                <span class="icon-wrap">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                </span>
-                <span>Добавить продукт</span>
-            </a>
-
             <a href="{% url 'create_order' %}" class="sidebar-link">
                 <span class="icon-wrap">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M4 12h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                 </span>
-                <span>Добавить заказ</span>
+                <span>Новый заказ + товар</span>
             </a>
             {% endif %}
 
@@ -71,7 +64,7 @@
         </nav>
 
         <div class="sidebar-footer">
-            <a href="tel:+998000000000" class="sidebar-link sidebar-link--muted">
+            <a href="{% url 'contacts' %}" class="sidebar-link sidebar-link--muted">
                 <span class="icon-wrap">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.5A2.5 2.5 0 0 1 7 3h2a2 2 0 0 1 2 1.7l.4 2.7a2 2 0 0 1-.6 1.7l-1.2 1.2a14.5 14.5 0 0 0 4.9 4.9l1.2-1.2a2 2 0 0 1 1.7-.6l2.7.4A2 2 0 0 1 21 15v2a2.5 2.5 0 0 1-2.5 2.5H17C9.8 19.5 4.5 14.2 4.5 7V5.5Z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
                 </span>

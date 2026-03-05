@@ -5,12 +5,18 @@
 {% block content %}
 <section class="hero-card">
     <h1>Поиск заказов</h1>
-    <p class="section-subtitle">Найдите заказ по квитанции, трек-номеру, имени клиента или названию товара.</p>
+    <p class="section-subtitle">
+        {% if request.user.is_staff or request.user.is_superuser %}
+        Найдите заказ по квитанции, трек-номеру, имени клиента или названию товара.
+        {% else %}
+        Найдите заказ по квитанции, имени клиента или названию товара.
+        {% endif %}
+    </p>
 
     <form class="search-form" method="get">
         <div class="search-row">
             <label for="order-search" class="sr-only">Поиск заказа</label>
-            <input id="order-search" type="search" name="search" placeholder="Квитанция, трек-номер, клиент или товар" required>
+            <input id="order-search" type="search" name="search" placeholder="{% if request.user.is_staff or request.user.is_superuser %}Квитанция, трек, клиент или товар{% else %}Квитанция, клиент или товар{% endif %}" required>
             <button type="submit" class="btn-primary">Поиск</button>
         </div>
     </form>
@@ -34,9 +40,10 @@
                 <th>Продукт</th>
                 <th>Дата</th>
                 <th>Статус</th>
+                <th>Итог</th>
                 <th>Телефон</th>
                 <th>Админ</th>
-                {% if request.user.is_superuser %}
+                {% if request.user.is_staff or request.user.is_superuser %}
                 <th>Действия</th>
                 {% endif %}
             </tr>
@@ -48,18 +55,13 @@
                     <a class="receipt-link" href="{% url 'detail_order' order.slug %}">№{{ order.receipt_number }}</a>
                 </td>
                 <td>{{ order.first_name }} {{ order.last_name }}</td>
-                <td>
-                    {% if order.product.link %}
-                    <a href="{{ order.product.link }}" target="_blank" rel="noopener">{{ order.product }}</a>
-                    {% else %}
-                    {{ order.product }}
-                    {% endif %}
-                </td>
-                <td>{{ order.created_at|date:"d.m.Y" }}</td>
+                <td>{{ order.get_display_product_name }}</td>
+                <td>{{ order.order_date|date:"d.m.Y" }}</td>
                 <td>{% include 'partials/status_badge.html' %}</td>
+                <td><b>{{ order.get_final_total|floatformat:2 }} {{ order.get_current }}</b></td>
                 <td>{{ order.phone1 }}</td>
-                <td>@{{ order.user }}</td>
-                {% if request.user.is_superuser %}
+                <td>@{{ order.user|default:"-" }}</td>
+                {% if request.user.is_staff or request.user.is_superuser %}
                 <td>
                     <div class="inline-actions">
                         <a class="action-edit" href="{% url 'change_order' order.slug %}">Изменить</a>

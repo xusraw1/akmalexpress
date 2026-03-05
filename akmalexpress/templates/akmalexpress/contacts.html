@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Контакты | AkmalExpress{% endblock %}
+
+{% block content %}
+<section class="content-card">
+    <div class="section-head">
+        <div>
+            <h1 class="section-title">Контакты</h1>
+            <p class="section-subtitle">Свяжитесь с нами по телефону, Telegram или через адрес на карте.</p>
+        </div>
+    </div>
+
+    <div class="contacts-grid">
+        <article class="contacts-card">
+            <h2>Телефоны</h2>
+            <a href="tel:+998913227747">+998913227747</a>
+            <a href="tel:+998902887767">+998902887767</a>
+        </article>
+
+        <article class="contacts-card">
+            <h2>Telegram</h2>
+            <a href="https://t.me/akex1" target="_blank" rel="noopener">@akex1</a>
+            <a href="https://t.me/akex2" target="_blank" rel="noopener">@akex2</a>
+            <a href="https://t.me/akex7" target="_blank" rel="noopener">@akex7</a>
+            <a href="https://t.me/akmalexpress" target="_blank" rel="noopener">@akmalexpress</a>
+            <a href="https://t.me/akexcargo" target="_blank" rel="noopener">@akexcargo</a>
+        </article>
+    </div>
+
+    <article class="contacts-card contacts-map">
+        <h2>Адрес</h2>
+        <a href="https://share.google/zJojbau53bJOBUhmP" target="_blank" rel="noopener">
+            Открыть локацию на карте
+        </a>
+    </article>
+</section>
+{% endblock %}

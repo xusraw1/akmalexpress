@@ -1,6 +1,6 @@
 {% if messages %}
     {% for message in messages %}
-    <article class="alert {% if 'success' in message.tags %}alert-success{% elif 'error' in message.tags %}alert-error{% elif 'warning' in message.tags %}alert-warning{% else %}alert-info{% endif %}">
+    <article class="alert {% if 'success' in message.tags %}alert-success{% elif 'error' in message.tags %}alert-error{% elif 'warning' in message.tags %}alert-warning{% else %}alert-info{% endif %}" data-auto-dismiss="1">
         <p>{{ message }}</p>
         <button type="button" class="alert-close" data-alert-close aria-label="Закрыть">
             <svg viewBox="0 0 20 20" aria-hidden="true">

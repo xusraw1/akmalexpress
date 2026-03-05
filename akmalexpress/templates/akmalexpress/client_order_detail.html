@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Статус заказа №{{ order.receipt_number }}{% endblock %}
+
+{% block content %}
+<section class="content-card order-summary">
+    <div class="section-head">
+        <div>
+            <h1 class="section-title">Статус заказа №{{ order.receipt_number }}</h1>
+            <p class="section-subtitle">Дата: {{ order.order_date|date:"d.m.Y" }}</p>
+        </div>
+        <div>{% include 'partials/status_badge.html' %}</div>
+    </div>
+
+    <div class="order-meta">
+        <div class="meta-item">
+            <strong>Номер заказа</strong>
+            <span>№{{ order.receipt_number }}</span>
+        </div>
+        <div class="meta-item">
+            <strong>Клиент</strong>
+            <span>{{ order.first_name }} {{ order.last_name }}</span>
+        </div>
+        <div class="meta-item">
+            <strong>Телефон</strong>
+            <span>{{ order.phone1 }}</span>
+        </div>
+        <div class="meta-item">
+            <strong>Статус</strong>
+            <span>{{ order.get_status_display }}</span>
+        </div>
+    </div>
+
+    <p class="section-subtitle" style="margin-top: 0.9rem;">
+        Здесь показана основная информация по вашему заказу. Трек-номер доступен у администратора.
+    </p>
+</section>
+
+<section class="content-card">
+    <div class="section-head">
+        <div>
+            <h2 class="section-title">Товары в заказе</h2>
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+            <tr>
+                <th>Название</th>
+                <th>Количество</th>
+                <th>Цена</th>
+                <th>Валюта</th>
+                <th>Сумма</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for item in order.items.all %}
+            <tr>
+                <td>{{ item.product_name }}</td>
+                <td>{{ item.product_quantity }}</td>
+                <td>{{ item.product_price|floatformat:3 }}</td>
+                <td>{{ item.product_price_currency }}</td>
+                <td><b>{{ item.get_subtotal|floatformat:2 }}</b></td>
+            </tr>
+            {% empty %}
+            {% if order.product %}
+            <tr>
+                <td>{{ order.product.product_name }}</td>
+                <td>{{ order.product.product_quantity }}</td>
+                <td>{{ order.product.product_price|floatformat:3 }}</td>
+                <td>{{ order.product.product_price_currency }}</td>
+                <td><b>{{ order.get_total_price|floatformat:2 }}</b></td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5">Товары не указаны.</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="content-card">
+    <div class="section-head">
+        <div>
+            <h2 class="section-title">Оплата</h2>
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table class="data-table" style="min-width: 520px;">
+            <tbody>
+            <tr>
+                <td>Сумма товаров</td>
+                <td><b>{{ order.get_total_price|floatformat:2 }} {{ order.get_current }}</b></td>
+            </tr>
+            {% if order.is_aliexpress_only %}
+            <tr>
+                <td>Итог к оплате</td>
+                <td><b>{{ order.get_final_total|floatformat:2 }} {{ order.get_current }}</b></td>
+            </tr>
+            {% else %}
+            <tr>
+                <td>Карго + услуга</td>
+                <td>{{ order.get_extra_cost|floatformat:2 }} {{ order.get_current }}</td>
+            </tr>
+            {% if order.status == 'end' %}
+            <tr>
+                <td>К доплате при получении</td>
+                <td><b>{{ order.get_pickup_due|floatformat:2 }} {{ order.get_current }}</b></td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="2">Карго и услуга рассчитываются окончательно после прибытия.</td>
+            </tr>
+            {% endif %}
+            {% endif %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

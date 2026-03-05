@@ -37,6 +37,7 @@ CRISPY_TEMPLATE_PACK = "tailwind"
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'akmalexpress.middleware.LanguageMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -57,6 +58,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'akmalexpress.context_processors.language_context',
             ],
         },
     },
@@ -107,6 +109,11 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
 LANGUAGE_CODE = 'ru'
+
+LANGUAGES = [
+    ('ru', 'Russian'),
+    ('uz', 'Uzbek'),
+]
 
 TIME_ZONE = 'Asia/Tashkent'
 
