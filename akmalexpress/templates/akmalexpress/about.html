@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+
+{% block title %}О нас | AkmalExpress{% endblock %}
+
+{% block content %}
+<div class="about-page">
+
+    <!-- ═══════════════ HERO ═══════════════ -->
+    <section class="about-hero">
+        <div class="about-hero__inner">
+            <div class="about-hero__badge">
+                <span class="about-hero__badge-dot"></span>
+                С 2017 года
+            </div>
+            <h1 class="about-hero__title">
+                Доставляем товары<br>
+                <span class="about-hero__accent">из Китая</span> по всему Узбекистану
+            </h1>
+            <p class="about-hero__lead">
+                AkmalExpress — сервис по заказу и доставке товаров из Китая. Также принимаем заказы из&nbsp;России, США, Европы, Кореи и Японии по запросу клиента.
+            </p>
+            <div class="about-hero__actions">
+                <a href="https://t.me/akmalexpress" target="_blank" rel="noopener" class="btn-primary about-hero__btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                    Написать в Telegram
+                </a>
+                <a href="{% url 'contacts' %}" class="btn-ghost about-hero__btn">Наши контакты</a>
+                <a href="https://www.youtube.com/@akmalluz/featured" target="_blank" rel="noopener" class="btn-ghost about-hero__btn about-hero__btn--yt">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.5 31.5 0 0 0 0 12a31.5 31.5 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14c1.87.55 9.38.55 9.38.55s7.5 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.5 31.5 0 0 0 24 12a31.5 31.5 0 0 0-.5-5.81ZM9.75 15.02V8.98L15.5 12l-5.75 3.02Z"/></svg>
+                    YouTube
+                </a>
+            </div>
+        </div>
+        <div class="about-hero__visual">
+            <div class="about-hero__globe">
+                <div class="about-hero__globe-ring about-hero__globe-ring--1"></div>
+                <div class="about-hero__globe-ring about-hero__globe-ring--2"></div>
+                <div class="about-hero__globe-ring about-hero__globe-ring--3"></div>
+                <div class="about-hero__globe-core">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(15,118,110,0.7)" stroke-width="1.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════ STATS ═══════════════ -->
+    <section class="about-stats">
+        <article class="about-stat">
+            <div class="about-stat__icon about-stat__icon--teal">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+            </div>
+            <span class="about-stat__label">Основаны</span>
+            <strong class="about-stat__value">2017</strong>
+        </article>
+        <article class="about-stat">
+            <div class="about-stat__icon about-stat__icon--orange">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <span class="about-stat__label">Клиентов</span>
+            <strong class="about-stat__value">5 000+</strong>
+        </article>
+        <article class="about-stat">
+            <div class="about-stat__icon about-stat__icon--blue">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <span class="about-stat__label">География</span>
+            <strong class="about-stat__value">Все регионы</strong>
+        </article>
+        <article class="about-stat">
+            <div class="about-stat__icon about-stat__icon--rose">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            </div>
+            <span class="about-stat__label">Основной рынок</span>
+            <strong class="about-stat__value">Китай</strong>
+        </article>
+    </section>
+
+    <!-- ═══════════════ FEATURES ═══════════════ -->
+    <div class="about-duo">
+        <section class="about-card about-card--geo">
+            <div class="about-card__head">
+                <div class="about-card__icon-box about-card__icon-box--teal">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                </div>
+                <h2>География и направления</h2>
+            </div>
+            <p>Работаем по всему Узбекистану и доставляем из разных стран. Основной поток идёт из Китая, но по запросу оформляем заказы и из других стран.</p>
+            <div class="about-countries">
+                <span class="about-country"><span class="about-country__flag">🇨🇳</span>Китай</span>
+                <span class="about-country"><span class="about-country__flag">🇷🇺</span>Россия</span>
+                <span class="about-country"><span class="about-country__flag">🇺🇸</span>США</span>
+                <span class="about-country"><span class="about-country__flag">🇪🇺</span>Европа</span>
+                <span class="about-country"><span class="about-country__flag">🇰🇷</span>Корея</span>
+                <span class="about-country"><span class="about-country__flag">🇯🇵</span>Япония</span>
+            </div>
+        </section>
+
+        <section class="about-card about-card--why">
+            <div class="about-card__head">
+                <div class="about-card__icon-box about-card__icon-box--orange">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                </div>
+                <h2>Почему выбирают нас</h2>
+            </div>
+            <ul class="about-advantages">
+                <li>
+                    <span class="about-advantages__check">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    </span>
+                    Сопровождаем заказ от заявки до&nbsp;выдачи
+                </li>
+                <li>
+                    <span class="about-advantages__check">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    </span>
+                    Работаем с клиентами из&nbsp;всех регионов Узбекистана
+                </li>
+                <li>
+                    <span class="about-advantages__check">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    </span>
+                    Помогаем выбрать удобный формат заказа
+                </li>
+            </ul>
+        </section>
+    </div>
+
+    <!-- ═══════════════ HOW WE WORK ═══════════════ -->
+    <section class="about-card about-card--steps">
+        <div class="about-card__head">
+            <div class="about-card__icon-box about-card__icon-box--indigo">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            </div>
+            <h2>Как мы работаем</h2>
+        </div>
+        <div class="about-timeline">
+            <div class="about-step">
+                <div class="about-step__num">1</div>
+                <div class="about-step__body">
+                    <strong>Заявка</strong>
+                    <p>Вы оставляете заявку в Telegram или по телефону — менеджер уточняет детали заказа.</p>
+                </div>
+            </div>
+            <div class="about-step">
+                <div class="about-step__num">2</div>
+                <div class="about-step__body">
+                    <strong>Оформление</strong>
+                    <p>Подбираем товар, согласовываем цену и условия доставки.</p>
+                </div>
+            </div>
+            <div class="about-step">
+                <div class="about-step__num">3</div>
+                <div class="about-step__body">
+                    <strong>Доставка</strong>
+                    <p>Товар отправляется из страны-поставщика. Мы отслеживаем каждый этап.</p>
+                </div>
+            </div>
+            <div class="about-step">
+                <div class="about-step__num">4</div>
+                <div class="about-step__body">
+                    <strong>Выдача</strong>
+                    <p>Забираете заказ из нашего офиса или получаете по стране через партнёров.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════ RESTRICTED ═══════════════ -->
+    <section class="about-card about-card--restricted">
+        <div class="about-card__head">
+            <div class="about-card__icon-box about-card__icon-box--red">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>
+            </div>
+            <div>
+                <h2>Что нельзя заказывать</h2>
+                <p class="about-card__sub">Эти категории мы не принимаем к доставке</p>
+            </div>
+        </div>
+        <div class="about-banned">
+            <div class="about-banned__item">
+                <span class="about-banned__icon">🔥</span>
+                <div>
+                    <strong>Горючие товары</strong>
+                    <p>Спички, зажигалки и&nbsp;другие горючие позиции</p>
+                </div>
+            </div>
+            <div class="about-banned__item">
+                <span class="about-banned__icon">⚔️</span>
+                <div>
+                    <strong>Военные товары</strong>
+                    <p>Оружие, ножи, бинокли, луки и&nbsp;похожие товары</p>
+                </div>
+            </div>
+            <div class="about-banned__item">
+                <span class="about-banned__icon">🔞</span>
+                <div>
+                    <strong>Товары 18+</strong>
+                    <p>Категория товаров для взрослых не&nbsp;принимается</p>
+                </div>
+            </div>
+            <div class="about-banned__item">
+                <span class="about-banned__icon">🍎</span>
+                <div>
+                    <strong>Продукты питания</strong>
+                    <p>Пищевые продукты, корнеплоды и&nbsp;другое</p>
+                </div>
+            </div>
+            <div class="about-banned__item">
+                <span class="about-banned__icon">🚨</span>
+                <div>
+                    <strong>Сирены, мигалки, книги</strong>
+                    <p>Эта категория также запрещена к&nbsp;доставке</p>
+                </div>
+            </div>
+            <div class="about-banned__item">
+                <span class="about-banned__icon">💎</span>
+                <div>
+                    <strong>Драгоценные изделия</strong>
+                    <p>Украшения и&nbsp;изделия из цветных металлов</p>
+                </div>
+            </div>
+            <div class="about-banned__item">
+                <span class="about-banned__icon">🚬</span>
+                <div>
+                    <strong>Табак и алкоголь</strong>
+                    <p>Табачные изделия и&nbsp;алкогольные товары</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════ OFFICE / CTA ═══════════════ -->
+    <section class="about-cta">
+        <div class="about-cta__inner">
+            <div class="about-cta__text">
+                <h2>Наш офис</h2>
+                <p>Islom Karimov ko'chasi, 213 uy.<br>Mo'ljal: Milliy Bank Ro'parasi, Sim-Sim butik yonida.</p>
+            </div>
+            <div class="about-cta__actions">
+                <a href="https://share.google/zJojbau53bJOBUhmP" target="_blank" rel="noopener" class="btn-ghost about-cta__btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Открыть на карте
+                </a>
+                <a href="https://t.me/akmalexpress" target="_blank" rel="noopener" class="btn-primary about-cta__btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                    Связаться в Telegram
+                </a>
+            </div>
+        </div>
+    </section>
+
+</div>
+{% endblock %}

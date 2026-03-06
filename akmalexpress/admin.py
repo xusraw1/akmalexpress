@@ -2,6 +2,14 @@ from django.contrib import admin
 from .models import Product, ProductDetail, Order
 
 
+def superuser_admin_only(request):
+    """Allow access to Django admin only for active superusers."""
+    return request.user.is_active and request.user.is_superuser
+
+
+admin.site.has_permission = superuser_admin_only
+
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = ['id', 'product_name', 'product_quantity', 'product_price', 'store', 'created_at']

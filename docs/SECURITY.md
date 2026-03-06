@@ -11,6 +11,7 @@
 - `DJANGO_ALLOWED_HOSTS`
 - `DJANGO_CSRF_TRUSTED_ORIGINS`
 - `DJANGO_ADMIN_URL` (скрытый путь к админке)
+- `DJANGO_STAFF_LOGIN_URL` (скрытый путь входа сотрудников)
 - `DB_ENGINE`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`
 
 Рекомендация для production:
@@ -20,6 +21,7 @@
 - явный whitelist в `DJANGO_ALLOWED_HOSTS`
 - HTTPS и прокси корректно настроены
 - нестандартный путь `DJANGO_ADMIN_URL` задан
+- нестандартный путь `DJANGO_STAFF_LOGIN_URL` задан
 
 При `DJANGO_DEBUG=0` в приложении автоматически включаются:
 
@@ -41,6 +43,8 @@ python manage.py check --deploy
 Убедиться, что:
 
 - `/admin/` возвращает `404`
+- `/login/` возвращает `404`
+- `/<DJANGO_STAFF_LOGIN_URL>` ведет на служебный вход
 - `/<DJANGO_ADMIN_URL>` ведет в Django admin
 - `/robots.txt` содержит `Disallow` для private-paths
 

@@ -7,7 +7,7 @@
 ## Что внутри
 
 - Backend: `Django`
-- Database: `PostgreSQL` (или `SQLite` через env)
+- Database: `SQLite` по умолчанию (опционально `PostgreSQL` через env)
 - Forms: `django-crispy-forms` + `crispy-tailwind`
 - UI: `Tailwind CSS` + `Flowbite`
 - Адаптивный интерфейс (desktop/tablet/mobile)
@@ -25,16 +25,20 @@
 - Пагинация списка заказов
 - Логин/логаут
 - Управление модераторами (для superuser)
+- Скрытый URL входа для сотрудников
 
 ## Роли и доступ
 
 - `Гость`
-  - главная и вход
+  - главная и поиск заказа
 - `Staff / Superuser`
+  - вход через скрытый служебный URL
   - создание продукта/заказа
   - список заказов
   - профиль
 - `Superuser`
+  - вход через скрытый служебный URL
+  - доступ к скрытой Django admin
   - создание и активация/деактивация модераторов
 
 ## Маршруты
@@ -42,7 +46,7 @@
 | URL | Назначение | Доступ |
 |---|---|---|
 | `/` | Главная + поиск | Все |
-| `/login/` | Вход | Все |
+| `/<DJANGO_STAFF_LOGIN_URL>` | Служебный вход | Staff/Superuser |
 | `/logout/` | Выход | Авторизованные |
 | `/order/` | Список заказов | Staff/Superuser |
 | `/order/<slug>/detail/` | Детали заказа | Все |
@@ -81,13 +85,21 @@ pip install django-crispy-forms crispy-tailwind
 cp .env.example .env
 ```
 
-Минимум для локального запуска (PostgreSQL):
+Минимум для локального запуска (SQLite по умолчанию):
 
 ```bash
 export DJANGO_DEBUG=1
 export DJANGO_SECRET_KEY='change-me-long-random-secret'
-export DJANGO_ALLOWED_HOSTS='127.0.0.1,localhost'
+export DJANGO_ALLOWED_HOSTS='127.0.0.1,localhost,0.0.0.0'
 export DJANGO_ADMIN_URL='secure-admin/'
+export DJANGO_STAFF_LOGIN_URL='staff-login/'
+export DB_ENGINE='django.db.backends.sqlite3'
+export DB_NAME='db.sqlite3'
+```
+
+Если нужен PostgreSQL:
+
+```bash
 export DB_ENGINE='django.db.backends.postgresql_psycopg2'
 export DB_NAME='AkmalExpress'
 export DB_USER='postgres'
@@ -96,14 +108,8 @@ export DB_HOST='localhost'
 export DB_PORT='5432'
 ```
 
-Если хочешь быстро стартовать без PostgreSQL:
-
-```bash
-export DJANGO_DEBUG=1
-export DB_ENGINE='django.db.backends.sqlite3'
-```
-
-Админка будет доступна не по `/admin/`, а по пути из `DJANGO_ADMIN_URL`.
+Суперпользовательская админка будет доступна не по `/admin/`, а по пути из `DJANGO_ADMIN_URL`.
+Служебный вход для админов сайта также скрыт и берется из `DJANGO_STAFF_LOGIN_URL`.
 
 ### 4) Миграции
 
@@ -126,7 +132,7 @@ python manage.py runserver 127.0.0.1:8000
 Открыть:
 
 - http://127.0.0.1:8000/
-- http://127.0.0.1:8000/login/
+- http://127.0.0.1:8000/<DJANGO_STAFF_LOGIN_URL>
 - http://127.0.0.1:8000/<DJANGO_ADMIN_URL>
 
 ### Запуск как локальный сервер для телефона/других устройств
@@ -226,7 +232,7 @@ npm run build
 ## Сброс данных (очистка БД)
 
 ```bash
-DB_PASSWORD='<your_db_password>' python manage.py flush --noinput
+python manage.py flush --noinput
 find media -mindepth 1 -delete 2>/dev/null || true
 ```
 

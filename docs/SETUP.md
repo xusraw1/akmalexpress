@@ -43,8 +43,9 @@ cp .env.example .env
 ```env
 DJANGO_DEBUG=1
 DJANGO_SECRET_KEY=change-me-long-random-secret
-DJANGO_ALLOWED_HOSTS=127.0.0.1,localhost
+DJANGO_ALLOWED_HOSTS=127.0.0.1,localhost,0.0.0.0
 DJANGO_ADMIN_URL=secure-admin/
+DJANGO_STAFF_LOGIN_URL=staff-login/
 
 DB_ENGINE=django.db.backends.sqlite3
 DB_NAME=db.sqlite3
@@ -66,8 +67,9 @@ python manage.py createsuperuser
 ```env
 DJANGO_DEBUG=1
 DJANGO_SECRET_KEY=change-me-long-random-secret
-DJANGO_ALLOWED_HOSTS=127.0.0.1,localhost,192.168.0.0/16
+DJANGO_ALLOWED_HOSTS=127.0.0.1,localhost,0.0.0.0,192.168.1.50
 DJANGO_ADMIN_URL=secure-admin/
+DJANGO_STAFF_LOGIN_URL=staff-login/
 
 DB_ENGINE=django.db.backends.postgresql_psycopg2
 DB_NAME=AkmalExpress
@@ -99,10 +101,11 @@ python manage.py runserver 127.0.0.1:8000
 Доступ:
 
 - Главная: `http://127.0.0.1:8000/`
-- Вход: `http://127.0.0.1:8000/login/`
-- Админка: `http://127.0.0.1:8000/<DJANGO_ADMIN_URL>`
+- Служебный вход админов: `http://127.0.0.1:8000/<DJANGO_STAFF_LOGIN_URL>`
+- Django admin superuser: `http://127.0.0.1:8000/<DJANGO_ADMIN_URL>`
 
 Важно: `/admin/` отключен и отдает `404`.
+Важно: `/login/` тоже скрыт и отдает `404`.
 
 ## 7) Запуск как сервер для телефона (LAN)
 
@@ -177,9 +180,13 @@ pip install -r requirements.txt
 - проверь `DJANGO_ADMIN_URL` в `.env`
 - открывай именно этот путь, не `/admin/`
 
+Вход админа не открывается:
+
+- проверь `DJANGO_STAFF_LOGIN_URL` в `.env`
+- открывай именно скрытый путь, не `/login/`
+
 Телефон не открывает сайт:
 
 - проверь одну сеть Wi‑Fi
 - проверь IP из `run_lan_server.sh`
 - временно поставь `DJANGO_ALLOWED_HOSTS=*` для теста
-

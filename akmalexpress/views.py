@@ -11,7 +11,7 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Q
-from django.http import HttpResponse, HttpResponseNotAllowed
+from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseNotFound
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils import timezone
@@ -168,11 +168,23 @@ def contacts_view(request):
     return render(request, 'akmalexpress/contacts.html')
 
 
+def about_view(request):
+    """Public company information page."""
+    return render(request, 'akmalexpress/about.html')
+
+
+def hidden_entrypoint(request):
+    """Return 404 for legacy public URLs that should stay hidden."""
+    return HttpResponseNotFound('Not found')
+
+
 def robots_txt(request):
     """Block indexing of private/admin pages for search crawlers."""
     admin_path = f"/{settings.ADMIN_URL}".replace('//', '/')
+    staff_login_path = f"/{settings.STAFF_LOGIN_URL}".replace('//', '/')
     private_paths = [
         admin_path,
+        staff_login_path,
         '/login/',
         '/logout/',
         '/order/',
@@ -514,6 +526,9 @@ def login_view(request):
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
         if user is not None:
+            if not (user.is_staff or user.is_superuser):
+                messages.error(request, 'Служебный вход доступен только администраторам.')
+                return redirect('staff_login')
             login(request, user)
             messages.success(request, 'Вы вошли в свой аккаунт')
             if user.is_staff and not user.is_superuser:
@@ -532,7 +547,7 @@ def login_view(request):
                     )
             return redirect('/')
         messages.error(request, 'Пользователь не найден, попробуйте заново')
-        return redirect('login')
+        return redirect('staff_login')
 
     return render(request, 'akmalexpress/login.html')
 
@@ -540,7 +555,7 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     messages.warning(request, "Вы вышли из аккаунта")
-    return redirect('login')
+    return redirect('index')
 
 
 @superuser_required

@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 
-{% block title %}Вход | AkmalExpress{% endblock %}
+{% block title %}Служебный вход | AkmalExpress{% endblock %}
 
 {% block content %}
 <div class="auth-wrap">
     <section class="auth-card">
-        <h1>Вход в аккаунт</h1>
-        <p>Авторизуйтесь, чтобы управлять заказами и профилем.</p>
+        <h1>Служебный вход</h1>
+        <p>Эта страница доступна только администраторам и суперпользователям.</p>
 
         <form method="post">
             {% csrf_token %}

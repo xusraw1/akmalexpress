@@ -44,8 +44,10 @@ class NoIndexPrivateRoutesMiddleware:
     def __call__(self, request):
         response = self.get_response(request)
         admin_prefix = f"/{getattr(settings, 'ADMIN_URL', 'admin/')}".replace('//', '/')
+        staff_login_prefix = f"/{getattr(settings, 'STAFF_LOGIN_URL', 'staff-login/')}".replace('//', '/')
         protected_prefixes = (
             admin_prefix,
+            staff_login_prefix,
             '/login/',
             '/logout/',
             '/order/',

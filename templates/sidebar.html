@@ -53,17 +53,17 @@
                     </span>
                     <span>Выход</span>
                 </a>
-            {% else %}
-                <a href="{% url 'login' %}" class="sidebar-link">
-                    <span class="icon-wrap">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                    </span>
-                    <span>Вход</span>
-                </a>
             {% endif %}
         </nav>
 
         <div class="sidebar-footer">
+            <a href="{% url 'about' %}" class="sidebar-link sidebar-link--muted">
+                <span class="icon-wrap">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM10.75 10.25h1.25V17h1.25M12 3.5a8.5 8.5 0 1 1 0 17 8.5 8.5 0 0 1 0-17Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span>О нас</span>
+            </a>
+
             <a href="{% url 'contacts' %}" class="sidebar-link sidebar-link--muted">
                 <span class="icon-wrap">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.5A2.5 2.5 0 0 1 7 3h2a2 2 0 0 1 2 1.7l.4 2.7a2 2 0 0 1-.6 1.7l-1.2 1.2a14.5 14.5 0 0 0 4.9 4.9l1.2-1.2a2 2 0 0 1 1.7-.6l2.7.4A2 2 0 0 1 21 15v2a2.5 2.5 0 0 1-2.5 2.5H17C9.8 19.5 4.5 14.2 4.5 7V5.5Z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>

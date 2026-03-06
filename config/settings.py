@@ -44,6 +44,7 @@ ALLOWED_HOSTS = env_list(
 )
 CSRF_TRUSTED_ORIGINS = env_list('DJANGO_CSRF_TRUSTED_ORIGINS', '')
 ADMIN_URL = normalize_admin_url(os.getenv('DJANGO_ADMIN_URL', 'secure-admin/'))
+STAFF_LOGIN_URL = normalize_admin_url(os.getenv('DJANGO_STAFF_LOGIN_URL', 'staff-login/'))
 
 # Application definition
 
@@ -101,14 +102,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
-DATABASE_ENGINE = os.getenv('DB_ENGINE', 'django.db.backends.postgresql_psycopg2')
+DATABASE_ENGINE = os.getenv('DB_ENGINE', 'django.db.backends.sqlite3')
 if DATABASE_ENGINE == 'django.db.backends.sqlite3':
     DATABASES = {
         'default': {
@@ -196,9 +190,9 @@ else:
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
-LOGIN_URL = 'login'
+LOGIN_URL = 'staff_login'
 LOGOUT_URL = 'logout'
 
-LOGOUT_REDIRECT_URL = 'login'
-LOGIN_REDIRECT_URL = 'login'
+LOGOUT_REDIRECT_URL = 'index'
+LOGIN_REDIRECT_URL = 'index'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

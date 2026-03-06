@@ -1,8 +1,10 @@
+from django.conf import settings
 from django.urls import path
 from .views import *
 
 urlpatterns = [
     path('', index, name='index'),
+    path('about/', about_view, name='about'),
     path('contacts/', contacts_view, name='contacts'),
     path('lang/<str:lang_code>/', set_language_view, name='set_language'),
     path('create/product/', create_product, name='create_product'),
@@ -17,6 +19,7 @@ urlpatterns = [
     path('delete_admin/<int:user_id>/', delete_admin, name='delete_admin'),
     path('create/admin/', create_admin, name='create_admin'),
     path('profile/<str:user>/', profile_view, name='profile'),
-    path('login/', login_view, name='login'),
+    path(settings.STAFF_LOGIN_URL, login_view, name='staff_login'),
+    path('login/', hidden_entrypoint, name='login'),
     path('logout/', logout_view, name='logout'),
 ]

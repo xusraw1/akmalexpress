@@ -10,37 +10,24 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.SeparateDatabaseAndState(
-            database_operations=[
-                migrations.RunSQL(
-                    sql="""
-                    ALTER TABLE akmalexpress_order ALTER COLUMN phone2 DROP DEFAULT;
-                    ALTER TABLE akmalexpress_order
-                        ALTER COLUMN phone1 TYPE bigint USING phone1::bigint,
-                        ALTER COLUMN phone2 TYPE bigint USING phone2::bigint,
-                        ALTER COLUMN phone1 SET DEFAULT 999999999,
-                        ALTER COLUMN phone2 SET DEFAULT NULL;
-                    """,
-                    reverse_sql="""
-                    ALTER TABLE akmalexpress_order
-                        ALTER COLUMN phone1 TYPE integer USING phone1::integer,
-                        ALTER COLUMN phone2 TYPE integer USING phone2::integer,
-                        ALTER COLUMN phone1 SET DEFAULT 999999999,
-                        ALTER COLUMN phone2 SET DEFAULT NULL;
-                    """,
-                ),
-            ],
-            state_operations=[
-                migrations.AlterField(
-                    model_name='order',
-                    name='phone1',
-                    field=models.PositiveBigIntegerField(blank=True, default=999999999, null=True, verbose_name='Raqam #1'),
-                ),
-                migrations.AlterField(
-                    model_name='order',
-                    name='phone2',
-                    field=models.PositiveBigIntegerField(blank=True, default=None, null=True, verbose_name='Raqam #2'),
-                ),
-            ],
+        migrations.AlterField(
+            model_name='order',
+            name='phone1',
+            field=models.PositiveBigIntegerField(
+                blank=True,
+                default=999999999,
+                null=True,
+                verbose_name='Raqam #1',
+            ),
+        ),
+        migrations.AlterField(
+            model_name='order',
+            name='phone2',
+            field=models.PositiveBigIntegerField(
+                blank=True,
+                default=None,
+                null=True,
+                verbose_name='Raqam #2',
+            ),
         ),
     ]
