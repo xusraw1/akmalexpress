@@ -4,6 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from django.core.management.utils import get_random_secret_key
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -51,6 +52,11 @@ if DEBUG and '*' not in ALLOWED_HOSTS:
     # Keep local development reachable from LAN devices by default.
     ALLOWED_HOSTS.append('*')
 
+# Render.com hostname
+render_external_hostname = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if render_external_hostname:
+    ALLOWED_HOSTS.append(render_external_hostname)
+
 CSRF_TRUSTED_ORIGINS = env_list('DJANGO_CSRF_TRUSTED_ORIGINS', '')
 ADMIN_URL = normalize_admin_url(os.getenv('DJANGO_ADMIN_URL', 'secure-admin/'))
 STAFF_LOGIN_URL = normalize_admin_url(os.getenv('DJANGO_STAFF_LOGIN_URL', 'staff-login/'))
@@ -70,6 +76,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'akmalexpress.middleware.LanguageMiddleware',
     'akmalexpress.middleware.NoIndexPrivateRoutesMiddleware',
@@ -102,13 +109,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Database: SQLite for local and LAN deployment.
+# Database: PostgreSQL for local, LAN and production deployment.
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.getenv('DB_NAME', str(BASE_DIR / 'db.sqlite3')),
-    }
+    'default': dj_database_url.config(
+        default=f"postgres://{os.getenv('DB_USER', 'postgres')}:{os.getenv('DB_PASSWORD', 'postgres')}@{os.getenv('DB_HOST', '127.0.0.1')}:{os.getenv('DB_PORT', '5432')}/{os.getenv('DB_NAME', 'akmalexpress')}",
+        conn_max_age=int(os.getenv('DB_CONN_MAX_AGE', '60')),
+    )
 }
+
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -152,6 +161,8 @@ if DEBUG:
     STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'), ]
 else:
     STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+    # Use WhiteNoise to serve static files in production
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

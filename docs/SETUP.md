@@ -33,8 +33,13 @@ npm install
 cp .env.example .env
 ```
 
-Далее выбери один режим БД.
-## 4) Настройка SQLite (рекомендуется)
+## 4) Настройка PostgreSQL (обязательно)
+
+Убедись, что PostgreSQL запущен и есть база:
+
+```bash
+createdb -h 127.0.0.1 -U postgres akmalexpress
+```
 
 В `.env`:
 
@@ -45,7 +50,12 @@ DJANGO_ALLOWED_HOSTS=127.0.0.1,localhost,0.0.0.0
 DJANGO_ADMIN_URL=secure-admin/
 DJANGO_STAFF_LOGIN_URL=staff-login/
 
-DB_NAME=db.sqlite3
+DB_NAME=akmalexpress
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_CONN_MAX_AGE=60
 ```
 
 Применить миграции:

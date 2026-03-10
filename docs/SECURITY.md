@@ -12,7 +12,7 @@
 - `DJANGO_CSRF_TRUSTED_ORIGINS`
 - `DJANGO_ADMIN_URL` (скрытый путь к админке)
 - `DJANGO_STAFF_LOGIN_URL` (скрытый путь входа сотрудников)
-- `DB_NAME` (SQLite-файл)
+- `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT` (PostgreSQL)
 
 Рекомендация для production:
 

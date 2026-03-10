@@ -7,7 +7,7 @@
 ## Что внутри
 
 - Backend: `Django`
-- Database: `SQLite`
+- Database: `PostgreSQL`
 - UI: `Tailwind CSS` + `Flowbite`
 - Адаптивный интерфейс (desktop/tablet/mobile)
 
@@ -83,7 +83,7 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Минимум для локального запуска (SQLite по умолчанию):
+Минимум для локального запуска (PostgreSQL):
 
 ```bash
 export DJANGO_DEBUG=1
@@ -91,13 +91,25 @@ export DJANGO_SECRET_KEY='change-me-long-random-secret'
 export DJANGO_ALLOWED_HOSTS='127.0.0.1,localhost,0.0.0.0'
 export DJANGO_ADMIN_URL='secure-admin/'
 export DJANGO_STAFF_LOGIN_URL='staff-login/'
-export DB_NAME='db.sqlite3'
+export DB_NAME='akmalexpress'
+export DB_USER='postgres'
+export DB_PASSWORD='postgres'
+export DB_HOST='127.0.0.1'
+export DB_PORT='5432'
 ```
 
 Суперпользовательская админка будет доступна не по `/admin/`, а по пути из `DJANGO_ADMIN_URL`.
 Служебный вход для админов сайта также скрыт и берется из `DJANGO_STAFF_LOGIN_URL`.
 
 ### 4) Миграции
+
+Сначала создай БД PostgreSQL:
+
+```bash
+createdb -h 127.0.0.1 -U postgres akmalexpress
+```
+
+Потом примени миграции:
 
 ```bash
 python manage.py migrate
@@ -188,9 +200,13 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### `OperationalError: database "AkmalExpress" does not exist`
+### `OperationalError: database "akmalexpress" does not exist`
 
-Создай БД и снова выполни `python manage.py migrate`.
+Создай PostgreSQL базу и снова выполни `python manage.py migrate`:
+
+```bash
+createdb -h 127.0.0.1 -U postgres akmalexpress
+```
 
 ### Ошибка установки `pillow==10.2.0` на Python 3.13
 
