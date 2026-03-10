@@ -2,11 +2,13 @@ databases:
   - name: akmalexpress-db
     databaseName: akmalexpress
     user: akmalexpress
+    plan: free
 
 services:
   - type: web
     name: akmalexpress-web
     env: python
+    plan: free
     buildCommand: "./build.sh"
     startCommand: "gunicorn config.wsgi:application"
     envVars:
