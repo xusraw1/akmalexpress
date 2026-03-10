@@ -7,8 +7,8 @@
     <h1 class="panel-title">Удаление заказа №{{ order.receipt_number }}</h1>
     <p class="panel-subtitle">Это действие необратимо. После удаления восстановить заказ нельзя.</p>
 
-    <div class="content-card" style="margin-top: 1rem; margin-bottom: 0; box-shadow: none; border-style: dashed;">
-        <p class="muted" style="margin-top: 0;">
+    <div class="content-card content-card-muted-dashed">
+        <p class="muted muted-no-top">
             Клиент: <b>{{ order.first_name }} {{ order.last_name }}</b><br>
             Продукт: <b>{{ order.product }}</b>
         </p>
@@ -17,7 +17,7 @@
             {% csrf_token %}
             <div class="form-actions">
                 <button type="submit" class="btn-danger">Да, удалить заказ</button>
-                <a href="{% url 'detail_order' order.slug %}" class="btn-ghost">Отмена</a>
+                <a href="{% url 'detail_order' order.slug %}" class="btn-ghost">Отменить</a>
             </div>
         </form>
     </div>

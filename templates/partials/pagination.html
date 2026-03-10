@@ -1,36 +1,50 @@
+{% load pagination_tags %}
 {% if page_obj and page_obj.paginator.num_pages > 1 %}
 <nav class="pager" aria-label="Пагинация">
-    <div class="pager-buttons">
-        {% if page_obj.has_previous %}
-        <a class="pager-btn" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">Назад</a>
-        {% endif %}
+    {% with current_param=page_param|default:'page' %}
+    <div class="pager-main">
+        <div class="pager-nav">
+            {% if page_obj.has_previous %}
+            <a class="pager-btn pager-btn--icon" href="?{% for key, value in request.GET.items %}{% if key != current_param %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}{{ current_param }}={{ page_obj.previous_page_number }}" aria-label="Предыдущая страница">‹</a>
+            {% else %}
+            <span class="pager-btn pager-btn--icon is-disabled" aria-hidden="true">‹</span>
+            {% endif %}
 
-        <span class="pager-current">Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+            <span class="pager-current">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+
+            {% if page_obj.has_next %}
+            <a class="pager-btn pager-btn--icon" href="?{% for key, value in request.GET.items %}{% if key != current_param %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}{{ current_param }}={{ page_obj.next_page_number }}" aria-label="Следующая страница">›</a>
+            {% else %}
+            <span class="pager-btn pager-btn--icon is-disabled" aria-hidden="true">›</span>
+            {% endif %}
+        </div>
 
         <div class="pager-pages" role="list">
-            {% for num in page_obj.paginator.page_range %}
-                {% if num == page_obj.number %}
-                <span class="pager-page is-active" role="listitem">{{ num }}</span>
+            {% compact_page_tokens page_obj as page_tokens %}
+            {% for token in page_tokens %}
+                {% if token %}
+                    {% if token == page_obj.number %}
+                <span class="pager-page is-active" role="listitem">{{ token }}</span>
+                    {% else %}
+                <a class="pager-page" role="listitem" href="?{% for key, value in request.GET.items %}{% if key != current_param %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}{{ current_param }}={{ token }}">{{ token }}</a>
+                    {% endif %}
                 {% else %}
-                <a class="pager-page" role="listitem" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+                <span class="pager-ellipsis" role="listitem">…</span>
                 {% endif %}
             {% endfor %}
         </div>
-
-        {% if page_obj.has_next %}
-        <a class="pager-btn" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">Вперед</a>
-        {% endif %}
     </div>
 
     <form action="" method="get" class="page-jump">
         {% for key, value in request.GET.items %}
-            {% if key != 'page' %}
+            {% if key != current_param %}
             <input type="hidden" name="{{ key }}" value="{{ value }}">
             {% endif %}
         {% endfor %}
-        <label for="page-jump-input" class="sr-only">Номер страницы</label>
-        <input id="page-jump-input" type="number" name="page" min="1" max="{{ page_obj.paginator.num_pages }}" placeholder="#">
-        <button type="submit">Перейти</button>
+        <label for="page-jump-input-{{ current_param }}" class="sr-only">Номер страницы</label>
+        <input id="page-jump-input-{{ current_param }}" type="number" name="{{ current_param }}" min="1" max="{{ page_obj.paginator.num_pages }}" placeholder="№">
+        <button type="submit" aria-label="Перейти">→</button>
     </form>
+    {% endwith %}
 </nav>
 {% endif %}

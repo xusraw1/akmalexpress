@@ -55,13 +55,22 @@ class CreateOrderForm(forms.Form):
     phone2 = forms.CharField(max_length=20, required=False, label='Телефон #2')
 
     debt = forms.DecimalField(min_value=0, required=False, decimal_places=2, max_digits=7, label='Долг')
-    status = forms.ChoiceField(choices=Order.Status.choices, initial=Order.Status.berildi, label='Статус')
+    shipping_method = forms.ChoiceField(
+        choices=Order.ShippingMethod.choices,
+        initial=Order.ShippingMethod.AVIA,
+        label='Тип отправки',
+    )
+    status = forms.ChoiceField(choices=Order.Status.choices, initial=Order.Status.ACCEPTED, label='Статус')
 
     track_pending = forms.BooleanField(required=False, initial=True, label='Трек-номер пока не получен')
     track_number = forms.CharField(max_length=100, required=False, label='Трек-номер')
 
+    cargo_enabled = forms.BooleanField(required=False, initial=True, label='Добавить карго (можно позже)')
     cargo_cost = forms.DecimalField(min_value=0, required=False, decimal_places=2, max_digits=10, initial=0, label='Карго')
+    service_enabled = forms.BooleanField(required=False, initial=True, label='Добавить услугу (можно позже)')
     service_cost = forms.DecimalField(min_value=0, required=False, decimal_places=2, max_digits=10, initial=0, label='Услуга')
+    usd_rate = forms.DecimalField(min_value=0.01, required=True, decimal_places=2, max_digits=12, initial=12205, label='Курс USD')
+    rmb_rate = forms.DecimalField(min_value=0.01, required=True, decimal_places=2, max_digits=12, initial=1807, label='Курс RMB')
     description = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 3}), label='Комментарий')
 
     attachments = MultiFileField(required=False, label='Фото заказа (можно несколько)')
@@ -77,6 +86,8 @@ class CreateOrderForm(forms.Form):
         self.fields['track_number'].widget.attrs.update({'placeholder': 'Оставьте пустым, если трека пока нет'})
         self.fields['cargo_cost'].widget.attrs.update({'step': '0.01'})
         self.fields['service_cost'].widget.attrs.update({'step': '0.01'})
+        self.fields['usd_rate'].widget.attrs.update({'step': '0.01', 'placeholder': 'Например: 12205'})
+        self.fields['rmb_rate'].widget.attrs.update({'step': '0.01', 'placeholder': 'Например: 1807'})
         self.fields['debt'].widget.attrs.update({'step': '0.01'})
         self.fields['description'].widget.attrs.update({'placeholder': 'Комментарий к заказу'})
         self.fields['attachments'].widget.attrs.update(
@@ -115,8 +126,21 @@ class CreateOrderForm(forms.Form):
         elif not track_number:
             self.add_error('track_number', 'Введите трек-номер или отметьте, что трек пока не получен.')
 
-        cleaned_data['cargo_cost'] = cleaned_data.get('cargo_cost') or Decimal('0.00')
-        cleaned_data['service_cost'] = cleaned_data.get('service_cost') or Decimal('0.00')
+        cargo_enabled = bool(cleaned_data.get('cargo_enabled'))
+        service_enabled = bool(cleaned_data.get('service_enabled'))
+        cleaned_data['cargo_enabled'] = cargo_enabled
+        cleaned_data['service_enabled'] = service_enabled
+
+        cargo_cost = cleaned_data.get('cargo_cost') or Decimal('0.00')
+        service_cost = cleaned_data.get('service_cost') or Decimal('0.00')
+
+        if not cargo_enabled:
+            cargo_cost = Decimal('0.00')
+        if not service_enabled:
+            service_cost = Decimal('0.00')
+
+        cleaned_data['cargo_cost'] = cargo_cost
+        cleaned_data['service_cost'] = service_cost
 
         return cleaned_data
 
@@ -126,19 +150,24 @@ class CreateOrderForm(forms.Form):
             user=user,
             receipt_number=data['receipt_number'],
             order_date=data['order_date'],
+            shipping_method=data['shipping_method'],
             track_number=data.get('track_number') or '',
             first_name=data['first_name'],
             last_name=data.get('last_name') or '',
             phone1=data.get('phone1'),
             phone2=data.get('phone2'),
             debt=data.get('debt'),
+            cargo_enabled=data.get('cargo_enabled', True),
             cargo_cost=data.get('cargo_cost') or Decimal('0.00'),
+            service_enabled=data.get('service_enabled', True),
             service_cost=data.get('service_cost') or Decimal('0.00'),
+            usd_rate=data.get('usd_rate') or Decimal('12205.00'),
+            rmb_rate=data.get('rmb_rate') or Decimal('1807.00'),
             description=data.get('description') or '',
             status=data['status'],
         )
 
-        if order.status == Order.Status.keldi:
+        if order.status == Order.Status.ARRIVED:
             order.come = timezone.now()
 
         order.save()
@@ -171,7 +200,6 @@ class BaseOrderItemFormSet(BaseFormSet):
             return
 
         active_count = 0
-        currencies = set()
 
         for form in self.forms:
             cleaned = form.cleaned_data
@@ -213,13 +241,9 @@ class BaseOrderItemFormSet(BaseFormSet):
                 continue
 
             active_count += 1
-            currencies.add(currency)
 
         if active_count == 0:
             raise forms.ValidationError('Добавьте хотя бы один товар в заказ.')
-
-        if len(currencies) > 1:
-            raise forms.ValidationError('Во всех товарах должна быть одна валюта расчета.')
 
 
 OrderItemFormSet = formset_factory(
@@ -263,14 +287,19 @@ class ChangeOrderForm(forms.ModelForm):
         fields = [
             'receipt_number',
             'order_date',
+            'shipping_method',
             'track_number',
             'first_name',
             'last_name',
             'phone1',
             'phone2',
             'debt',
+            'cargo_enabled',
             'cargo_cost',
+            'service_enabled',
             'service_cost',
+            'usd_rate',
+            'rmb_rate',
             'description',
             'status',
         ]
@@ -289,6 +318,10 @@ class ChangeOrderForm(forms.ModelForm):
         self.fields['debt'].widget.attrs.update({'step': '0.01'})
         self.fields['cargo_cost'].widget.attrs.update({'step': '0.01'})
         self.fields['service_cost'].widget.attrs.update({'step': '0.01'})
+        self.fields['usd_rate'].widget.attrs.update({'step': '0.01', 'placeholder': 'Например: 12205'})
+        self.fields['rmb_rate'].widget.attrs.update({'step': '0.01', 'placeholder': 'Например: 1807'})
+        self.fields['cargo_enabled'].label = 'Добавить карго (можно позже)'
+        self.fields['service_enabled'].label = 'Добавить услугу (можно позже)'
         self.fields['description'].widget.attrs.update({'placeholder': 'Комментарий к заказу'})
         if instance is not None:
             self.fields['track_pending'].initial = not bool(instance.track_number)
@@ -302,5 +335,21 @@ class ChangeOrderForm(forms.ModelForm):
             cleaned_data['track_number'] = ''
         elif not track_number:
             self.add_error('track_number', 'Введите трек-номер или отметьте, что трек пока не получен.')
+
+        cargo_enabled = bool(cleaned_data.get('cargo_enabled'))
+        service_enabled = bool(cleaned_data.get('service_enabled'))
+        cleaned_data['cargo_enabled'] = cargo_enabled
+        cleaned_data['service_enabled'] = service_enabled
+
+        cargo_cost = cleaned_data.get('cargo_cost') or Decimal('0.00')
+        service_cost = cleaned_data.get('service_cost') or Decimal('0.00')
+
+        if not cargo_enabled:
+            cargo_cost = Decimal('0.00')
+        if not service_enabled:
+            service_cost = Decimal('0.00')
+
+        cleaned_data['cargo_cost'] = cargo_cost
+        cleaned_data['service_cost'] = service_cost
 
         return cleaned_data

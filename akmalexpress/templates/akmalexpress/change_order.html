@@ -59,11 +59,26 @@
                     {{ form.status }}
                     {% if form.status.errors %}<p class="field-error">{{ form.status.errors|striptags }}</p>{% endif %}
                 </div>
+                <div class="field">
+                    <label for="{{ form.shipping_method.id_for_label }}">{{ form.shipping_method.label }}</label>
+                    {{ form.shipping_method }}
+                    {% if form.shipping_method.errors %}<p class="field-error">{{ form.shipping_method.errors|striptags }}</p>{% endif %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.usd_rate.id_for_label }}">{{ form.usd_rate.label }}</label>
+                    {{ form.usd_rate }}
+                    {% if form.usd_rate.errors %}<p class="field-error">{{ form.usd_rate.errors|striptags }}</p>{% endif %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.rmb_rate.id_for_label }}">{{ form.rmb_rate.label }}</label>
+                    {{ form.rmb_rate }}
+                    {% if form.rmb_rate.errors %}<p class="field-error">{{ form.rmb_rate.errors|striptags }}</p>{% endif %}
+                </div>
             </div>
         </article>
 
         <article class="content-card form-block">
-            <h2 class="section-title form-block-title">Логистика и трек</h2>
+            <h2 class="section-title form-block-title">Карго и трек</h2>
 
             <div class="field field-inline-check">
                 <label for="{{ form.track_pending.id_for_label }}" class="toggle-check">
@@ -81,6 +96,23 @@
                     {% if form.track_number.errors %}<p class="field-error">{{ form.track_number.errors|striptags }}</p>{% endif %}
                 </div>
                 <div class="field"></div>
+
+                <div class="field field-inline-check">
+                    <label for="{{ form.cargo_enabled.id_for_label }}" class="toggle-check">
+                        {{ form.cargo_enabled }}
+                        <span class="toggle-slider" aria-hidden="true"></span>
+                        <span class="toggle-text">{{ form.cargo_enabled.label }}</span>
+                    </label>
+                    {% if form.cargo_enabled.errors %}<p class="field-error">{{ form.cargo_enabled.errors|striptags }}</p>{% endif %}
+                </div>
+                <div class="field field-inline-check">
+                    <label for="{{ form.service_enabled.id_for_label }}" class="toggle-check">
+                        {{ form.service_enabled }}
+                        <span class="toggle-slider" aria-hidden="true"></span>
+                        <span class="toggle-text">{{ form.service_enabled.label }}</span>
+                    </label>
+                    {% if form.service_enabled.errors %}<p class="field-error">{{ form.service_enabled.errors|striptags }}</p>{% endif %}
+                </div>
 
                 <div class="field">
                     <label for="{{ form.cargo_cost.id_for_label }}">{{ form.cargo_cost.label }}</label>
@@ -112,6 +144,10 @@
 (function () {
     const trackPending = document.getElementById('id_track_pending');
     const trackInput = document.getElementById('id_track_number');
+    const cargoEnabled = document.getElementById('id_cargo_enabled');
+    const cargoInput = document.getElementById('id_cargo_cost');
+    const serviceEnabled = document.getElementById('id_service_enabled');
+    const serviceInput = document.getElementById('id_service_cost');
 
     const toggleTrack = () => {
         if (!trackPending || !trackInput) return;
@@ -119,9 +155,25 @@
         if (trackPending.checked) trackInput.value = '';
     };
 
+    const toggleCost = (toggle, input) => {
+        if (!toggle || !input) return;
+        input.disabled = !toggle.checked;
+        if (!toggle.checked) input.value = '0';
+    };
+
     if (trackPending) {
         trackPending.addEventListener('change', toggleTrack);
         toggleTrack();
+    }
+
+    if (cargoEnabled) {
+        cargoEnabled.addEventListener('change', () => toggleCost(cargoEnabled, cargoInput));
+        toggleCost(cargoEnabled, cargoInput);
+    }
+
+    if (serviceEnabled) {
+        serviceEnabled.addEventListener('change', () => toggleCost(serviceEnabled, serviceInput));
+        toggleCost(serviceEnabled, serviceInput);
     }
 })();
 </script>

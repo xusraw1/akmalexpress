@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load number_format %}
 
 {% block title %}Статус заказа №{{ order.receipt_number }}{% endblock %}
 
@@ -31,7 +32,7 @@
         </div>
     </div>
 
-    <p class="section-subtitle" style="margin-top: 0.9rem;">
+    <p class="section-subtitle section-subtitle-top">
         Здесь показана основная информация по вашему заказу. Трек-номер доступен у администратора.
     </p>
 </section>
@@ -59,18 +60,18 @@
             <tr>
                 <td>{{ item.product_name }}</td>
                 <td>{{ item.product_quantity }}</td>
-                <td>{{ item.product_price|floatformat:3 }}</td>
+                <td>{{ item.product_price|money:3 }}</td>
                 <td>{{ item.product_price_currency }}</td>
-                <td><b>{{ item.get_subtotal|floatformat:2 }}</b></td>
+                <td><b>{{ item.get_subtotal|money:2 }}</b></td>
             </tr>
             {% empty %}
             {% if order.product %}
             <tr>
                 <td>{{ order.product.product_name }}</td>
                 <td>{{ order.product.product_quantity }}</td>
-                <td>{{ order.product.product_price|floatformat:3 }}</td>
+                <td>{{ order.product.product_price|money:3 }}</td>
                 <td>{{ order.product.product_price_currency }}</td>
-                <td><b>{{ order.get_total_price|floatformat:2 }}</b></td>
+                <td><b>{{ order.get_total_price|money:2 }}</b></td>
             </tr>
             {% else %}
             <tr>
@@ -91,26 +92,26 @@
     </div>
 
     <div class="table-wrap">
-        <table class="data-table kv-table" style="min-width: 520px;">
+        <table class="data-table kv-table data-table--client-pay">
             <tbody>
             <tr>
                 <td>Сумма товаров</td>
-                <td><b>{{ order.get_total_price|floatformat:2 }} {{ order.get_current }}</b></td>
+                <td><b>{{ order.get_total_price|money:2 }} {{ order.get_current }}</b></td>
             </tr>
             {% if order.is_aliexpress_only %}
             <tr>
                 <td>Итог к оплате</td>
-                <td><b>{{ order.get_final_total|floatformat:2 }} {{ order.get_current }}</b></td>
+                <td><b>{{ order.get_final_total|money:2 }} {{ order.get_current }}</b></td>
             </tr>
             {% else %}
             <tr>
                 <td>Карго + услуга</td>
-                <td>{{ order.get_extra_cost|floatformat:2 }} {{ order.get_current }}</td>
+                <td>{{ order.get_extra_cost|money:2 }} {{ order.get_current }}</td>
             </tr>
-            {% if order.status == 'end' %}
+            {% if order.status == 'arrived' %}
             <tr>
                 <td>К доплате при получении</td>
-                <td><b>{{ order.get_pickup_due|floatformat:2 }} {{ order.get_current }}</b></td>
+                <td><b>{{ order.get_pickup_due|money:2 }} {{ order.get_current }}</b></td>
             </tr>
             {% else %}
             <tr>

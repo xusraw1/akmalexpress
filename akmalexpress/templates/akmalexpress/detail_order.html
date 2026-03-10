@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load number_format %}
 
 {% block title %}Заказ №{{ order.receipt_number }} | AkmalExpress{% endblock %}
 
@@ -31,6 +32,10 @@
         <div class="meta-item">
             <strong>Валюта</strong>
             <span>{{ order.get_current }}</span>
+        </div>
+        <div class="meta-item">
+            <strong>Тип отправки</strong>
+            <span>{{ order.shipping_method }}</span>
         </div>
     </div>
 
@@ -98,7 +103,7 @@
             <tr>
                 <td>{{ item.product_name }}</td>
                 <td>{{ item.product_quantity }}</td>
-                <td>{{ item.product_price }}</td>
+                <td>{{ item.product_price|money:3 }}</td>
                 <td>{{ item.product_price_currency }}</td>
                 <td>{{ item.store }}</td>
                 <td>
@@ -106,18 +111,18 @@
                     <a href="{{ item.link }}" target="_blank" rel="noopener">Открыть</a>
                     {% else %}-{% endif %}
                 </td>
-                <td><b>{{ item.get_subtotal|floatformat:2 }}</b></td>
+                <td><b>{{ item.get_subtotal|money:2 }}</b></td>
             </tr>
             {% empty %}
             {% if order.product %}
             <tr>
                 <td>{{ order.product.product_name }}</td>
                 <td>{{ order.product.product_quantity }}</td>
-                <td>{{ order.product.product_price }}</td>
+                <td>{{ order.product.product_price|money:3 }}</td>
                 <td>{{ order.product.product_price_currency }}</td>
                 <td>{{ order.product.store }}</td>
                 <td>{% if order.product.link %}<a href="{{ order.product.link }}" target="_blank" rel="noopener">Открыть</a>{% else %}-{% endif %}</td>
-                <td><b>{{ order.get_total_price|floatformat:2 }}</b></td>
+                <td><b>{{ order.get_total_price|money:2 }}</b></td>
             </tr>
             {% else %}
             <tr>
@@ -139,7 +144,7 @@
     </div>
 
     <div class="table-wrap">
-        <table class="data-table" style="min-width: 620px;">
+        <table class="data-table data-table--finance">
             <thead>
             <tr>
                 <th>Позиция</th>
@@ -150,28 +155,28 @@
             <tbody>
             <tr>
                 <td>Себестоимость товаров</td>
-                <td>{{ order.get_total_price|floatformat:2 }}</td>
+                <td>{{ order.get_total_price|money:2 }}</td>
                 <td>{{ order.get_current }}</td>
             </tr>
             <tr>
                 <td>Карго</td>
-                <td>{{ order.cargo_cost|default_if_none:0|floatformat:2 }}</td>
+                <td>{{ order.cargo_cost|default_if_none:0|money:2 }}</td>
                 <td>{{ order.get_current }}</td>
             </tr>
             <tr>
                 <td>Услуга</td>
-                <td>{{ order.service_cost|default_if_none:0|floatformat:2 }}</td>
+                <td>{{ order.service_cost|default_if_none:0|money:2 }}</td>
                 <td>{{ order.get_current }}</td>
             </tr>
             <tr>
                 <td><b>Итоговая стоимость</b></td>
-                <td><b>{{ order.get_final_total|floatformat:2 }}</b></td>
+                <td><b>{{ order.get_final_total|money:2 }}</b></td>
                 <td><b>{{ order.get_current }}</b></td>
             </tr>
             {% if order.debt %}
             <tr>
                 <td>Долг клиента</td>
-                <td>{{ order.debt|floatformat:2 }}</td>
+                <td>{{ order.debt|money:2 }}</td>
                 <td>{{ order.get_current }}</td>
             </tr>
             {% endif %}

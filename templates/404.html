@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}404 | AkmalExpress{% endblock %}
+
+{% block content %}
+<section class="notfound-page">
+    <article class="notfound-card content-card" data-notfound-card>
+        <div class="notfound-grid">
+            <div class="notfound-main">
+                <p class="notfound-kicker">Ошибка маршрута</p>
+                <p class="notfound-code" aria-hidden="true">404</p>
+                <h1 class="section-title">Страница не найдена</h1>
+                <p class="section-subtitle">
+                    Ссылка может быть старой или введена с ошибкой. Выберите нужный раздел и продолжайте работу.
+                </p>
+
+                <div class="notfound-actions">
+                    <a href="{% url 'index' %}" class="btn-primary">На главную</a>
+                    <a href="{% url 'contacts' %}" class="btn-ghost">Контакты</a>
+                    <button type="button" class="btn-secondary" onclick="window.history.back()">Назад</button>
+                </div>
+            </div>
+
+            <aside class="notfound-side">
+                <div class="notfound-tip-wrap">
+                    <span class="notfound-tip-label">Подсказка</span>
+                    <p class="notfound-tip" id="notfoundTip">
+                        Проверьте номер квитанции или откройте поиск заказов с главной страницы.
+                    </p>
+                </div>
+
+                <div class="notfound-shortcuts">
+                    <a href="{% url 'about' %}" class="notfound-chip">О компании</a>
+                    {% if user.is_staff or user.is_superuser %}
+                    <a href="{% url 'orders' %}" class="notfound-chip">Все заказы</a>
+                    <a href="{% url 'create_order' %}" class="notfound-chip">Новый заказ</a>
+                    {% else %}
+                    <a href="{% url 'index' %}" class="notfound-chip">Поиск заказа</a>
+                    <a href="{% url 'contacts' %}" class="notfound-chip">Связаться с нами</a>
+                    {% endif %}
+                </div>
+            </aside>
+        </div>
+        <div class="notfound-glow" aria-hidden="true"></div>
+    </article>
+</section>
+
+<script>
+    (function () {
+        const card = document.querySelector('[data-notfound-card]');
+        if (!card) return;
+
+        const tip = document.getElementById('notfoundTip');
+        const tips = [
+            'Проверьте номер квитанции или откройте поиск заказов с главной страницы.',
+            'Если ссылка пришла от клиента, попросите его отправить актуальный URL.',
+            'Для быстрого перехода используйте меню справа или кнопку "На главную".'
+        ];
+
+        let tipIndex = 0;
+        if (tip) {
+            window.setInterval(() => {
+                tipIndex = (tipIndex + 1) % tips.length;
+                tip.classList.add('is-switching');
+                window.setTimeout(() => {
+                    tip.textContent = tips[tipIndex];
+                    tip.classList.remove('is-switching');
+                }, 180);
+            }, 3200);
+        }
+
+        const resetTransform = () => {
+            card.style.transform = '';
+            card.style.setProperty('--mx', '50%');
+            card.style.setProperty('--my', '50%');
+        };
+
+        card.addEventListener('pointermove', (event) => {
+            const rect = card.getBoundingClientRect();
+            const x = ((event.clientX - rect.left) / rect.width) * 100;
+            const y = ((event.clientY - rect.top) / rect.height) * 100;
+            const rotateY = (x - 50) / 14;
+            const rotateX = (50 - y) / 18;
+
+            card.style.setProperty('--mx', `${x}%`);
+            card.style.setProperty('--my', `${y}%`);
+            card.style.transform = `perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        });
+
+        card.addEventListener('pointerleave', resetTransform);
+        resetTransform();
+    })();
+</script>
+{% endblock %}

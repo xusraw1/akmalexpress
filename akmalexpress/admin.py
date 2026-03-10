@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Product, ProductDetail, Order
+from .models import Product, Order
 
 
 def superuser_admin_only(request):
@@ -18,7 +18,7 @@ class ProductAdmin(admin.ModelAdmin):
 
 
 @admin.register(Order)
-class ProductAdmin(admin.ModelAdmin):
+class OrderAdmin(admin.ModelAdmin):
     list_display = ['id', 'product', 'first_name', 'phone1', 'status']
     list_filter = ['created_at', 'updated_at', 'user']
     list_editable = ['product', 'first_name', 'phone1', 'status']

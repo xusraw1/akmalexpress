@@ -1,0 +1,85 @@
+<section class="{{ calc_class|default:'sidebar-calc' }} cargo-calc" data-cargo-calc aria-label="Калькулятор карго">
+    <h3 class="sidebar-calc__title">Калькулятор карго</h3>
+    <p class="sidebar-calc__hint">Введите сумму заказа, вес и курс USD.</p>
+    <p class="sidebar-calc__live">Авторасчет включен</p>
+
+    <form class="sidebar-calc__form" data-calc-form novalidate>
+        <div class="sidebar-calc__field">
+            <label>
+                Сумма товара (UZS)
+                <input name="amount" data-calc-input="amount" type="number" min="0" step="1" inputmode="decimal" placeholder="100000">
+            </label>
+        </div>
+        <div class="sidebar-calc__field-grid">
+            <div class="sidebar-calc__field">
+                <label>
+                    Вес (кг)
+                    <input name="weight" data-calc-input="weight" type="number" min="0" step="0.01" inputmode="decimal" placeholder="1">
+                </label>
+            </div>
+            <div class="sidebar-calc__field">
+                <label>
+                    Курс USD
+                    <input name="rate" data-calc-input="rate" type="number" min="0" step="1" inputmode="decimal" placeholder="12200" value="12200">
+                </label>
+            </div>
+        </div>
+        <button type="submit" class="btn-primary sidebar-calc__btn">Пересчитать</button>
+    </form>
+
+    <p class="sidebar-calc__error" data-calc-error hidden></p>
+
+    <div class="sidebar-calc__result" data-calc-result hidden>
+        <div class="sidebar-calc__row">
+            <span>Правило</span>
+            <b data-calc-output="rule">-</b>
+        </div>
+        <div class="sidebar-calc__row">
+            <span>Сумма в USD</span>
+            <b data-calc-output="amount-usd">0</b>
+        </div>
+        <div class="sidebar-calc__row">
+            <span>Услуга</span>
+            <b data-calc-output="service">0</b>
+        </div>
+        <div class="sidebar-calc__row">
+            <span>Тариф карго</span>
+            <b data-calc-output="cargo-rate">-</b>
+        </div>
+        <div class="sidebar-calc__row">
+            <span>Карго (USD)</span>
+            <b data-calc-output="cargo-usd">0</b>
+        </div>
+        <div class="sidebar-calc__row">
+            <span>Карго (UZS)</span>
+            <b data-calc-output="cargo-uzs">0</b>
+        </div>
+        <div class="sidebar-calc__split">
+            <div class="sidebar-calc__split-head">
+                <span>Доли доплат</span>
+            </div>
+            <div class="sidebar-calc__split-item">
+                <div class="sidebar-calc__split-line">
+                    <span>Услуга</span>
+                    <b data-calc-output="service-share">0%</b>
+                </div>
+                <div class="sidebar-calc__meter">
+                    <span class="cargo-calc__service-bar" data-calc-output="service-bar"></span>
+                </div>
+            </div>
+            <div class="sidebar-calc__split-item">
+                <div class="sidebar-calc__split-line">
+                    <span>Карго</span>
+                    <b data-calc-output="cargo-share">0%</b>
+                </div>
+                <div class="sidebar-calc__meter">
+                    <span class="cargo-calc__cargo-bar" data-calc-output="cargo-bar"></span>
+                </div>
+            </div>
+        </div>
+        <div class="sidebar-calc__row sidebar-calc__row--total">
+            <span>Итого к оплате</span>
+            <b data-calc-output="total">0</b>
+        </div>
+    </div>
+</section>

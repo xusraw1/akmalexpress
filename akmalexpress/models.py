@@ -67,11 +67,16 @@ class ProductDetail(models.Model):
 
 class Order(models.Model):
     class Status(models.TextChoices):
-        NO = 'none', 'None'
-        berildi = 'start', 'Начат'
-        yolda = 'continue', 'В пути'
-        keldi = 'end', 'Пришел'
-        force = 'force', 'Отменен'
+        ACCEPTED = 'accepted', 'Принят'
+        ORDERED = 'ordered', 'Заказан'
+        TRANSIT = 'transit', 'В пути'
+        ARRIVED = 'arrived', 'Прибыл'
+        CANCELLED = 'cancelled', 'Отмена'
+
+    class ShippingMethod(models.TextChoices):
+        AVIA = 'AVIA', 'АВИА'
+        IPOST = 'iPost', 'iPost'
+        CARGO_17994 = '17994', '17994'
 
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     # Legacy link for old orders. New orders store items in OrderItem.
@@ -79,6 +84,12 @@ class Order(models.Model):
     slug = models.SlugField(unique=True, blank=True, null=True)
     receipt_number = models.PositiveIntegerField(validators=[MaxValueValidator(1500)], verbose_name='Kvitansiya Raqam')
     order_date = models.DateField(default=timezone.now, verbose_name='Sana')
+    shipping_method = models.CharField(
+        max_length=8,
+        choices=ShippingMethod.choices,
+        default=ShippingMethod.AVIA,
+        verbose_name='Yuborish turi',
+    )
     track_number = models.CharField(max_length=100, null=True, blank=True)
     first_name = models.CharField(max_length=100, verbose_name='Mijoz Ismi')
     last_name = models.CharField(max_length=100, verbose_name='Mijoz Familiyasi', blank=True)
@@ -101,6 +112,7 @@ class Order(models.Model):
         null=True,
         verbose_name='Cargo',
     )
+    cargo_enabled = models.BooleanField(default=True, verbose_name='Cargo yoqilgan')
     service_cost = models.DecimalField(
         validators=[MinValueValidator(0.0)],
         decimal_places=2,
@@ -110,8 +122,23 @@ class Order(models.Model):
         null=True,
         verbose_name='Xizmat',
     )
+    service_enabled = models.BooleanField(default=True, verbose_name='Xizmat yoqilgan')
+    usd_rate = models.DecimalField(
+        validators=[MinValueValidator(0.0)],
+        decimal_places=2,
+        max_digits=12,
+        default=12205,
+        verbose_name='USD kursi',
+    )
+    rmb_rate = models.DecimalField(
+        validators=[MinValueValidator(0.0)],
+        decimal_places=2,
+        max_digits=12,
+        default=1807,
+        verbose_name='RMB kursi',
+    )
     description = models.TextField(max_length=500, verbose_name='Tarif', default='', blank=True)
-    status = models.CharField(max_length=8, choices=Status.choices, default=Status.NO, verbose_name='Status')
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.ACCEPTED, verbose_name='Status')
     come = models.DateTimeField(default=timezone.now, blank=True, null=True, verbose_name='Kelgan Sana')
 
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='Yaratilgan Sana')
@@ -132,6 +159,15 @@ class Order(models.Model):
         if not hasattr(self, '_cached_items'):
             self._cached_items = list(self.items.all())
         return self._cached_items
+
+    def convert_to_uzs(self, amount, currency):
+        amount_decimal = Decimal(amount or '0.00')
+        currency_code = (currency or Product.Currency.UZS).upper()
+        if currency_code == Product.Currency.USD:
+            return amount_decimal * Decimal(self.usd_rate or '0.00')
+        if currency_code == Product.Currency.RMB:
+            return amount_decimal * Decimal(self.rmb_rate or '0.00')
+        return amount_decimal
 
     @property
     def has_items(self):
@@ -154,11 +190,17 @@ class Order(models.Model):
     def get_total_price(self):
         items = self._items_cache()
         if items:
-            return sum((item.get_subtotal for item in items), Decimal('0.00'))
+            return sum(
+                (self.convert_to_uzs(item.get_subtotal, item.product_price_currency) for item in items),
+                Decimal('0.00'),
+            )
 
         if not self.product:
             return Decimal('0.00')
-        return Decimal(self.product.product_quantity) * self.product.product_price
+        return self.convert_to_uzs(
+            Decimal(self.product.product_quantity) * self.product.product_price,
+            self.product.product_price_currency,
+        )
 
     @property
     def is_aliexpress_only(self):
@@ -174,8 +216,8 @@ class Order(models.Model):
     def get_extra_cost(self):
         if self.is_aliexpress_only:
             return Decimal('0.00')
-        cargo = self.cargo_cost or Decimal('0.00')
-        service = self.service_cost or Decimal('0.00')
+        cargo = (self.cargo_cost or Decimal('0.00')) if self.cargo_enabled else Decimal('0.00')
+        service = (self.service_cost or Decimal('0.00')) if self.service_enabled else Decimal('0.00')
         return cargo + service
 
     @property
@@ -189,23 +231,13 @@ class Order(models.Model):
 
     @property
     def get_current(self):
-        items = self._items_cache()
-        if items:
-            currencies = {item.product_price_currency for item in items if item.product_price_currency}
-            if len(currencies) == 1:
-                return currencies.pop()
-            if len(currencies) > 1:
-                return 'MIX'
-
-        if self.product:
-            return self.product.product_price_currency
-        return ''
+        return Product.Currency.UZS
 
     @property
     def pricing_note(self):
         if self.is_aliexpress_only:
-            return 'AliExpress: итог берется из цены товара.'
-        return 'Не AliExpress: себестоимость + карго + услуга.'
+            return 'AliExpress: итог считается в UZS по курсу заказа.'
+        return 'Не AliExpress: себестоимость (в UZS по курсу) + карго + услуга.'
 
 
 class OrderItem(models.Model):

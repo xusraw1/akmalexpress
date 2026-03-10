@@ -1,14 +1,16 @@
+{% load static %}
 <header class="topbar">
     <div class="topbar-inner">
         <div class="topbar-left">
             <button id="sidebarToggle" class="menu-btn" type="button" aria-controls="appSidebar" aria-expanded="false">
                 <span class="sr-only">Открыть меню</span>
                 <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8"
+                        stroke-linecap="round" />
                 </svg>
             </button>
             <a href="{% url 'index' %}" class="brand-mark">
-                <span class="brand-mark__dot"></span>
+                <img src="{% static 'img/logo-header.jpg' %}" alt="AkEx" class="brand-mark__logo">
                 <span>
                     <b>AkmalExpress</b>
                     <small>cargo dashboard</small>
@@ -18,22 +20,28 @@
 
         <div class="topbar-right">
             <div class="lang-switch" aria-label="Language switch">
-                <a href="{% url 'set_language' 'ru' %}?next={{ request.get_full_path|urlencode }}" class="lang-pill {% if current_lang == 'ru' %}is-active{% endif %}">RU</a>
-                <a href="{% url 'set_language' 'uz' %}?next={{ request.get_full_path|urlencode }}" class="lang-pill {% if current_lang == 'uz' %}is-active{% endif %}">UZ</a>
+                <a href="{% url 'set_language' 'ru' %}?next={{ request.get_full_path|urlencode }}"
+                    class="lang-pill {% if current_lang == 'ru' %}is-active{% endif %}">RU</a>
+                <a href="{% url 'set_language' 'uz' %}?next={{ request.get_full_path|urlencode }}"
+                    class="lang-pill {% if current_lang == 'uz' %}is-active{% endif %}">UZ</a>
             </div>
             <a href="{% url 'index' %}" class="top-pill">Главная</a>
             <a href="{% url 'about' %}" class="top-pill">О нас</a>
             {% if user.is_staff or user.is_superuser %}
             <a href="{% url 'orders' %}" class="top-pill">Заказы</a>
+            <a href="{% url 'dispatch_orders' %}" class="top-pill">Отправка</a>
+            <a href="{% url 'panel' %}" class="top-pill">Панель</a>
             {% endif %}
 
             {% if user.is_authenticated %}
-                {% if user.is_staff or user.is_superuser %}
-                <a href="{% url 'profile' request.user %}" class="user-pill">@{{ request.user.username }}</a>
-                {% else %}
-                <span class="user-pill">@{{ request.user.username }}</span>
-                {% endif %}
-                <a href="{% url 'logout' %}" class="top-action">Выход</a>
+            {% if user.is_staff or user.is_superuser %}
+            <a href="{% url 'profile' request.user.username %}" class="user-pill">@{{ request.user.username }}</a>
+            {% else %}
+            <span class="user-pill">@{{ request.user.username }}</span>
+            {% endif %}
+            <a href="{% url 'logout' %}" class="top-action">Выход</a>
+            {% else %}
+            <a href="{% url 'panel' %}" class="top-action">Вход админа</a>
             {% endif %}
         </div>
     </div>

@@ -11,13 +11,13 @@
         </div>
     </div>
 
-    <p class="muted" style="margin-bottom: 0.85rem;">
+    <p class="muted muted-block">
         Новые модераторы автоматически получают доступ к CRUD заказов и товаров, но не могут создавать других админов.
     </p>
 
     <form method="post">
         {% csrf_token %}
-        <div style="display: grid; gap: 0.85rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+        <div class="stack-grid stack-grid-auto-220">
             <div>
                 <label for="admin-username">Никнейм</label>
                 <input required type="text" name="username" id="admin-username" placeholder="admin_user">

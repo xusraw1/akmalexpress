@@ -1,8 +1,15 @@
 <aside id="appSidebar" class="app-sidebar" aria-label="Основное меню">
     <div class="sidebar-scroll">
-        <div class="sidebar-brand">
-            <p class="sidebar-kicker">Логистика</p>
-            <h2>Панель управления</h2>
+        <div class="sidebar-brand sidebar-brand--head">
+            <div class="sidebar-brand__text">
+                <p class="sidebar-kicker">Карго</p>
+                <h2>Панель управления</h2>
+            </div>
+            <button id="sidebarCollapse" class="sidebar-collapse-btn" type="button" aria-pressed="false" aria-label="Свернуть меню" title="Свернуть меню">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="m15 6-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
         </div>
 
         <nav class="sidebar-nav">
@@ -19,6 +26,13 @@
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                 </span>
                 <span>Все заказы</span>
+            </a>
+
+            <a href="{% url 'dispatch_orders' %}" class="sidebar-link">
+                <span class="icon-wrap">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11M3 12h7M3 17h11M15 9h6v8h-6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span>Заказы на отправку</span>
             </a>
 
             <a href="{% url 'create_order' %}" class="sidebar-link">
@@ -40,7 +54,7 @@
 
             {% if user.is_authenticated %}
                 {% if user.is_staff or user.is_superuser %}
-                <a href="{% url 'profile' request.user %}" class="sidebar-link">
+                <a href="{% url 'profile' request.user.username %}" class="sidebar-link">
                     <span class="icon-wrap">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-7.5 9a7.5 7.5 0 0 1 15 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
                     </span>
@@ -52,6 +66,13 @@
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3M16 17l5-5-5-5M21 12H9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                     </span>
                     <span>Выход</span>
+                </a>
+            {% else %}
+                <a href="{% url 'panel' %}" class="sidebar-link">
+                    <span class="icon-wrap">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h4M15 8l5 4-5 4M20 12H9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                    </span>
+                    <span>Вход админа</span>
                 </a>
             {% endif %}
         </nav>

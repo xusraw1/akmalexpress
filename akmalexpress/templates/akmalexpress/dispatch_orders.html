@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load number_format %}
+
+{% block title %}Заказы на отправку | AkmalExpress{% endblock %}
+
+{% block content %}
+<section class="content-card dispatch-page">
+    <div class="section-head">
+        <div>
+            <h1 class="section-title">Заказы на отправку</h1>
+            <p class="section-subtitle">Показаны только новые заказы со статусом «Принят».</p>
+        </div>
+        <div class="dispatch-summary">
+            <article class="summary-pill">
+                <span>Заказов</span>
+                <b>{{ total_orders }}</b>
+            </article>
+            <article class="summary-pill">
+                <span>Товарных позиций</span>
+                <b>{{ total_items }}</b>
+            </article>
+        </div>
+    </div>
+
+    <section class="dispatch-stack">
+        {% for order in orders %}
+        <details class="dispatch-order-card dispatch-order-card--{{ order.status }}" data-order-card {% if forloop.first %}open{% endif %}>
+            <summary class="dispatch-order-summary">
+                <div>
+                    <a class="receipt-link receipt-link--{{ order.status }}" href="{% url 'detail_order' order.slug %}">№{{ order.receipt_number }}</a>
+                    <p class="dispatch-order-client">{{ order.first_name }} {{ order.last_name }} · {{ order.phone1 }}</p>
+                </div>
+                <div class="dispatch-order-meta">
+                    <span class="dispatch-chip">{{ order.shipping_method }}</span>
+                    <span class="dispatch-order-price">{{ order.get_final_total|money:2 }} {{ order.get_current }}</span>
+                    <span
+                        data-status-badge
+                        class="status-badge {% if order.status == 'accepted' %}status-accepted{% elif order.status == 'ordered' %}status-ordered{% elif order.status == 'transit' %}status-transit{% elif order.status == 'arrived' %}status-done{% elif order.status == 'cancelled' %}status-cancelled{% else %}status-default{% endif %}"
+                    >{{ order.get_status_display }}</span>
+                </div>
+            </summary>
+
+            <div class="dispatch-order-body">
+                <div class="dispatch-order-grid">
+                    <article class="dispatch-info-card">
+                        <h3>Основное</h3>
+                        <p><b>Квитанция:</b> №{{ order.receipt_number }}</p>
+                        <p><b>Клиент:</b> {{ order.first_name }} {{ order.last_name }}</p>
+                        <p><b>Телефон:</b> {{ order.phone1 }}</p>
+                        <p><b>Тип отправки:</b> {{ order.shipping_method }}</p>
+                        <p><b>Дата:</b> {{ order.order_date|date:"d.m.Y" }}</p>
+                    </article>
+
+                    <article class="dispatch-info-card">
+                        <h3>Цена и комментарий</h3>
+                        <p><b>Себестоимость:</b> {{ order.get_total_price|money:2 }} {{ order.get_current }}</p>
+                        <p><b>Карго + услуга:</b> {{ order.get_extra_cost|money:2 }} {{ order.get_current }}</p>
+                        <p><b>Итог:</b> {{ order.get_final_total|money:2 }} {{ order.get_current }}</p>
+                        <p><b>Описание:</b> {{ order.description|default:"-" }}</p>
+                    </article>
+
+                    <article class="dispatch-info-card">
+                        <h3>Статус</h3>
+                        <form method="post" class="dispatch-status-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="order_id" value="{{ order.id }}">
+                            <select name="status" data-status-select aria-label="Статус заказа {{ order.receipt_number }}">
+                                {% for value, label in status_choices %}
+                                <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn-secondary">Сохранить статус</button>
+                        </form>
+                    </article>
+                </div>
+
+                <article class="dispatch-info-card">
+                    <h3>Товары и ссылки</h3>
+                    <ul class="dispatch-items">
+                        {% for item in order.items.all %}
+                        <li>
+                            <span>{{ item.product_name }} × {{ item.product_quantity }}</span>
+                            {% if item.link %}
+                            <a href="{{ item.link }}" target="_blank" rel="noopener">Ссылка</a>
+                            {% endif %}
+                        </li>
+                        {% empty %}
+                        {% if order.product %}
+                        <li>
+                            <span>{{ order.product.product_name }}</span>
+                            {% if order.product.link %}
+                            <a href="{{ order.product.link }}" target="_blank" rel="noopener">Ссылка</a>
+                            {% endif %}
+                        </li>
+                        {% else %}
+                        <li><span class="muted">Нет товарных позиций</span></li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+                </article>
+
+                {% with photos=order.attachments.all %}
+                {% if photos %}
+                <article class="dispatch-info-card">
+                    <h3>Скриншоты / Фото</h3>
+                    <details class="dispatch-photos-panel">
+                        <summary class="chip-btn" data-photos-toggle data-open-label="Скрыть фото" data-closed-label="Показать фото ({{ photos|length }})">Показать фото ({{ photos|length }})</summary>
+                        <div class="dispatch-photos">
+                            {% for attachment in photos %}
+                            <a
+                                href="{{ attachment.image.url }}"
+                                class="dispatch-photo-thumb"
+                                data-lightbox-image
+                                data-lightbox-title="Фото заказа №{{ order.receipt_number }}"
+                            >
+                                <img src="{{ attachment.image.url }}" alt="Фото заказа {{ forloop.counter }}">
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </details>
+                </article>
+                {% endif %}
+                {% endwith %}
+            </div>
+        </details>
+        {% empty %}
+        <article class="content-card">
+            <p class="section-subtitle">Новых заказов нет.</p>
+        </article>
+        {% endfor %}
+    </section>
+
+    {% include 'partials/pagination.html' with page_obj=orders %}
+</section>
+
+<script>
+(function () {
+    const statusBadgeClassByCode = {
+        accepted: 'status-accepted',
+        ordered: 'status-ordered',
+        transit: 'status-transit',
+        arrived: 'status-done',
+        cancelled: 'status-cancelled',
+    };
+    const orderCardStatusClasses = Object.keys(statusBadgeClassByCode).map((code) => `dispatch-order-card--${code}`);
+
+    const applyStatusVisual = (card, badge, code, label) => {
+        orderCardStatusClasses.forEach((className) => card.classList.remove(className));
+        Object.values(statusBadgeClassByCode).forEach((className) => badge.classList.remove(className));
+        badge.classList.remove('status-default');
+
+        const cardClass = `dispatch-order-card--${code}`;
+        const badgeClass = statusBadgeClassByCode[code] || 'status-default';
+        card.classList.add(cardClass);
+        badge.classList.add(badgeClass);
+        badge.textContent = label;
+    };
+
+    document.querySelectorAll('[data-order-card]').forEach((card) => {
+        const select = card.querySelector('[data-status-select]');
+        const badge = card.querySelector('[data-status-badge]');
+        if (!select || !badge) return;
+
+        select.addEventListener('change', () => {
+            const selectedOption = select.options[select.selectedIndex];
+            const selectedLabel = selectedOption ? selectedOption.textContent.trim() : '';
+            applyStatusVisual(card, badge, select.value, selectedLabel);
+        });
+    });
+
+    document.querySelectorAll('[data-photos-toggle]').forEach((toggle) => {
+        const root = toggle.closest('details');
+        if (!root) return;
+
+        const refreshText = () => {
+            toggle.textContent = root.open
+                ? (toggle.getAttribute('data-open-label') || 'Скрыть фото')
+                : (toggle.getAttribute('data-closed-label') || 'Показать фото');
+        };
+
+        refreshText();
+        root.addEventListener('toggle', refreshText);
+    });
+})();
+</script>
+{% endblock %}

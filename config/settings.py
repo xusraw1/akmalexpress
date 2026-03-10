@@ -1,10 +1,15 @@
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 from django.core.management.utils import get_random_secret_key
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from .env file
+load_dotenv(BASE_DIR / '.env')
 
 
 def env_bool(name: str, default: bool = False) -> bool:
@@ -42,6 +47,10 @@ ALLOWED_HOSTS = env_list(
     'DJANGO_ALLOWED_HOSTS',
     '*' if DEBUG else '127.0.0.1,localhost',
 )
+if DEBUG and '*' not in ALLOWED_HOSTS:
+    # Keep local development reachable from LAN devices by default.
+    ALLOWED_HOSTS.append('*')
+
 CSRF_TRUSTED_ORIGINS = env_list('DJANGO_CSRF_TRUSTED_ORIGINS', '')
 ADMIN_URL = normalize_admin_url(os.getenv('DJANGO_ADMIN_URL', 'secure-admin/'))
 STAFF_LOGIN_URL = normalize_admin_url(os.getenv('DJANGO_STAFF_LOGIN_URL', 'staff-login/'))
@@ -57,13 +66,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'akmalexpress',
-    "crispy_forms",
-    "crispy_tailwind",
 ]
-
-CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
-
-CRISPY_TEMPLATE_PACK = "tailwind"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -99,28 +102,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
-DATABASE_ENGINE = os.getenv('DB_ENGINE', 'django.db.backends.sqlite3')
-if DATABASE_ENGINE == 'django.db.backends.sqlite3':
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.getenv('DB_NAME', str(BASE_DIR / 'db.sqlite3')),
-        }
+# Database: SQLite for local and LAN deployment.
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.getenv('DB_NAME', str(BASE_DIR / 'db.sqlite3')),
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': DATABASE_ENGINE,
-            'NAME': os.getenv('DB_NAME', 'AkmalExpress'),
-            'USER': os.getenv('DB_USER', 'postgres'),
-            'PASSWORD': os.getenv('DB_PASSWORD', ''),
-            'HOST': os.getenv('DB_HOST', 'localhost'),
-            'PORT': os.getenv('DB_PORT', '5432'),
-        }
-    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators

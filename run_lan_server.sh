@@ -43,6 +43,10 @@ get_lan_ip() {
 
 LAN_IP="$(get_lan_ip)"
 
+# Make local/LAN access work out of the box in development.
+export DJANGO_DEBUG="${DJANGO_DEBUG:-1}"
+export DJANGO_ALLOWED_HOSTS="${DJANGO_ALLOWED_HOSTS:-*}"
+
 echo "Starting AkmalExpress in LAN mode..."
 echo "Local URL:   http://127.0.0.1:${PORT}"
 if [[ -n "$LAN_IP" ]]; then
@@ -51,6 +55,7 @@ if [[ -n "$LAN_IP" ]]; then
 else
     echo "LAN IP not detected automatically."
 fi
+echo "ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}"
 echo
 
 exec "$PY_BIN" manage.py runserver "0.0.0.0:${PORT}"

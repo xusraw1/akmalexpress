@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.shortcuts import render
 from django.utils.translation import activate
 
 from .i18n import normalize_language, translate_html_content
@@ -9,11 +10,18 @@ class LanguageMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        requested_language = request.GET.get('lang')
         session_language = request.session.get('site_language')
         cookie_language = request.COOKIES.get('site_language')
+        requested_language = request.GET.get('lang')
 
-        language = normalize_language(requested_language or session_language or cookie_language or 'ru')
+        if session_language:
+            language = normalize_language(session_language)
+        elif cookie_language:
+            language = normalize_language(cookie_language)
+        elif requested_language:
+            language = normalize_language(requested_language)
+        else:
+            language = 'ru'
         request.session['site_language'] = language
         request.LANGUAGE_CODE = language
         activate(language)
@@ -45,17 +53,31 @@ class NoIndexPrivateRoutesMiddleware:
         response = self.get_response(request)
         admin_prefix = f"/{getattr(settings, 'ADMIN_URL', 'admin/')}".replace('//', '/')
         staff_login_prefix = f"/{getattr(settings, 'STAFF_LOGIN_URL', 'staff-login/')}".replace('//', '/')
+        admin_prefix_no_slash = admin_prefix.rstrip('/')
+        staff_login_prefix_no_slash = staff_login_prefix.rstrip('/')
         protected_prefixes = (
+            '/admin/',
             admin_prefix,
+            admin_prefix_no_slash,
             staff_login_prefix,
+            staff_login_prefix_no_slash,
             '/login/',
             '/logout/',
+            '/panel/',
+            '/panel',
+            '/notifications/',
             '/order/',
             '/create/',
             '/toggle_status/',
             '/delete_admin/',
             '/profile/',
         )
+
+        accepts_html = 'text/html' in (request.META.get('HTTP_ACCEPT', '') or '')
+        is_private_route = request.path.startswith(protected_prefixes)
+        if response.status_code == 404 and accepts_html and not is_private_route:
+            response = render(request, '404.html', status=404)
+
         if request.path.startswith(protected_prefixes):
             response['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
         return response

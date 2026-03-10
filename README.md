@@ -7,8 +7,7 @@
 ## Что внутри
 
 - Backend: `Django`
-- Database: `SQLite` по умолчанию (опционально `PostgreSQL` через env)
-- Forms: `django-crispy-forms` + `crispy-tailwind`
+- Database: `SQLite`
 - UI: `Tailwind CSS` + `Flowbite`
 - Адаптивный интерфейс (desktop/tablet/mobile)
 
@@ -74,7 +73,6 @@ cd akmalexpress
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-pip install django-crispy-forms crispy-tailwind
 ```
 
 ### 3) Конфигурация окружения (`.env`)
@@ -93,19 +91,7 @@ export DJANGO_SECRET_KEY='change-me-long-random-secret'
 export DJANGO_ALLOWED_HOSTS='127.0.0.1,localhost,0.0.0.0'
 export DJANGO_ADMIN_URL='secure-admin/'
 export DJANGO_STAFF_LOGIN_URL='staff-login/'
-export DB_ENGINE='django.db.backends.sqlite3'
 export DB_NAME='db.sqlite3'
-```
-
-Если нужен PostgreSQL:
-
-```bash
-export DB_ENGINE='django.db.backends.postgresql_psycopg2'
-export DB_NAME='AkmalExpress'
-export DB_USER='postgres'
-export DB_PASSWORD='your_db_password'
-export DB_HOST='localhost'
-export DB_PORT='5432'
 ```
 
 Суперпользовательская админка будет доступна не по `/admin/`, а по пути из `DJANGO_ADMIN_URL`.
@@ -237,5 +223,3 @@ find media -mindepth 1 -delete 2>/dev/null || true
 ```
 
 ---
-
-Если нужно, добавлю в README блок с `.env`-конфигом и готовым `docker-compose` для PostgreSQL + Django.

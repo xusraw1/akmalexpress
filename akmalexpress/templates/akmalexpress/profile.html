@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load number_format %}
 
 {% block title %}Профиль {{ profile.username }} | AkmalExpress{% endblock %}
 
@@ -6,16 +7,16 @@
 <section class="profile-grid">
     <article class="content-card profile-card">
         <div class="profile-avatar">{{ profile.username|first|upper }}</div>
-        <h1 class="section-title" style="margin-bottom: 0.2rem;">@{{ profile.username }}</h1>
+        <h1 class="section-title section-title-tight">@{{ profile.username }}</h1>
 
         <p class="muted">
             Должность:
             {% if profile.is_superuser %}
-                Главный админ
+            Главный админ
             {% elif profile.is_staff %}
-                Админ
+            Админ
             {% else %}
-                Пользователь
+            Пользователь
             {% endif %}
         </p>
 
@@ -30,7 +31,7 @@
             </div>
             <div class="stat-pill">
                 <span>Сумма заказов</span>
-                <b>{{ profile_total_amount|floatformat:2 }}</b>
+                <b>{{ profile_total_amount|money:2 }}</b>
             </div>
         </div>
     </article>
@@ -39,128 +40,139 @@
         <h2 class="section-title">Краткая статистика</h2>
         <p class="section-subtitle">Профиль администратора и история заказов.</p>
 
-        <div class="table-wrap" style="margin-top: 1rem;">
-            <table class="data-table" style="min-width: 560px;">
+        <div class="table-wrap table-wrap-spaced-lg">
+            <table class="data-table data-table--profile">
                 <thead>
-                <tr>
-                    <th>Показатель</th>
-                    <th>Значение</th>
-                </tr>
+                    <tr>
+                        <th>Показатель</th>
+                        <th>Значение</th>
+                    </tr>
                 </thead>
                 <tbody>
-                <tr>
-                    <td>Всего заказов</td>
-                    <td><b>{{ orders_total_count }}</b></td>
-                </tr>
-                <tr>
-                    <td>Сумма заказов</td>
-                    <td><b>{{ profile_total_amount|floatformat:2 }}</b></td>
-                </tr>
-                <tr>
-                    <td>Сумма по фильтру</td>
-                    <td><b>{{ filtered_total_amount|floatformat:2 }}</b></td>
-                </tr>
-                <tr>
-                    <td>Дата регистрации</td>
-                    <td><b>{{ profile.date_joined|date:"d.m.Y H:i" }}</b></td>
-                </tr>
+                    <tr>
+                        <td>Всего заказов</td>
+                        <td><b>{{ orders_total_count }}</b></td>
+                    </tr>
+                    <tr>
+                        <td>Сумма заказов</td>
+                        <td><b>{{ profile_total_amount|money:2 }}</b></td>
+                    </tr>
+                    <tr>
+                        <td>Сумма по фильтру</td>
+                        <td><b>{{ filtered_total_amount|money:2 }}</b></td>
+                    </tr>
+                    <tr>
+                        <td>Дата регистрации</td>
+                        <td><b>{{ profile.date_joined|date:"d.m.Y H:i" }}</b></td>
+                    </tr>
                 </tbody>
             </table>
         </div>
     </article>
 </section>
 
+{% if profile_track_notice_count %}
+<section class="content-card alert-card">
+    <div class="section-head">
+        <div>
+            <h2 class="section-title section-title-with-icon">
+                <span class="section-title-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.72 3h16.92a2 2 0 0 0 1.72-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path>
+                        <path d="M12 9v4"></path>
+                        <path d="M12 17h.01"></path>
+                    </svg>
+                </span>
+                Заказы без трек-номера
+            </h2>
+            <p class="section-subtitle">{{ profile_track_notice_count }} заказ(ов) старше 2 дней без трек-номера. Добавьте
+                трек для отслеживания.</p>
+        </div>
+    </div>
+    <ul class="reminder-list reminder-list--profile">
+        {% for order in profile_track_notice_page %}
+        <li>
+            <span>
+                <a class="receipt-link receipt-link--{{ order.status }}" href="{% url 'detail_order' order.slug %}">№{{ order.receipt_number }}</a>
+                — {{ order.first_name }} {{ order.last_name }}
+                · {{ order.order_date|date:"d.m.Y" }}
+                · {{ order.get_status_display }} · @{{ order.user }}
+            </span>
+            <a class="action-edit" href="{% url 'change_order' order.slug %}">Добавить трек</a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% include 'partials/pagination.html' with page_obj=profile_track_notice_page page_param='notice_page' %}
+</section>
+{% endif %}
+
 <section class="content-card">
     <div class="section-head">
         <div>
             <h2 class="section-title">Заказы пользователя @{{ profile }}</h2>
-            <p class="section-subtitle">Всего: {{ orders_total_count }} | После фильтра: {{ orders.paginator.count }}</p>
+            <p class="section-subtitle">Всего: {{ orders_total_count }} | После фильтра: {{ orders.paginator.count }}
+            </p>
+        </div>
+        <div class="inline-actions inline-actions--excel">
+            <a class="action-print" href="{% url 'profile_export_excel' profile.username %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}">Скачать Excel</a>
+            <form method="post" enctype="multipart/form-data" action="{% url 'profile_import_excel' profile.username %}" class="excel-upload-form">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <div class="file-picker file-picker--compact" data-file-picker>
+                    <input class="excel-file-input" type="file" name="excel_file" id="profile-excel-file" accept=".xlsx" data-file-input required>
+                    <label class="file-picker__button" for="profile-excel-file">Выбрать файл</label>
+                    <span class="file-picker__name" data-file-name>Файл не выбран</span>
+                </div>
+                <button type="submit" class="action-edit">Загрузить Excel</button>
+            </form>
         </div>
     </div>
-
-    <form method="get" class="profile-filter-bar">
-        <div class="profile-filter-field">
-            <label for="profile-search">Поиск</label>
-            <input id="profile-search" type="search" name="search" value="{{ filters.search }}" placeholder="Квитанция, клиент, товар">
-        </div>
-        <div class="profile-filter-field">
-            <label for="profile-status">Статус</label>
-            <select id="profile-status" name="status">
-                <option value="">Все статусы</option>
-                {% for value, label in status_choices %}
-                <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="profile-filter-field">
-            <label for="profile-sort">Сортировка</label>
-            <select id="profile-sort" name="sort">
-                <option value="date_desc" {% if filters.sort == 'date_desc' %}selected{% endif %}>По дате (новые)</option>
-                <option value="date_asc" {% if filters.sort == 'date_asc' %}selected{% endif %}>По дате (старые)</option>
-                <option value="receipt_desc" {% if filters.sort == 'receipt_desc' %}selected{% endif %}>По квитанции (убывание)</option>
-                <option value="receipt_asc" {% if filters.sort == 'receipt_asc' %}selected{% endif %}>По квитанции (возрастание)</option>
-                <option value="status_asc" {% if filters.sort == 'status_asc' %}selected{% endif %}>По статусу (А-Я)</option>
-                <option value="status_desc" {% if filters.sort == 'status_desc' %}selected{% endif %}>По статусу (Я-А)</option>
-            </select>
-        </div>
-        <div class="profile-filter-field">
-            <label for="profile-date-from">Дата с</label>
-            <input id="profile-date-from" type="date" name="date_from" value="{{ filters.date_from }}">
-        </div>
-        <div class="profile-filter-field">
-            <label for="profile-date-to">Дата по</label>
-            <input id="profile-date-to" type="date" name="date_to" value="{{ filters.date_to }}">
-        </div>
-        <div class="profile-filter-actions">
-            <button type="submit" class="btn-primary">Применить</button>
-            <a href="{% url 'profile' profile.username %}" class="btn-ghost">Сброс</a>
-        </div>
-    </form>
 
     <div class="table-wrap">
         <table class="data-table">
             <thead>
-            <tr>
-                <th>Квитанция</th>
-                <th>Клиент</th>
-                <th>Продукт</th>
-                <th>Дата</th>
-                <th>Статус</th>
-                <th>Итог</th>
-                <th>Телефон</th>
-                <th>Админ</th>
-                {% if request.user.is_staff or request.user.is_superuser %}
-                <th>Действия</th>
-                {% endif %}
-            </tr>
+                <tr>
+                    <th>Квитанция</th>
+                    <th>Клиент</th>
+                    <th>Продукт</th>
+                    <th>Дата</th>
+                    <th>Статус</th>
+                    <th>Итог</th>
+                    <th>Телефон</th>
+                    <th>Админ</th>
+                    {% if request.user.is_staff or request.user.is_superuser %}
+                    <th>Действия</th>
+                    {% endif %}
+                </tr>
             </thead>
             <tbody>
-            {% for order in orders %}
-            <tr>
-                <td>
-                    <a class="receipt-link" href="{% url 'detail_order' order.slug %}">№{{ order.receipt_number }}</a>
-                </td>
-                <td>{{ order.first_name }} {{ order.last_name }}</td>
-                <td>{{ order.get_display_product_name }}</td>
-                <td>{{ order.order_date|date:"d.m.Y" }}</td>
-                <td>{% include 'partials/status_badge.html' %}</td>
-                <td><b>{{ order.get_final_total|floatformat:2 }} {{ order.get_current }}</b></td>
-                <td>{{ order.phone1 }}</td>
-                <td>@{{ order.user }}</td>
-                {% if request.user.is_staff or request.user.is_superuser %}
-                <td>
-                    <div class="inline-actions">
-                        <a class="action-edit" href="{% url 'change_order' order.slug %}">Изменить</a>
-                        <a class="action-delete" href="{% url 'delete_order' order.slug %}">Удалить</a>
-                    </div>
-                </td>
-                {% endif %}
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="{% if request.user.is_staff or request.user.is_superuser %}9{% else %}8{% endif %}">По выбранным фильтрам заказы не найдены.</td>
-            </tr>
-            {% endfor %}
+                {% for order in orders %}
+                <tr>
+                    <td data-label="Квитанция">
+                        <a class="receipt-link receipt-link--{{ order.status }}" href="{% url 'detail_order' order.slug %}">№{{order.receipt_number}}</a>
+                    </td>
+                    <td data-label="Клиент">{{ order.first_name }} {{ order.last_name }}</td>
+                    <td data-label="Продукт">{{ order.get_display_product_name }}</td>
+                    <td data-label="Дата">{{ order.order_date|date:"d.m.Y" }}</td>
+                    <td data-label="Статус">{% include 'partials/status_badge.html' %}</td>
+                    <td data-label="Итог"><b>{{ order.get_final_total|money:2 }} {{ order.get_current }}</b></td>
+                    <td data-label="Телефон">{{ order.phone1 }}</td>
+                    <td data-label="Админ">@{{ order.user }}</td>
+                    {% if request.user.is_staff or request.user.is_superuser %}
+                    <td data-label="Действия">
+                        <div class="inline-actions">
+                            <a class="action-edit" href="{% url 'change_order' order.slug %}">Изменить</a>
+                            <a class="action-delete" href="{% url 'delete_order' order.slug %}">Удалить</a>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="{% if request.user.is_staff or request.user.is_superuser %}9{% else %}8{% endif %}">По
+                        выбранным фильтрам заказы не найдены.</td>
+                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>

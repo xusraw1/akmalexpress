@@ -1,43 +1,46 @@
+{% load number_format %}
 <!DOCTYPE html>
 <html lang="{{ current_lang|default:'ru' }}">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Квитанция №{{ order.receipt_number }}</title>
+    <title>Квитанция №{{ order.receipt_number }} | AkmalExpress</title>
     <style>
         :root {
-            --ink: #0f172a;
-            --muted: #475569;
-            --line: #cbd5e1;
-            --soft: #f8fafc;
+            --sheet-width: 170mm;
+            --page-margin: 3mm;
+            --sheet-padding-y: 5mm;
+            --sheet-padding-x: 5mm;
         }
 
         @page {
-            size: A4 portrait;
-            margin: 2mm;
+            size: auto;
+            margin: var(--page-margin);
         }
 
         * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         body {
-            margin: 0;
-            background: #eef2f7;
             font-family: "Segoe UI", "Arial", sans-serif;
-            color: var(--ink);
-            font-size: 15px;
-            line-height: 1.14;
-            padding: 0.12rem;
+            color: #0f172a;
+            font-size: 11pt;
+            line-height: 1.2;
+            background: #eef2f7;
+            padding: 12px;
         }
 
+        /* ── Screen-only controls ── */
         .print-actions {
-            max-width: 210mm;
-            margin: 0 auto 0.14rem;
+            max-width: var(--sheet-width);
+            margin: 0 auto 12px;
             display: flex;
             justify-content: flex-end;
-            gap: 0.45rem;
-            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .print-actions a,
@@ -46,8 +49,8 @@
             background: #fff;
             color: #0f172a;
             border-radius: 10px;
-            padding: 0.52rem 0.78rem;
-            font-size: 0.95rem;
+            padding: 10px 18px;
+            font-size: 14px;
             font-weight: 700;
             cursor: pointer;
             text-decoration: none;
@@ -59,388 +62,346 @@
             border-color: #0f766e;
         }
 
-        .receipt-sheet {
-            width: min(210mm, 100%);
+        /* ── Receipt sheet ── */
+        .receipt {
+            width: min(var(--sheet-width), 100%);
+            min-height: auto;
             margin: 0 auto;
             background: #fff;
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            padding: 3.2mm 3.4mm;
-        }
-
-        .head {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 0.4rem;
-            border-bottom: 1px solid var(--line);
-            padding-bottom: 0.2rem;
-            margin-bottom: 0.18rem;
-        }
-
-        .head h1 {
-            margin: 0;
-            font-size: 1.34rem;
-            line-height: 1.1;
-        }
-
-        .head p {
-            margin: 0.18rem 0 0;
-            color: var(--muted);
-            font-size: 0.96rem;
-            font-weight: 600;
-        }
-
-        .receipt-meta {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 0.16rem;
-            margin-bottom: 0.16rem;
-        }
-
-        .meta-item {
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            background: var(--soft);
-            padding: 0.2rem 0.26rem;
-            font-size: 0.94rem;
-        }
-
-        .meta-item b {
-            margin-right: 0.3rem;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.95rem;
-            margin-top: 0.04rem;
-        }
-
-        th,
-        td {
-            border: 1px solid var(--line);
-            padding: 0.18rem 0.22rem;
-            text-align: left;
-            vertical-align: top;
-        }
-
-        th {
-            background: var(--soft);
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        tfoot td {
-            font-weight: 700;
-            background: #f8fafc;
-        }
-
-        .delivery-note {
-            margin-top: 0.14rem;
-            border: 1px dashed #94a3b8;
-            border-radius: 8px;
-            background: #f8fafc;
-            padding: 0.16rem 0.2rem;
-            font-size: 0.96rem;
-            font-weight: 600;
-        }
-
-        .service-flags {
-            margin-top: 0.14rem;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 0.14rem;
-        }
-
-        .service-flag {
-            position: relative;
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            background: var(--soft);
-            padding: 0.16rem 0.2rem;
-            display: grid;
-            grid-template-columns: auto minmax(62px, auto) minmax(0, 1fr);
-            align-items: center;
-            gap: 0.2rem;
-            font-size: 0.92rem;
-            cursor: pointer;
-        }
-
-        .flag-box {
-            width: 16px;
-            height: 16px;
-            border-radius: 4px;
-            border: 1.4px solid #64748b;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.76rem;
-            font-weight: 800;
-            line-height: 1;
-            color: transparent;
-            background: #fff;
-        }
-
-        .service-flag.is-checked .flag-box {
-            border-color: #0f766e;
-            background: #0f766e;
-            color: #fff;
-        }
-
-        .service-check {
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
-            width: 1px;
-            height: 1px;
-        }
-
-        .service-title {
-            font-weight: 700;
-        }
-
-        .service-value {
-            border-bottom: 1px dashed #94a3b8;
-            min-height: 1rem;
-            display: inline-flex;
-            align-items: center;
-            color: #1e293b;
-            padding: 0 0.12rem;
-            font-family: "Consolas", "Menlo", monospace;
-            font-size: 0.84rem;
-        }
-
-        .service-editor {
-            margin-top: 0.16rem;
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 0.16rem;
-        }
-
-        .service-editor label {
-            display: grid;
-            gap: 0.1rem;
-            font-size: 0.84rem;
-            color: var(--muted);
-            font-weight: 700;
-        }
-
-        .service-editor input {
-            width: 100%;
             border: 1px solid #cbd5e1;
             border-radius: 8px;
-            font: inherit;
-            color: #0f172a;
-            padding: 0.16rem 0.2rem;
-            background: #fff;
+            padding: var(--sheet-padding-y) var(--sheet-padding-x);
+            display: flex;
+            flex-direction: column;
         }
 
-        .service-editor input:focus {
-            outline: none;
-            border-color: #0f766e;
-            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+        /* ── Header ── */
+        .receipt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1.5px solid #0f172a;
+            padding-bottom: 5px;
+            margin-bottom: 7px;
         }
 
-        .muted {
-            margin-top: 0.12rem;
-            color: var(--muted);
-            font-size: 0.86rem;
+        .receipt-header h1 {
+            font-size: 16pt;
+            font-weight: 800;
+            letter-spacing: -0.02em;
         }
 
-        @media (max-width: 640px) {
-            body {
-                padding: 0.3rem;
-            }
-
-            .receipt-sheet {
-                padding: 0.58rem;
-            }
-
-            .receipt-meta {
-                grid-template-columns: 1fr;
-            }
-
-            .service-flags {
-                display: grid;
-                grid-template-columns: 1fr;
-            }
-
-            .service-editor {
-                grid-template-columns: 1fr;
-            }
-
-            th,
-            td {
-                padding: 0.34rem;
-                font-size: 0.9rem;
-            }
+        .receipt-header .company {
+            font-size: 9pt;
+            color: #475569;
+            font-weight: 600;
+            margin-top: 1px;
         }
 
+        .receipt-header .date-block {
+            text-align: right;
+            font-size: 9pt;
+        }
+
+        .receipt-header .date-block b {
+            display: block;
+            font-size: 10pt;
+        }
+
+        /* ── Client info ── */
+        .client-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3px 10px;
+            margin-bottom: 6px;
+            font-size: 9.2pt;
+        }
+
+        .client-info .field {
+            display: flex;
+            gap: 4px;
+        }
+
+        .client-info .label {
+            color: #475569;
+            white-space: nowrap;
+        }
+
+        .client-info .value {
+            font-weight: 700;
+        }
+
+        /* ── Items table ── */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 6px;
+            font-size: 9.2pt;
+        }
+
+        .items-table th,
+        .items-table td {
+            border: 1px solid #94a3b8;
+            padding: 3px 5px;
+            text-align: left;
+            line-height: 1.15;
+        }
+
+        .items-table th {
+            background: #f1f5f9;
+            font-size: 8.2pt;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            font-weight: 700;
+        }
+
+        .items-table td:nth-child(2),
+        .items-table td:nth-child(3),
+        .items-table td:nth-child(4) {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .items-table th:nth-child(2),
+        .items-table th:nth-child(3),
+        .items-table th:nth-child(4) {
+            text-align: right;
+        }
+
+        .items-table tfoot td {
+            font-weight: 800;
+            background: #f8fafc;
+            font-size: 9.8pt;
+        }
+
+        .td-muted-center {
+            text-align: center;
+            color: #94a3b8;
+        }
+
+        /* ── Totals block ── */
+        .totals-block {
+            border: 1.5px solid #0f172a;
+            border-radius: 6px;
+            padding: 5px 7px;
+            margin-bottom: 7px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10.4pt;
+            font-weight: 800;
+        }
+
+        /* ── Signature lines ── */
+        .sign-section {
+            margin-top: 0;
+        }
+
+        .sign-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .sign-field {
+            min-width: 0;
+        }
+
+        .sign-label {
+            font-size: 8.2pt;
+            color: #475569;
+            margin-bottom: 2px;
+            font-weight: 600;
+        }
+
+        .sign-line {
+            border-bottom: 1.5px solid #0f172a;
+            height: 12px;
+        }
+
+        .sign-line-dashed {
+            border-bottom: 1.5px dashed #94a3b8;
+            height: 12px;
+        }
+
+        /* ── Footer ── */
+        .receipt-footer {
+            border-top: 1px solid #cbd5e1;
+            padding-top: 4px;
+            margin-top: 6px;
+            text-align: center;
+            font-size: 7.2pt;
+            color: #94a3b8;
+        }
+
+        /* ── Print styles ── */
         @media print {
             body {
                 background: #fff;
                 padding: 0;
-                font-size: 11.6pt;
-                line-height: 1.08;
             }
 
             .no-print {
                 display: none !important;
             }
 
-            .receipt-sheet {
+            .receipt {
                 border: 0;
                 border-radius: 0;
-                max-width: 100%;
                 margin: 0;
-                padding: 0.5mm 0.8mm;
+                padding: 0;
+                width: 100%;
+                min-height: auto;
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 6px;
             }
 
-            th {
-                font-size: 9.8pt;
+            .receipt {
+                width: 100%;
+                padding: 16px;
+                min-height: auto;
             }
 
-            th,
-            td {
-                padding: 1.1mm 1.4mm;
+            .client-info {
+                grid-template-columns: 1fr;
+            }
+
+            .sign-grid {
+                grid-template-columns: 1fr;
+                gap: 6px;
+            }
+
+            .sign-field {
+                max-width: 100%;
             }
         }
     </style>
 </head>
+
 <body>
-<div class="print-actions no-print">
-    <a href="{% url 'detail_order' order.slug %}">Назад к заказу</a>
-    <button type="button" onclick="window.print()">Печать</button>
-</div>
-
-<section class="receipt-sheet">
-    <header class="head">
-        <div>
-            <h1>Квитанция №{{ order.receipt_number }}</h1>
-            <p>AkmalExpress</p>
-        </div>
-        <p>Дата: {{ order.order_date|date:"d.m.Y" }}</p>
-    </header>
-
-    <div class="receipt-meta">
-        <div class="meta-item"><b>Клиент:</b> {{ order.first_name }} {{ order.last_name }}</div>
-        <div class="meta-item"><b>Телефон:</b> {{ order.phone1 }}</div>
+    <div class="print-actions no-print">
+        <a href="{% url 'detail_order' order.slug %}">← Назад к заказу</a>
+        <button type="button" onclick="window.print()">🖨 Печать</button>
     </div>
 
-    <table>
-        <thead>
-        <tr>
-            <th>Товар</th>
-            <th>Кол-во</th>
-            <th>Себестоимость</th>
-            <th>Сумма</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for item in order.items.all %}
-        <tr>
-            <td>{{ item.product_name }}</td>
-            <td>{{ item.product_quantity }}</td>
-            <td>{{ item.product_price|floatformat:3 }} {{ item.product_price_currency }}</td>
-            <td>{{ item.get_subtotal|floatformat:2 }} {{ item.product_price_currency }}</td>
-        </tr>
-        {% empty %}
-            {% if order.product %}
-            <tr>
-                <td>{{ order.product.product_name }}</td>
-                <td>{{ order.product.product_quantity }}</td>
-                <td>{{ order.product.product_price|floatformat:3 }} {{ order.product.product_price_currency }}</td>
-                <td>{{ order.get_total_price|floatformat:2 }} {{ order.product.product_price_currency }}</td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="4">Товары не указаны.</td>
-            </tr>
+    <section class="receipt">
+        <!-- Header -->
+        <header class="receipt-header">
+            <div>
+                <h1>Квитанция №{{ order.receipt_number }}</h1>
+                <div class="company">AkmalExpress</div>
+            </div>
+            <div class="date-block">
+                <span>Дата заказа</span>
+                <b>{{ order.order_date|date:"d.m.Y" }}</b>
+            </div>
+        </header>
+
+        <!-- Client Info -->
+        <div class="client-info">
+            <div class="field">
+                <span class="label">Клиент:</span>
+                <span class="value">{{ order.first_name }} {{ order.last_name }}</span>
+            </div>
+            <div class="field">
+                <span class="label">Телефон:</span>
+                <span class="value">{% if order.phone1 %}{{ order.phone1 }}{% else %}—{% endif %}</span>
+            </div>
+            {% if order.phone2 %}
+            <div class="field">
+                <span class="label">Телефон 2:</span>
+                <span class="value">{{ order.phone2 }}</span>
+            </div>
             {% endif %}
-        {% endfor %}
-        </tbody>
-        <tfoot>
-        <tr>
-            <td colspan="3">Итого себестоимость</td>
-            <td>{{ order.get_total_price|floatformat:2 }} {{ order.get_current }}</td>
-        </tr>
-        </tfoot>
-    </table>
+            {% if order.track_number %}
+            <div class="field">
+                <span class="label">Трек-номер:</span>
+                <span class="value">{{ order.track_number }}</span>
+            </div>
+            {% endif %}
+        </div>
 
-    <div class="delivery-note"><b>Общая стоимость товара:</b> {{ order.get_total_price|floatformat:2 }} {{ order.get_current }}</div>
+        <!-- Items Table -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Товар</th>
+                    <th>Кол-во</th>
+                    <th>Цена</th>
+                    <th>Сумма</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.items.all %}
+                <tr>
+                    <td>{{ item.product_name }}</td>
+                    <td>{{ item.product_quantity }}</td>
+                    <td>{{ item.product_price|money:2 }} {{ item.product_price_currency }}</td>
+                    <td>{{ item.get_subtotal|money:2 }} {{ item.product_price_currency }}</td>
+                </tr>
+                {% empty %}
+                {% if order.product %}
+                <tr>
+                    <td>{{ order.product.product_name }}</td>
+                    <td>{{ order.product.product_quantity }}</td>
+                    <td>{{ order.product.product_price|money:2 }} {{ order.product.product_price_currency }}</td>
+                    <td>{{ order.get_total_price|money:2 }} {{ order.get_current }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="td-muted-center">Товары не указаны</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3">Итого товары</td>
+                    <td>{{ order.get_total_price|money:2 }} {{ order.get_current }}</td>
+                </tr>
+            </tfoot>
+        </table>
 
-    <div class="delivery-note"><b>Доставка:</b> 30 дней +-</div>
-    <div class="service-flags" id="serviceFlags">
-        <label class="service-flag" id="cargoFlag" for="cargoCheck">
-            <input type="checkbox" id="cargoCheck" class="service-check">
-            <span class="flag-box" aria-hidden="true">✓</span>
-            <span class="service-title">Карго</span>
-            <span class="service-value" id="cargoPrintValue">________________</span>
-        </label>
-        <label class="service-flag" id="serviceFlag" for="serviceCheck">
-            <input type="checkbox" id="serviceCheck" class="service-check">
-            <span class="flag-box" aria-hidden="true">✓</span>
-            <span class="service-title">Услуга</span>
-            <span class="service-value" id="servicePrintValue">________________</span>
-        </label>
-    </div>
-    <div class="service-editor no-print">
-        <label>
-            Карго сумма (опционально)
-            <input type="text" id="cargoValueInput" placeholder="например: 120 000 UZS">
-        </label>
-        <label>
-            Услуга сумма (опционально)
-            <input type="text" id="serviceValueInput" placeholder="например: 50 000 UZS">
-        </label>
-    </div>
-    <p class="muted">Если сумма будет известна после прибытия, оставьте поле пустым.</p>
-    <p class="muted">Статус: {{ order.get_status_display }}</p>
-</section>
+        <!-- Total -->
+        <div class="totals-block">
+            <span>Общая сумма:</span>
+            <span>{{ order.get_final_total|money:2 }} {{ order.get_current }}</span>
+        </div>
 
-<script>
-(() => {
-    const cargoCheck = document.getElementById('cargoCheck');
-    const serviceCheck = document.getElementById('serviceCheck');
-    const cargoFlag = document.getElementById('cargoFlag');
-    const serviceFlag = document.getElementById('serviceFlag');
-    const cargoValueInput = document.getElementById('cargoValueInput');
-    const serviceValueInput = document.getElementById('serviceValueInput');
-    const cargoPrintValue = document.getElementById('cargoPrintValue');
-    const servicePrintValue = document.getElementById('servicePrintValue');
+        <!-- Cargo + Services signature lines -->
+        <div class="sign-section">
+            <div class="sign-grid">
+                <div class="sign-field">
+                    <div class="sign-label">Карго + Услуга</div>
+                    <div class="sign-line-dashed"></div>
+                </div>
+                <div class="sign-field">
+                    <div class="sign-label">Подпись клиента</div>
+                    <div class="sign-line"></div>
+                </div>
+                <div class="sign-field">
+                    <div class="sign-label">Подпись сотрудника</div>
+                    <div class="sign-line"></div>
+                </div>
+            </div>
+        </div>
 
-    const syncFlag = (checkEl, rowEl) => {
-        if (!checkEl || !rowEl) return;
-        rowEl.classList.toggle('is-checked', checkEl.checked);
-    };
+        <!-- Footer -->
+        <div class="receipt-footer">
+            AkmalExpress · Квитанция №{{ order.receipt_number }} · {{ order.order_date|date:"d.m.Y" }}
+        </div>
+    </section>
 
-    const syncValue = (inputEl, outputEl) => {
-        if (!outputEl) return;
-        const raw = (inputEl?.value || '').trim();
-        outputEl.textContent = raw || '________________';
-    };
-
-    const bindServiceField = (checkEl, rowEl, inputEl, outputEl) => {
-        if (checkEl) {
-            checkEl.addEventListener('change', () => syncFlag(checkEl, rowEl));
-            syncFlag(checkEl, rowEl);
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('autoprint') === '1') {
+            window.print();
         }
-        if (inputEl && outputEl) {
-            inputEl.addEventListener('input', () => syncValue(inputEl, outputEl));
-            syncValue(inputEl, outputEl);
-        }
-    };
-
-    bindServiceField(cargoCheck, cargoFlag, cargoValueInput, cargoPrintValue);
-    bindServiceField(serviceCheck, serviceFlag, serviceValueInput, servicePrintValue);
-
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('autoprint') === '1') {
-        window.print();
-    }
-})();
-</script>
+    </script>
 </body>
+
 </html>

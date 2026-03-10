@@ -1,44 +1,54 @@
 {% extends 'base.html' %}
+{% load number_format %}
 
 {% block title %}Главная | AkmalExpress{% endblock %}
 
 {% block content %}
-<section class="hero-card">
-    <h1>Поиск заказов</h1>
-    <p class="section-subtitle">
-        {% if request.user.is_staff or request.user.is_superuser %}
-        Найдите заказ по квитанции, трек-номеру, имени клиента или названию товара.
-        {% else %}
-        Найдите заказ по квитанции, имени клиента или названию товара.
-        {% endif %}
-    </p>
+<section class="search-layout is-calc-hidden" data-search-layout>
+    <article class="hero-card search-layout__main">
+        <div class="search-layout__head">
+            <h1>Поиск заказов</h1>
+            <button type="button" id="searchCalcPanelToggle" class="btn-ghost search-calc-toggle" aria-expanded="false">Показать калькулятор</button>
+        </div>
+        <p class="section-subtitle">
+            {% if request.user.is_staff or request.user.is_superuser %}
+            Найдите заказ по квитанции, трек-номеру, имени клиента или названию товара.
+            {% else %}
+            Найдите заказ по квитанции, имени клиента или названию товара.
+            {% endif %}
+        </p>
 
-    <form class="search-form" method="get">
-        <div class="search-row">
-            <label for="order-search" class="sr-only">Поиск заказа</label>
-            <input id="order-search" type="search" name="search" value="{{ search_query }}" placeholder="{% if request.user.is_staff or request.user.is_superuser %}Квитанция, трек, клиент или товар{% else %}Квитанция, клиент или товар{% endif %}">
-            <button type="submit" class="btn-primary">Поиск</button>
-        </div>
-        <div class="search-filters">
-            <div class="search-date-field">
-                <label for="search-date-from">Дата с</label>
-                <input id="search-date-from" type="date" name="date_from" value="{{ date_from }}">
+        <form class="search-form" method="get">
+            <div class="search-row">
+                <label for="order-search" class="sr-only">Поиск заказа</label>
+                <input id="order-search" type="search" name="search" value="{{ search_query }}" placeholder="{% if request.user.is_staff or request.user.is_superuser %}Квитанция, трек, клиент или товар{% else %}Квитанция, клиент или товар{% endif %}">
+                <button type="submit" class="btn-primary">Поиск</button>
             </div>
-            <div class="search-date-field">
-                <label for="search-date-to">Дата по</label>
-                <input id="search-date-to" type="date" name="date_to" value="{{ date_to }}">
+            <div class="search-filters">
+                <div class="search-date-field">
+                    <label for="search-date-from">Дата с</label>
+                    <input id="search-date-from" type="date" name="date_from" value="{{ date_from }}">
+                </div>
+                <div class="search-date-field">
+                    <label for="search-date-to">Дата по</label>
+                    <input id="search-date-to" type="date" name="date_to" value="{{ date_to }}">
+                </div>
+                <div class="search-filter-actions">
+                    {% if search_query or date_from or date_to %}
+                    <a href="{% url 'index' %}" class="btn-ghost">Сброс</a>
+                    {% endif %}
+                </div>
             </div>
-            <div class="search-filter-actions">
-                {% if search_query or date_from or date_to %}
-                <a href="{% url 'index' %}" class="btn-ghost">Сброс</a>
-                {% endif %}
-            </div>
-        </div>
-    </form>
+        </form>
+    </article>
+
+    <aside class="search-layout__calc" data-search-calc-panel hidden>
+        {% include 'partials/cargo_calculator.html' with calc_class='sidebar-calc cargo-calc--search' %}
+    </aside>
 </section>
 
 {% if orders %}
-<section class="content-card">
+<section class="content-card search-results-card">
     <div class="section-head">
         <div>
             <h2 class="section-title">Результаты поиска</h2>
@@ -46,48 +56,49 @@
         </div>
     </div>
 
-    <div class="table-wrap">
-        <table class="data-table">
-            <thead>
-            <tr>
-                <th>Квитанция</th>
-                <th>Клиент</th>
-                <th>Продукт</th>
-                <th>Дата</th>
-                <th>Статус</th>
-                <th>Итог</th>
-                <th>Телефон</th>
-                <th>Админ</th>
-                {% if request.user.is_staff or request.user.is_superuser %}
-                <th>Действия</th>
-                {% endif %}
-            </tr>
-            </thead>
-            <tbody>
-            {% for order in orders %}
-            <tr>
-                <td>
-                    <a class="receipt-link" href="{% url 'detail_order' order.slug %}">№{{ order.receipt_number }}</a>
-                </td>
-                <td>{{ order.first_name }} {{ order.last_name }}</td>
-                <td>{{ order.get_display_product_name }}</td>
-                <td>{{ order.order_date|date:"d.m.Y" }}</td>
-                <td>{% include 'partials/status_badge.html' %}</td>
-                <td><b>{{ order.get_final_total|floatformat:2 }} {{ order.get_current }}</b></td>
-                <td>{{ order.phone1 }}</td>
-                <td>@{{ order.user|default:"-" }}</td>
-                {% if request.user.is_staff or request.user.is_superuser %}
-                <td>
-                    <div class="inline-actions">
-                        <a class="action-edit" href="{% url 'change_order' order.slug %}">Изменить</a>
-                        <a class="action-delete" href="{% url 'delete_order' order.slug %}">Удалить</a>
+    <div class="search-result-stack">
+        {% for order in orders %}
+        <details class="search-order-card search-order-card--{{ order.status }}" {% if forloop.first %}open{% endif %}>
+            <summary class="search-order-summary">
+                <div class="search-order-summary__main">
+                    <a class="receipt-link receipt-link--{{ order.status }}" href="{% url 'detail_order' order.slug %}">№{{ order.receipt_number }}</a>
+                    <div>
+                        <p class="search-order-client">{{ order.first_name }} {{ order.last_name }}</p>
+                        <p class="search-order-meta">{{ order.order_date|date:"d.m.Y" }} · {{ order.phone1 }} · @{{ order.user|default:"-" }}</p>
                     </div>
-                </td>
-                {% endif %}
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+                </div>
+                <div class="search-order-summary__side">
+                    {% include 'partials/status_badge.html' %}
+                    <b class="search-order-total">{{ order.get_final_total|money:2 }} {{ order.get_current }}</b>
+                </div>
+            </summary>
+
+            <div class="search-order-body">
+                <div class="search-order-grid">
+                    <article class="search-order-info">
+                        <h3>Товар</h3>
+                        <p>{{ order.get_display_product_name }}</p>
+                    </article>
+                    <article class="search-order-info">
+                        <h3>Клиент</h3>
+                        <p>{{ order.first_name }} {{ order.last_name }}</p>
+                    </article>
+                    <article class="search-order-info">
+                        <h3>Телефон</h3>
+                        <p>{{ order.phone1 }}</p>
+                    </article>
+                </div>
+
+                <div class="inline-actions search-order-actions">
+                    <a class="action-print" href="{% url 'detail_order' order.slug %}">Открыть</a>
+                    {% if request.user.is_staff or request.user.is_superuser %}
+                    <a class="action-edit" href="{% url 'change_order' order.slug %}">Изменить</a>
+                    <a class="action-delete" href="{% url 'delete_order' order.slug %}">Удалить</a>
+                    {% endif %}
+                </div>
+            </div>
+        </details>
+        {% endfor %}
     </div>
 
     {% include 'partials/pagination.html' with page_obj=orders %}

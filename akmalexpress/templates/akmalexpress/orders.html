@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load number_format %}
 
 {% block title %}Все заказы | AkmalExpress{% endblock %}
 
@@ -9,33 +10,22 @@
             <h1 class="section-title">Все заказы</h1>
             <p class="section-subtitle">Показано: {{ orders|length }} из {{ orders.paginator.count }}</p>
         </div>
+        <div class="inline-actions inline-actions--excel">
+            <a class="action-print" href="{% url 'orders_export_excel' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}">Скачать Excel</a>
+            <form method="post" enctype="multipart/form-data" action="{% url 'orders_import_excel' %}" class="excel-upload-form">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <div class="file-picker file-picker--compact" data-file-picker>
+                    <input class="excel-file-input" type="file" name="excel_file" id="orders-excel-file" accept=".xlsx" data-file-input required>
+                    <label class="file-picker__button" for="orders-excel-file">Выбрать файл</label>
+                    <span class="file-picker__name" data-file-name>Файл не выбран</span>
+                </div>
+                <button type="submit" class="action-edit">Загрузить Excel</button>
+            </form>
+        </div>
     </div>
 
-    {% if track_reminders_count %}
-    <article class="content-card reminder-card" style="margin-bottom: 0.9rem; box-shadow: none;">
-        <h2 class="section-title" style="font-size: 1.08rem;">{{ track_reminder_title }}</h2>
-        <p class="section-subtitle">
-            У {{ track_reminders_count }} заказ(ов) нет трек-номера уже 2+ дня.
-        </p>
-        <ul class="reminder-list">
-            {% for item in track_reminders %}
-            <li>
-                <span>№{{ item.receipt_number }} | {{ item.first_name }} {{ item.last_name }} | {{ item.order_date|date:"d.m.Y" }}</span>
-                <a class="action-edit" href="{% url 'change_order' item.slug %}">Добавить трек</a>
-            </li>
-            {% endfor %}
-        </ul>
-    </article>
-    {% endif %}
-
     {% if request.user.is_superuser %}
-    <form method="get" class="filter-bar">
-        <label for="month-filter">Фильтр по месяцу</label>
-        <input id="month-filter" type="month" name="month" value="{{ selected_month }}">
-        <button type="submit" class="btn-primary">Применить</button>
-        <a href="{% url 'orders' %}" class="btn-ghost">Сброс</a>
-    </form>
-
     <div class="summary-grid">
         <article class="summary-pill">
             <span>Месяц</span>
@@ -43,7 +33,7 @@
         </article>
         <article class="summary-pill">
             <span>Сумма заказов</span>
-            <b>{{ monthly_total|floatformat:2 }}</b>
+            <b>{{ monthly_total|money:2 }}</b>
         </article>
         <article class="summary-pill">
             <span>Количество заказов</span>
@@ -52,8 +42,8 @@
     </div>
 
     {% if monthly_admin_stats %}
-    <div class="table-wrap" style="margin-top: 0.9rem;">
-        <table class="data-table" style="min-width: 540px;">
+    <div class="table-wrap table-wrap-spaced">
+        <table class="data-table data-table--summary">
             <thead>
             <tr>
                 <th>Админ</th>
@@ -66,7 +56,7 @@
             <tr>
                 <td>@{{ stat.user__username|default:"-" }}</td>
                 <td>{{ stat.orders_count }}</td>
-                <td>{{ stat.total|floatformat:2 }}</td>
+                <td>{{ stat.total|money:2 }}</td>
             </tr>
             {% endfor %}
             </tbody>
@@ -75,49 +65,50 @@
     {% endif %}
     {% endif %}
 
-    <div class="table-wrap" style="margin-top: 0.9rem;">
-        <table class="data-table">
-            <thead>
-            <tr>
-                <th>Квитанция</th>
-                <th>Клиент</th>
-                <th>Продукт</th>
-                <th>Дата</th>
-                <th>Статус</th>
-                <th>Итог</th>
-                <th>Телефон</th>
-                <th>Админ</th>
-                {% if request.user.is_staff or request.user.is_superuser %}
-                <th>Действия</th>
-                {% endif %}
-            </tr>
-            </thead>
-            <tbody>
-            {% for order in orders %}
-            <tr>
-                <td>
-                    <a class="receipt-link" href="{% url 'detail_order' order.slug %}">№{{ order.receipt_number }}</a>
-                </td>
-                <td>{{ order.first_name }} {{ order.last_name }}</td>
-                <td>{{ order.get_display_product_name }}</td>
-                <td>{{ order.order_date|date:"d.m.Y" }}</td>
-                <td>{% include 'partials/status_badge.html' %}</td>
-                <td><b>{{ order.get_final_total|floatformat:2 }} {{ order.get_current }}</b></td>
-                <td>{{ order.phone1 }}</td>
-                <td>@{{ order.user|default:"-" }}</td>
-                {% if request.user.is_staff or request.user.is_superuser %}
-                <td>
-                    <div class="inline-actions">
-                        <a class="action-print" href="{% url 'print_receipt' order.slug %}" target="_blank" rel="noopener">Печать</a>
-                        <a class="action-edit" href="{% url 'change_order' order.slug %}">Изменить</a>
-                        <a class="action-delete" href="{% url 'delete_order' order.slug %}">Удалить</a>
+    <div class="search-result-stack table-wrap-spaced">
+        {% for order in orders %}
+        <details class="search-order-card search-order-card--{{ order.status }}" {% if forloop.first %}open{% endif %}>
+            <summary class="search-order-summary">
+                <div class="search-order-summary__main">
+                    <a class="receipt-link receipt-link--{{ order.status }}" href="{% url 'detail_order' order.slug %}">№{{ order.receipt_number }}</a>
+                    <div>
+                        <p class="search-order-client">{{ order.first_name }} {{ order.last_name }}</p>
+                        <p class="search-order-meta">{{ order.order_date|date:"d.m.Y" }} · {{ order.phone1 }} · @{{ order.user|default:"-" }}</p>
                     </div>
-                </td>
-                {% endif %}
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+                </div>
+                <div class="search-order-summary__side">
+                    {% include 'partials/status_badge.html' %}
+                    <b class="search-order-total">{{ order.get_final_total|money:2 }} {{ order.get_current }}</b>
+                </div>
+            </summary>
+
+            <div class="search-order-body">
+                <div class="search-order-grid">
+                    <article class="search-order-info">
+                        <h3>Товар</h3>
+                        <p>{{ order.get_display_product_name }}</p>
+                    </article>
+                    <article class="search-order-info">
+                        <h3>Тип отправки</h3>
+                        <p>{{ order.shipping_method }}</p>
+                    </article>
+                    <article class="search-order-info">
+                        <h3>Админ</h3>
+                        <p>@{{ order.user|default:"-" }}</p>
+                    </article>
+                </div>
+
+                <div class="inline-actions search-order-actions">
+                    <a class="action-print" href="{% url 'detail_order' order.slug %}">Открыть</a>
+                    {% if request.user.is_staff or request.user.is_superuser %}
+                    <a class="action-print" href="{% url 'print_receipt' order.slug %}" target="_blank" rel="noopener">Печать</a>
+                    <a class="action-edit" href="{% url 'change_order' order.slug %}">Изменить</a>
+                    <a class="action-delete" href="{% url 'delete_order' order.slug %}">Удалить</a>
+                    {% endif %}
+                </div>
+            </div>
+        </details>
+        {% endfor %}
     </div>
 
     {% include 'partials/pagination.html' with page_obj=orders %}

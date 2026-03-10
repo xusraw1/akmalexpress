@@ -65,6 +65,21 @@
                     {{ form.status }}
                     {% if form.status.errors %}<p class="field-error">{{ form.status.errors|striptags }}</p>{% endif %}
                 </div>
+                <div class="field">
+                    <label for="{{ form.shipping_method.id_for_label }}">{{ form.shipping_method.label }}</label>
+                    {{ form.shipping_method }}
+                    {% if form.shipping_method.errors %}<p class="field-error">{{ form.shipping_method.errors|striptags }}</p>{% endif %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.usd_rate.id_for_label }}">{{ form.usd_rate.label }}</label>
+                    {{ form.usd_rate }}
+                    {% if form.usd_rate.errors %}<p class="field-error">{{ form.usd_rate.errors|striptags }}</p>{% endif %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.rmb_rate.id_for_label }}">{{ form.rmb_rate.label }}</label>
+                    {{ form.rmb_rate }}
+                    {% if form.rmb_rate.errors %}<p class="field-error">{{ form.rmb_rate.errors|striptags }}</p>{% endif %}
+                </div>
             </div>
         </article>
 
@@ -132,7 +147,7 @@
                             <label for="id_items-__prefix__-product_price_currency">Валюта</label>
                             <select name="items-__prefix__-product_price_currency" id="id_items-__prefix__-product_price_currency">
                                 <option value="USD">USD</option>
-                                <option value="UZS">UZS</option>
+                                <option value="UZS" selected>UZS</option>
                                 <option value="RMB">RMB</option>
                             </select>
                         </div>
@@ -165,11 +180,11 @@
                 </div>
             </template>
 
-            <button type="button" id="add-item-btn" class="chip-btn" style="margin-top: 0.7rem;">+ Добавить товар</button>
+            <button type="button" id="add-item-btn" class="chip-btn mt-sm">+ Добавить товар</button>
         </article>
 
         <article class="content-card form-block">
-            <h2 class="section-title form-block-title">Логистика, трек и фото</h2>
+            <h2 class="section-title form-block-title">Карго, трек и фото</h2>
             <p class="section-subtitle" id="pricing-note">
                 Для AliExpress: итог = сумма товаров. Для остальных: сумма товаров + карго + услуга.
             </p>
@@ -191,6 +206,23 @@
                 </div>
                 <div class="field"></div>
 
+                <div class="field field-inline-check">
+                    <label for="{{ form.cargo_enabled.id_for_label }}" class="toggle-check">
+                        {{ form.cargo_enabled }}
+                        <span class="toggle-slider" aria-hidden="true"></span>
+                        <span class="toggle-text">{{ form.cargo_enabled.label }}</span>
+                    </label>
+                    {% if form.cargo_enabled.errors %}<p class="field-error">{{ form.cargo_enabled.errors|striptags }}</p>{% endif %}
+                </div>
+                <div class="field field-inline-check">
+                    <label for="{{ form.service_enabled.id_for_label }}" class="toggle-check">
+                        {{ form.service_enabled }}
+                        <span class="toggle-slider" aria-hidden="true"></span>
+                        <span class="toggle-text">{{ form.service_enabled.label }}</span>
+                    </label>
+                    {% if form.service_enabled.errors %}<p class="field-error">{{ form.service_enabled.errors|striptags }}</p>{% endif %}
+                </div>
+
                 <div class="field">
                     <label for="{{ form.cargo_cost.id_for_label }}">{{ form.cargo_cost.label }}</label>
                     {{ form.cargo_cost }}
@@ -206,15 +238,28 @@
             <div class="field upload-field">
                 <label for="{{ form.attachments.id_for_label }}">{{ form.attachments.label }}</label>
                 <div class="upload-zone">
-                    {{ form.attachments }}
+                    <div class="file-picker" data-file-picker>
+                        <input
+                            class="upload-input"
+                            type="file"
+                            name="attachments"
+                            id="{{ form.attachments.id_for_label }}"
+                            accept="image/*"
+                            multiple
+                            data-file-input
+                        >
+                        <label class="file-picker__button" for="{{ form.attachments.id_for_label }}">Выбрать фото</label>
+                        <span class="file-picker__name" data-file-name>Фото не выбраны</span>
+                    </div>
                     <p class="hint" id="attachments-hint">Можно прикреплять неограниченное количество фото.</p>
+                    <p class="hint">Можно вставить фото через <b>Ctrl+V</b> прямо на этой странице.</p>
                     <p class="upload-meta" id="attachments-meta">Фото не выбраны.</p>
                     <div class="attachments-preview" id="attachments-preview"></div>
                 </div>
                 {% if form.attachments.errors %}<p class="field-error">{{ form.attachments.errors|striptags }}</p>{% endif %}
             </div>
 
-            <div class="field" style="margin-top: 0.7rem;">
+            <div class="field mt-sm">
                 <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
                 {{ form.description }}
                 {% if form.description.errors %}<p class="field-error">{{ form.description.errors|striptags }}</p>{% endif %}
@@ -232,21 +277,32 @@
 (function () {
     const trackPending = document.getElementById('id_track_pending');
     const trackInput = document.getElementById('id_track_number');
+    const cargoEnabled = document.getElementById('id_cargo_enabled');
+    const serviceEnabled = document.getElementById('id_service_enabled');
     const cargo = document.getElementById('id_cargo_cost');
     const service = document.getElementById('id_service_cost');
     const attachmentsInput = document.getElementById('id_attachments');
     const attachmentsMeta = document.getElementById('attachments-meta');
     const attachmentsPreview = document.getElementById('attachments-preview');
+    const uploadZone = document.querySelector('.upload-zone');
 
     const totalFormsInput = document.getElementById('id_items-TOTAL_FORMS');
     const itemsStack = document.getElementById('items-stack');
     const addItemBtn = document.getElementById('add-item-btn');
     const itemTemplate = document.getElementById('empty-item-template');
+    const attachmentFiles = [];
 
     const toggleTrack = () => {
         if (!trackPending || !trackInput) return;
         trackInput.disabled = trackPending.checked;
         if (trackPending.checked) trackInput.value = '';
+    };
+
+    const setCostFieldState = (toggle, input, forceDisabled = false) => {
+        if (!toggle || !input) return;
+        const enabled = toggle.checked && !forceDisabled;
+        input.disabled = !enabled;
+        if (!enabled) input.value = '0';
     };
 
     const recalcAliExpressRule = () => {
@@ -259,15 +315,31 @@
             .map((el) => el.value)
             .filter((val) => val);
 
-        if (stores.length > 0 && stores.every((s) => s === 'AliExpress')) {
-            cargo.value = '0';
-            service.value = '0';
-            cargo.setAttribute('readonly', 'readonly');
-            service.setAttribute('readonly', 'readonly');
+        const aliexpressOnly = stores.length > 0 && stores.every((s) => s === 'AliExpress');
+        if (aliexpressOnly) {
+            if (cargoEnabled && !cargoEnabled.disabled) cargoEnabled.dataset.prevChecked = cargoEnabled.checked ? '1' : '0';
+            if (serviceEnabled && !serviceEnabled.disabled) serviceEnabled.dataset.prevChecked = serviceEnabled.checked ? '1' : '0';
+            if (cargoEnabled) {
+                cargoEnabled.checked = false;
+                cargoEnabled.disabled = true;
+            }
+            if (serviceEnabled) {
+                serviceEnabled.checked = false;
+                serviceEnabled.disabled = true;
+            }
         } else {
-            cargo.removeAttribute('readonly');
-            service.removeAttribute('readonly');
+            if (cargoEnabled && cargoEnabled.disabled) {
+                cargoEnabled.disabled = false;
+                cargoEnabled.checked = (cargoEnabled.dataset.prevChecked || '1') === '1';
+            }
+            if (serviceEnabled && serviceEnabled.disabled) {
+                serviceEnabled.disabled = false;
+                serviceEnabled.checked = (serviceEnabled.dataset.prevChecked || '1') === '1';
+            }
         }
+
+        setCostFieldState(cargoEnabled, cargo, aliexpressOnly);
+        setCostFieldState(serviceEnabled, service, aliexpressOnly);
     };
 
     const bindRemoveButtons = () => {
@@ -295,9 +367,30 @@
         });
     };
 
+    const syncAttachmentInput = () => {
+        if (!attachmentsInput || typeof DataTransfer === 'undefined') return;
+        const dataTransfer = new DataTransfer();
+        attachmentFiles.forEach((file) => dataTransfer.items.add(file));
+        attachmentsInput.files = dataTransfer.files;
+    };
+
+    const mergeAttachmentFiles = (newFiles) => {
+        const signatures = new Set(attachmentFiles.map((file) => `${file.name}:${file.size}:${file.lastModified}`));
+        newFiles.forEach((file) => {
+            const isImage = (file.type || '').startsWith('image/');
+            if (!isImage) return;
+            const signature = `${file.name}:${file.size}:${file.lastModified}`;
+            if (signatures.has(signature)) return;
+            signatures.add(signature);
+            attachmentFiles.push(file);
+        });
+        syncAttachmentInput();
+        updateAttachmentPreview();
+    };
+
     const updateAttachmentPreview = () => {
         if (!attachmentsInput || !attachmentsMeta || !attachmentsPreview) return;
-        const files = Array.from(attachmentsInput.files || []);
+        const files = attachmentFiles;
 
         if (!files.length) {
             attachmentsMeta.textContent = 'Фото не выбраны.';
@@ -339,6 +432,9 @@
         const html = itemTemplate.innerHTML.replaceAll('__prefix__', total);
         itemsStack.insertAdjacentHTML('beforeend', html);
         totalFormsInput.value = total + 1;
+        const lastRow = itemsStack.querySelector('[data-item-row]:last-child');
+        const currencySelect = lastRow ? lastRow.querySelector('select[name$="-product_price_currency"]') : null;
+        if (currencySelect) currencySelect.value = 'UZS';
         bindRemoveButtons();
         bindStoreInputs();
         recalcAliExpressRule();
@@ -351,13 +447,45 @@
         toggleTrack();
     }
 
+    if (cargoEnabled) cargoEnabled.addEventListener('change', () => setCostFieldState(cargoEnabled, cargo));
+    if (serviceEnabled) serviceEnabled.addEventListener('change', () => setCostFieldState(serviceEnabled, service));
+
     if (attachmentsInput) {
-        attachmentsInput.addEventListener('change', updateAttachmentPreview);
+        attachmentsInput.addEventListener('change', () => {
+            attachmentFiles.length = 0;
+            mergeAttachmentFiles(Array.from(attachmentsInput.files || []));
+        });
         updateAttachmentPreview();
+    }
+
+    document.addEventListener('paste', (event) => {
+        if (!attachmentsInput) return;
+        const target = event.target;
+        if (target && target.closest('input:not([type="file"]), textarea, [contenteditable="true"]')) return;
+        const clipboard = event.clipboardData;
+        if (!clipboard) return;
+        const imageFiles = Array.from(clipboard.files || []).filter((file) => (file.type || '').startsWith('image/'));
+        if (!imageFiles.length) return;
+        event.preventDefault();
+        mergeAttachmentFiles(imageFiles);
+    });
+
+    if (uploadZone) {
+        uploadZone.addEventListener('click', (event) => {
+            if (!attachmentsInput) return;
+            const target = event.target;
+            if (target && target.closest('a, button, input, textarea, select, label')) return;
+            attachmentsInput.click();
+        });
     }
 
     bindRemoveButtons();
     bindStoreInputs();
+    if (attachmentsInput) {
+        attachmentFiles.push(...Array.from(attachmentsInput.files || []));
+        syncAttachmentInput();
+        updateAttachmentPreview();
+    }
     recalcAliExpressRule();
 })();
 </script>
