@@ -6,7 +6,6 @@ async-timeout==3.0.1
 attrs==25.4.0
 bandit==1.9.4
 boolean.py==5.0
-bson==0.5.10
 CacheControl==0.14.4
 certifi==2026.2.25
 chardet==3.0.4
@@ -60,6 +59,5 @@ tomli==2.4.0
 tomli_w==1.2.0
 typing_extensions==4.15.0
 urllib3==2.6.3
-websockets==9.1
 whitenoise==6.12.0
 yarl==1.23.0
