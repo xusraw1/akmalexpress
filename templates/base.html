@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+{% load static i18n %}
+<html lang="{{ current_lang|default:'ru' }}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AkmalExpress{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'output.css' %}">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/about-faq.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/dashboard.css' %}">
+</head>
+
+<body class="app-body">
+    <div class="bg-orb orb-one"></div>
+    <div class="bg-orb orb-two"></div>
+
+    {% include 'navbar.html' %}
+
+    <div class="app-shell">
+        {% include 'sidebar.html' %}
+
+        <main class="app-main">
+            {% if messages %}
+            <section class="alerts-wrap">
+                {% include 'messages.html' %}
+            </section>
+            {% endif %}
+
+            <section class="content-shell">
+                {% block content %}{% endblock content %}
+            </section>
+        </main>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" hidden></div>
+    <div class="image-lightbox" id="imageLightbox" hidden>
+        <div class="image-lightbox__panel" role="dialog" aria-modal="true" aria-label="{% trans 'Просмотр фото' %}">
+            <button type="button" class="image-lightbox__close" id="imageLightboxClose" aria-label="{% trans 'Закрыть' %}">
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                    <path d="M5 5 15 15M15 5 5 15" fill="none" stroke="currentColor" stroke-width="1.8"
+                        stroke-linecap="round" />
+                </svg>
+            </button>
+            <img id="imageLightboxImage" class="image-lightbox__image" alt="">
+            <p id="imageLightboxCaption" class="image-lightbox__caption" hidden></p>
+        </div>
+    </div>
+
+    {% trans "Развернуть меню" as i18n_expand_menu %}
+    {% trans "Свернуть меню" as i18n_collapse_menu %}
+    {% trans "Фото заказа" as i18n_order_photo %}
+    {% trans "Файл не выбран" as i18n_file_not_selected %}
+    {% trans "Выбрано файлов:" as i18n_files_selected_prefix %}
+    {% trans "Копировать" as i18n_copy_prompt %}
+    {% trans "Скопировано" as i18n_copy_success %}
+    {% trans "Ошибка" as i18n_copy_error %}
+    {% trans "Копировать" as i18n_copy_default %}
+
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+    <script>
+        (function () {
+            const i18n = {
+                expandMenu: "{{ i18n_expand_menu|escapejs }}",
+                collapseMenu: "{{ i18n_collapse_menu|escapejs }}",
+                orderPhoto: "{{ i18n_order_photo|escapejs }}",
+                fileNotSelected: "{{ i18n_file_not_selected|escapejs }}",
+                filesSelectedPrefix: "{{ i18n_files_selected_prefix|escapejs }}",
+                copyPrompt: "{{ i18n_copy_prompt|escapejs }}",
+                copySuccess: "{{ i18n_copy_success|escapejs }}",
+                copyError: "{{ i18n_copy_error|escapejs }}",
+                copyDefault: "{{ i18n_copy_default|escapejs }}",
+            };
+            const compactLayoutQuery = '(max-width: 1240px)';
+            const toggleButton = document.getElementById('sidebarToggle');
+            const sidebarCollapseButton = document.getElementById('sidebarCollapse');
+            const sidebar = document.getElementById('appSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const imageLightbox = document.getElementById('imageLightbox');
+            const imageLightboxImage = document.getElementById('imageLightboxImage');
+            const imageLightboxCaption = document.getElementById('imageLightboxCaption');
+            const imageLightboxClose = document.getElementById('imageLightboxClose');
+            const isCompactLayout = () => window.matchMedia(compactLayoutQuery).matches;
+            const sidebarCollapsedStorageKey = 'akex.sidebar.collapsed';
+
+            const setSidebarCollapsedState = (collapsed) => {
+                const shouldCollapse = Boolean(collapsed) && !isCompactLayout();
+                document.body.classList.toggle('sidebar-collapsed', shouldCollapse);
+                if (sidebarCollapseButton) {
+                    sidebarCollapseButton.setAttribute('aria-pressed', shouldCollapse ? 'true' : 'false');
+                    const label = shouldCollapse ? i18n.expandMenu : i18n.collapseMenu;
+                    sidebarCollapseButton.setAttribute('aria-label', label);
+                    sidebarCollapseButton.setAttribute('title', label);
+                }
+            };
+
+            const restoreSidebarCollapsedState = () => {
+                if (isCompactLayout()) {
+                    setSidebarCollapsedState(false);
+                    return;
+                }
+                let collapsed = false;
+                try {
+                    collapsed = window.localStorage.getItem(sidebarCollapsedStorageKey) === '1';
+                } catch (_err) {
+                    collapsed = false;
+                }
+                setSidebarCollapsedState(collapsed);
+            };
+
+            const persistSidebarCollapsedState = (collapsed) => {
+                try {
+                    window.localStorage.setItem(sidebarCollapsedStorageKey, collapsed ? '1' : '0');
+                } catch (_err) {
+                    // ignore storage errors
+                }
+            };
+
+            const closeSidebar = () => {
+                if (!sidebar) return;
+                sidebar.classList.remove('is-open');
+                if (overlay) overlay.hidden = true;
+                if (toggleButton) toggleButton.setAttribute('aria-expanded', 'false');
+                document.body.classList.remove('sidebar-open');
+            };
+
+            const closeImageLightbox = () => {
+                if (!imageLightbox) return;
+                imageLightbox.hidden = true;
+                if (imageLightboxImage) imageLightboxImage.src = '';
+                document.body.classList.remove('modal-open');
+            };
+
+            const openImageLightbox = (src, caption) => {
+                if (!imageLightbox || !imageLightboxImage) return;
+                imageLightboxImage.src = src;
+                imageLightboxImage.alt = caption || i18n.orderPhoto;
+                if (imageLightboxCaption) {
+                    imageLightboxCaption.textContent = caption || '';
+                    imageLightboxCaption.hidden = !caption;
+                }
+                imageLightbox.hidden = false;
+                document.body.classList.add('modal-open');
+            };
+
+            const openSidebar = () => {
+                if (!sidebar) return;
+                sidebar.classList.add('is-open');
+                if (overlay) overlay.hidden = !isCompactLayout();
+                if (toggleButton) toggleButton.setAttribute('aria-expanded', 'true');
+                if (isCompactLayout()) {
+                    document.body.classList.add('sidebar-open');
+                }
+            };
+
+            const toggleSidebar = () => {
+                if (!sidebar) return;
+                if (sidebar.classList.contains('is-open')) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
+            };
+
+            if (toggleButton && sidebar) {
+                toggleButton.addEventListener('click', toggleSidebar);
+            }
+
+            if (overlay) {
+                overlay.addEventListener('click', closeSidebar);
+            }
+
+            if (sidebarCollapseButton) {
+                sidebarCollapseButton.addEventListener('click', () => {
+                    if (isCompactLayout()) return;
+                    const nextCollapsed = !document.body.classList.contains('sidebar-collapsed');
+                    setSidebarCollapsedState(nextCollapsed);
+                    persistSidebarCollapsedState(nextCollapsed);
+                });
+            }
+
+            document.querySelectorAll('.sidebar-link').forEach((link) => {
+                link.addEventListener('click', (event) => {
+                    if (!isCompactLayout()) return;
+                    const href = link instanceof HTMLAnchorElement ? link.getAttribute('href') : '';
+                    closeSidebar();
+                    if (href && href !== '#') {
+                        event.preventDefault();
+                        window.location.assign(href);
+                    }
+                });
+            });
+
+            window.addEventListener('resize', () => {
+                if (!isCompactLayout()) {
+                    closeSidebar();
+                    restoreSidebarCollapsedState();
+                } else {
+                    setSidebarCollapsedState(false);
+                }
+            });
+
+            window.addEventListener('pageshow', () => {
+                closeSidebar();
+                restoreSidebarCollapsedState();
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    closeSidebar();
+                    closeImageLightbox();
+                }
+            });
+
+            if (imageLightbox) {
+                imageLightbox.addEventListener('click', (event) => {
+                    if (event.target === imageLightbox) {
+                        closeImageLightbox();
+                    }
+                });
+            }
+
+            if (imageLightboxClose) {
+                imageLightboxClose.addEventListener('click', closeImageLightbox);
+            }
+
+            document.querySelectorAll('[data-lightbox-image]').forEach((trigger) => {
+                trigger.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    const src = trigger.getAttribute('href');
+                    const caption = trigger.getAttribute('data-lightbox-title') || '';
+                    if (src) openImageLightbox(src, caption);
+                });
+            });
+
+            const hideAlert = (alertElement) => {
+                if (!alertElement || alertElement.dataset.hiding === '1') return;
+                alertElement.dataset.hiding = '1';
+                alertElement.classList.add('is-leaving');
+                window.setTimeout(() => {
+                    alertElement.remove();
+                }, 260);
+            };
+
+            document.querySelectorAll('[data-alert-close]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const alert = button.closest('.alert');
+                    hideAlert(alert);
+                });
+            });
+
+            document.querySelectorAll('[data-auto-dismiss="1"]').forEach((alert) => {
+                window.setTimeout(() => {
+                    hideAlert(alert);
+                }, 5000);
+            });
+
+            const formatSelectedFiles = (files) => {
+                if (!files || files.length === 0) return i18n.fileNotSelected;
+                if (files.length === 1) return files[0].name;
+                return `${i18n.filesSelectedPrefix} ${files.length}`;
+            };
+
+            document.querySelectorAll('[data-file-picker]').forEach((picker) => {
+                const input = picker.querySelector('[data-file-input]');
+                const fileName = picker.querySelector('[data-file-name]');
+                const clearButton = picker.querySelector('[data-file-clear]');
+                if (!input || !fileName) return;
+
+                const refreshLabel = () => {
+                    fileName.textContent = formatSelectedFiles(input.files);
+                    if (clearButton) {
+                        clearButton.hidden = !(input.files && input.files.length > 0);
+                    }
+                };
+
+                input.addEventListener('change', refreshLabel);
+                if (clearButton) {
+                    clearButton.addEventListener('click', () => {
+                        input.value = '';
+                        refreshLabel();
+                    });
+                }
+                refreshLabel();
+            });
+
+            const setupResponsiveTables = () => {
+                document.querySelectorAll('.data-table').forEach((table) => {
+                    const headers = Array.from(table.querySelectorAll('thead th')).map((th) =>
+                        th.textContent.replace(/\s+/g, ' ').trim()
+                    );
+                    if (!headers.length) return;
+
+                    table.querySelectorAll('tbody tr').forEach((row) => {
+                        Array.from(row.children).forEach((cell, index) => {
+                            if (!(cell instanceof HTMLTableCellElement)) return;
+                            if (!cell.dataset.label) {
+                                cell.dataset.label = headers[Math.min(index, headers.length - 1)] || '';
+                            }
+                        });
+                    });
+                });
+            };
+
+            setupResponsiveTables();
+
+            const fallbackCopyText = (value) => {
+                const ta = document.createElement('textarea');
+                ta.value = value;
+                ta.setAttribute('readonly', 'readonly');
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                ta.style.pointerEvents = 'none';
+                ta.style.top = '-9999px';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                let ok = false;
+                try {
+                    ok = document.execCommand('copy');
+                } catch (_err) {
+                    ok = false;
+                }
+                document.body.removeChild(ta);
+                return ok;
+            };
+
+            const getTextFromTarget = (target) => {
+                if (!target) return '';
+                if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+                    return String(target.value ?? '').trim();
+                }
+                return String(target.textContent ?? '').trim();
+            };
+
+            const selectTargetText = (target) => {
+                if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) {
+                    return false;
+                }
+                target.focus({ preventScroll: true });
+                target.select();
+                if (target.setSelectionRange) {
+                    target.setSelectionRange(0, String(target.value ?? '').length);
+                }
+                return true;
+            };
+
+            const copyToClipboard = async (target) => {
+                const text = getTextFromTarget(target);
+                if (!text) return false;
+
+                if (navigator.clipboard && window.isSecureContext) {
+                    try {
+                        await navigator.clipboard.writeText(text);
+                        return true;
+                    } catch (_err) {
+                        // fallback below
+                    }
+                }
+
+                if (fallbackCopyText(text)) {
+                    return true;
+                }
+
+                if (selectTargetText(target)) {
+                    try {
+                        if (document.execCommand('copy')) {
+                            return true;
+                        }
+                    } catch (_err) {
+                        // fallback below
+                    }
+                }
+
+                try {
+                    window.prompt(i18n.copyPrompt, text);
+                } catch (_err) {
+                    return false;
+                }
+                return true;
+            };
+
+            document.querySelectorAll('[data-copy-target]').forEach((button) => {
+                button.addEventListener('click', async () => {
+                    const target = document.getElementById(button.getAttribute('data-copy-target'));
+                    if (!target) return;
+
+                    try {
+                        const copied = await copyToClipboard(target);
+                        button.textContent = copied ? i18n.copySuccess : i18n.copyError;
+                        setTimeout(() => {
+                            button.textContent = i18n.copyDefault;
+                        }, 1400);
+                    } catch (error) {
+                        button.textContent = i18n.copyError;
+                        setTimeout(() => {
+                            button.textContent = i18n.copyDefault;
+                        }, 1400);
+                    }
+                });
+            });
+
+            const setupInteractiveCards = () => {
+                const cards = document.querySelectorAll('[data-interactive-card]');
+                if (!cards.length) return;
+
+                const canTilt = window.matchMedia('(pointer: fine)').matches && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+                cards.forEach((card) => {
+                    const reset = () => {
+                        card.classList.remove('is-tilting');
+                        card.style.transform = '';
+                        card.style.setProperty('--mx', '50%');
+                        card.style.setProperty('--my', '50%');
+                    };
+
+                    reset();
+                    if (!canTilt) return;
+
+                    card.addEventListener('pointermove', (event) => {
+                        const rect = card.getBoundingClientRect();
+                        const x = ((event.clientX - rect.left) / rect.width) * 100;
+                        const y = ((event.clientY - rect.top) / rect.height) * 100;
+                        const rotateY = (x - 50) / 22;
+                        const rotateX = (50 - y) / 26;
+
+                        card.classList.add('is-tilting');
+                        card.style.setProperty('--mx', `${x}%`);
+                        card.style.setProperty('--my', `${y}%`);
+                        card.style.transform = `perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                    });
+
+                    card.addEventListener('pointerleave', reset);
+                    card.addEventListener('pointercancel', reset);
+                });
+            };
+
+            const setupExchangeRateAutofill = () => {
+                const usdTargets = Array.from(
+                    document.querySelectorAll('[data-exchange-rate="usd"][data-exchange-autofill="1"], [data-calc-input="rate"]')
+                );
+                const rmbTargets = Array.from(
+                    document.querySelectorAll('[data-exchange-rate="rmb"][data-exchange-autofill="1"]')
+                );
+                if (!usdTargets.length && !rmbTargets.length) return;
+
+                const applyRate = (inputs, value) => {
+                    if (!inputs.length || !value) return;
+                    inputs.forEach((input) => {
+                        if (!(input instanceof HTMLInputElement)) return;
+                        if (document.activeElement === input) return;
+                        input.value = value;
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                        input.dispatchEvent(new Event('change', { bubbles: true }));
+                    });
+                };
+
+                fetch("{% url 'exchange_rates_api' %}", {
+                    method: 'GET',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin',
+                })
+                    .then((response) => {
+                        if (!response.ok) throw new Error('exchange_rate_unavailable');
+                        return response.json();
+                    })
+                    .then((payload) => {
+                        const usdRate = String(payload.usd_rate || '').trim();
+                        const rmbRate = String(payload.rmb_rate || '').trim();
+                        applyRate(usdTargets, usdRate);
+                        applyRate(rmbTargets, rmbRate);
+                        window.dispatchEvent(new CustomEvent('exchange-rates-updated', { detail: payload }));
+                    })
+                    .catch(() => {
+                        // keep current defaults if remote source is unavailable
+                    });
+            };
+
+            const setupClickableRows = () => {
+                document.querySelectorAll('[data-order-url]').forEach((row) => {
+                    const go = () => {
+                        const url = row.getAttribute('data-order-url');
+                        if (url) window.location.href = url;
+                    };
+
+                    row.addEventListener('click', (event) => {
+                        if (event.defaultPrevented) return;
+                        if (event.target.closest('a, button, input, select, textarea, label')) return;
+                        go();
+                    });
+
+                    row.addEventListener('keydown', (event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            go();
+                        }
+                    });
+                });
+            };
+
+            closeSidebar();
+            restoreSidebarCollapsedState();
+            setupInteractiveCards();
+            setupExchangeRateAutofill();
+            setupClickableRows();
+        })();
+    </script>
+</body>
+
+</html>

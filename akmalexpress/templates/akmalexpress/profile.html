@@ -1,0 +1,419 @@
+{% extends 'base.html' %}
+{% load number_format i18n %}
+
+{% block title %}{% blocktrans with username=profile.username %}Профиль {{ username }} | AkmalExpress{% endblocktrans %}{% endblock %}
+
+{% block content %}
+<section class="profile-grid">
+    <article class="content-card profile-card">
+        <div id="profileAvatarFrame" class="profile-avatar-frame{% if user_profile and user_profile.avatar %} has-image{% endif %}">
+            <img
+                id="profileAvatarPreview"
+                src="{% if user_profile and user_profile.avatar %}{{ user_profile.avatar.url }}{% endif %}"
+                alt="{% blocktrans with username=profile.username %}Фото профиля @{{ username }}{% endblocktrans %}"
+                class="profile-avatar profile-avatar--image"
+            >
+            <span id="profileAvatarPreviewFallback" class="profile-avatar profile-avatar--fallback">{{ profile.username|first|upper }}</span>
+        </div>
+
+        <h1 class="section-title section-title-tight">@{{ profile.username }}</h1>
+        <p class="muted">
+            {% trans "Должность:" %}
+            {% if profile.is_superuser %}
+            {% trans "Главный админ" %}
+            {% elif profile.is_staff %}
+            {% trans "Админ" %}
+            {% else %}
+            {% trans "Пользователь" %}
+            {% endif %}
+        </p>
+
+        <p class="muted">
+            {% trans "ФИО:" %}
+            {% if profile.first_name or profile.last_name %}
+            {{ profile.first_name }} {{ profile.last_name }}
+            {% else %}
+            {% trans "не заполнено" %}
+            {% endif %}
+        </p>
+
+        <div class="profile-stats">
+            <div class="stat-pill">
+                <span>{% trans "Заказы" %}</span>
+                <b>{{ orders_total_count }}</b>
+            </div>
+            <div class="stat-pill">
+                <span>{% trans "Сумма заказов" %}</span>
+                <b>{{ profile_total_amount|money:2 }}</b>
+            </div>
+        </div>
+
+        {% if request.user.is_superuser and profile.is_superuser %}
+        <div class="form-actions mt-sm">
+            <a href="{% url 'create_admin' %}" class="btn-primary profile-admin-cta">{% trans "Добавить администратора" %}</a>
+        </div>
+        {% endif %}
+    </article>
+
+    <article class="content-card profile-personal-card">
+        <h2 class="section-title">{% trans "Личные данные" %}</h2>
+        <p class="section-subtitle">{% trans "На этой странице можно изменить фото, имя, фамилию, логин и пароль." %}</p>
+
+        {% if can_edit_profile %}
+        <details class="profile-edit-accordion" id="profileEditAccordion">
+            <summary>
+                <span>{% trans "Изменить профиль" %}</span>
+                <small>{% trans "Нажмите, чтобы открыть форму" %}</small>
+            </summary>
+            <form method="post" enctype="multipart/form-data" id="profileEditForm" class="profile-edit-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_profile">
+                <input type="hidden" id="profile-require-current-password" value="{% if request.user == profile and not request.user.is_superuser %}1{% else %}0{% endif %}">
+
+                <div class="field">
+                    <label for="profile-avatar-input">{% trans "Фото профиля" %}</label>
+                    <div class="file-picker profile-avatar-picker" data-file-picker>
+                        <input
+                            id="profile-avatar-input"
+                            class="upload-input"
+                            type="file"
+                            name="avatar"
+                            accept="image/*"
+                            data-file-input
+                        >
+                        <label class="file-picker__button" for="profile-avatar-input">{% trans "Выбрать фото" %}</label>
+                        <span class="file-picker__name" data-file-name>{% trans "Файл не выбран" %}</span>
+                        <button type="button" class="file-picker__clear profile-avatar-picker__clear" data-file-clear title="{% trans 'Очистить файл' %}" aria-label="{% trans 'Очистить файл' %}" hidden>{% trans "Очистить" %}</button>
+                    </div>
+                    <p class="hint">{% trans "Поддерживаются изображения до 5MB. Предпросмотр появится сразу." %}</p>
+                    {% if user_profile and user_profile.avatar %}
+                    <div class="profile-avatar-toggle">
+                        <label class="toggle-check">
+                            <input type="checkbox" name="remove_avatar" value="1">
+                            <span class="toggle-slider" aria-hidden="true"></span>
+                            <span class="toggle-text">{% trans "Удалить текущее фото" %}</span>
+                        </label>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-grid two-col">
+                    <div class="field">
+                        <label for="profile-first-name">{% trans "Имя" %}</label>
+                        <input id="profile-first-name" type="text" name="first_name" value="{{ profile.first_name }}" maxlength="150" required>
+                    </div>
+                    <div class="field">
+                        <label for="profile-last-name">{% trans "Фамилия" %}</label>
+                        <input id="profile-last-name" type="text" name="last_name" value="{{ profile.last_name }}" maxlength="150" required>
+                    </div>
+                    <div class="field">
+                        <label for="profile-username">{% trans "Логин" %}</label>
+                        <input id="profile-username" type="text" name="username" value="{{ profile.username }}" minlength="3" maxlength="150" required>
+                    </div>
+                    <div class="field">
+                        <label for="profile-current-password">{% trans "Текущий пароль" %}</label>
+                        <input id="profile-current-password" type="password" name="current_password" minlength="6" autocomplete="current-password" placeholder="{% trans 'Нужен только при смене пароля' %}">
+                    </div>
+                    <div class="field">
+                        <label for="profile-new-password">{% trans "Новый пароль" %}</label>
+                        <input id="profile-new-password" type="password" name="new_password" minlength="6" autocomplete="new-password" placeholder="{% trans 'Оставьте пустым, если не меняете' %}">
+                    </div>
+                    <div class="field">
+                        <label for="profile-confirm-password">{% trans "Подтверждение пароля" %}</label>
+                        <input id="profile-confirm-password" type="password" name="confirm_password" minlength="6" autocomplete="new-password" placeholder="{% trans 'Повторите новый пароль' %}">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">{% trans "Сохранить профиль" %}</button>
+                </div>
+            </form>
+        </details>
+        {% else %}
+        <p class="muted">{% trans "Редактирование профиля доступно владельцу профиля и супер-администратору." %}</p>
+        {% endif %}
+
+        <div class="table-wrap table-wrap-spaced-lg">
+            <table class="data-table data-table--profile">
+                <thead>
+                    <tr>
+                        <th>{% trans "Показатель" %}</th>
+                        <th>{% trans "Значение" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{% trans "Всего заказов" %}</td>
+                        <td><b>{{ orders_total_count }}</b></td>
+                    </tr>
+                    <tr>
+                        <td>{% trans "Сумма заказов" %}</td>
+                        <td><b>{{ profile_total_amount|money:2 }}</b></td>
+                    </tr>
+                    <tr>
+                        <td>{% trans "Сумма по фильтру" %}</td>
+                        <td><b>{{ filtered_total_amount|money:2 }}</b></td>
+                    </tr>
+                    <tr>
+                        <td>{% trans "Дата регистрации" %}</td>
+                        <td><b>{{ profile.date_joined|date:"d.m.Y H:i" }}</b></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </article>
+</section>
+
+<div id="profile-orders-container">
+    {% include 'akmalexpress/partials/profile_orders_section.html' %}
+</div>
+
+{% trans "Заполните новый пароль и подтверждение." as i18n_profile_fill_password %}
+{% trans "Пароль должен быть не короче 6 символов." as i18n_profile_password_short %}
+{% trans "Пароли не совпадают." as i18n_profile_password_mismatch %}
+{% trans "Укажите текущий пароль." as i18n_profile_current_password_required %}
+{% trans "Файл не выбран" as i18n_profile_file_not_selected %}
+{% trans "Выбрано файлов:" as i18n_profile_files_selected_prefix %}
+
+<script>
+(function () {
+    const i18n = {
+        fillPassword: "{{ i18n_profile_fill_password|escapejs }}",
+        passwordShort: "{{ i18n_profile_password_short|escapejs }}",
+        passwordMismatch: "{{ i18n_profile_password_mismatch|escapejs }}",
+        currentPasswordRequired: "{{ i18n_profile_current_password_required|escapejs }}",
+        fileNotSelected: "{{ i18n_profile_file_not_selected|escapejs }}",
+        filesSelectedPrefix: "{{ i18n_profile_files_selected_prefix|escapejs }}",
+    };
+
+    const profileEditForm = document.getElementById('profileEditForm');
+    const avatarFrame = document.getElementById('profileAvatarFrame');
+    const avatarInput = document.getElementById('profile-avatar-input');
+    const avatarPreview = document.getElementById('profileAvatarPreview');
+    const removeAvatarCheckbox = profileEditForm ? profileEditForm.querySelector('input[name="remove_avatar"]') : null;
+    const currentPasswordInput = document.getElementById('profile-current-password');
+    const newPasswordInput = document.getElementById('profile-new-password');
+    const confirmPasswordInput = document.getElementById('profile-confirm-password');
+    const requireCurrentPasswordFlag = document.getElementById('profile-require-current-password');
+    const ordersContainer = document.getElementById('profile-orders-container');
+
+    const bindAvatarPreview = () => {
+        if (!avatarInput || !avatarPreview) return;
+        avatarInput.addEventListener('change', () => {
+            const file = avatarInput.files && avatarInput.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                avatarPreview.src = event.target && event.target.result ? event.target.result : '';
+                if (avatarFrame) avatarFrame.classList.add('has-image');
+                if (removeAvatarCheckbox) removeAvatarCheckbox.checked = false;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        if (removeAvatarCheckbox) {
+            removeAvatarCheckbox.addEventListener('change', () => {
+                if (!avatarFrame) return;
+                if (removeAvatarCheckbox.checked) {
+                    avatarFrame.classList.remove('has-image');
+                    return;
+                }
+                if (avatarPreview && avatarPreview.getAttribute('src')) {
+                    avatarFrame.classList.add('has-image');
+                }
+            });
+        }
+    };
+
+    const bindProfileValidation = () => {
+        if (!profileEditForm || !newPasswordInput || !confirmPasswordInput) return;
+
+        const clearPasswordValidity = () => {
+            newPasswordInput.setCustomValidity('');
+            confirmPasswordInput.setCustomValidity('');
+            if (currentPasswordInput) currentPasswordInput.setCustomValidity('');
+        };
+
+        const validatePasswordChange = () => {
+            clearPasswordValidity();
+            const newPassword = (newPasswordInput.value || '').trim();
+            const confirmPassword = (confirmPasswordInput.value || '').trim();
+            const currentPassword = (currentPasswordInput && currentPasswordInput.value) ? currentPasswordInput.value.trim() : '';
+
+            if (!newPassword && !confirmPassword) return true;
+
+            if (!newPassword || !confirmPassword) {
+                confirmPasswordInput.setCustomValidity(i18n.fillPassword);
+                return false;
+            }
+
+            if (newPassword.length < 6) {
+                newPasswordInput.setCustomValidity(i18n.passwordShort);
+                return false;
+            }
+
+            if (newPassword !== confirmPassword) {
+                confirmPasswordInput.setCustomValidity(i18n.passwordMismatch);
+                return false;
+            }
+
+            const requireCurrentPassword = requireCurrentPasswordFlag && requireCurrentPasswordFlag.value === '1';
+            if (requireCurrentPassword && currentPasswordInput && !currentPassword) {
+                currentPasswordInput.setCustomValidity(i18n.currentPasswordRequired);
+                return false;
+            }
+
+            return true;
+        };
+
+        [currentPasswordInput, newPasswordInput, confirmPasswordInput].forEach((input) => {
+            if (!input) return;
+            input.addEventListener('input', validatePasswordChange);
+        });
+
+        profileEditForm.addEventListener('submit', (event) => {
+            if (!validatePasswordChange()) {
+                event.preventDefault();
+                profileEditForm.reportValidity();
+            }
+        });
+    };
+
+    const setCustomRangeVisibility = (scopeRoot) => {
+        const root = scopeRoot || document;
+        const form = root.querySelector('[data-profile-filters]');
+        if (!form) return;
+
+        const periodSelect = form.querySelector('[data-profile-period-select]');
+        const customRangeFields = form.querySelectorAll('[data-profile-custom-range]');
+        if (!periodSelect || !customRangeFields.length) return;
+
+        const isCustom = periodSelect.value === 'custom';
+        customRangeFields.forEach((field) => {
+            field.hidden = !isCustom;
+            const input = field.querySelector('input[type="date"]');
+            if (input) {
+                input.disabled = !isCustom;
+                input.required = isCustom;
+            }
+        });
+    };
+
+    const formatSelectedFiles = (files) => {
+        if (!files || files.length === 0) return i18n.fileNotSelected;
+        if (files.length === 1) return files[0].name;
+        return `${i18n.filesSelectedPrefix} ${files.length}`;
+    };
+
+    const initFilePickers = (scopeRoot) => {
+        const root = scopeRoot || document;
+        root.querySelectorAll('[data-file-picker]').forEach((picker) => {
+            if (picker.dataset.bound === '1') return;
+            picker.dataset.bound = '1';
+
+            const input = picker.querySelector('[data-file-input]');
+            const fileName = picker.querySelector('[data-file-name]');
+            const clearButton = picker.querySelector('[data-file-clear]');
+            if (!input || !fileName) return;
+
+            const refreshLabel = () => {
+                fileName.textContent = formatSelectedFiles(input.files);
+                if (clearButton) clearButton.hidden = !(input.files && input.files.length > 0);
+            };
+
+            input.addEventListener('change', refreshLabel);
+            if (clearButton) {
+                clearButton.addEventListener('click', () => {
+                    input.value = '';
+                    refreshLabel();
+                });
+            }
+            refreshLabel();
+        });
+    };
+
+    const fetchAndReplace = (url) => {
+        if (!ordersContainer) return;
+        const targetUrl = url || window.location.pathname + window.location.search;
+        fetch(targetUrl, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+        })
+            .then((response) => response.json())
+            .then((payload) => {
+                if (!payload || !payload.html) return;
+                ordersContainer.innerHTML = payload.html;
+                bindOrdersInteractions();
+                const nextUrl = new URL(targetUrl, window.location.origin);
+                window.history.replaceState({}, '', nextUrl.pathname + nextUrl.search);
+            })
+            .catch(() => {
+                window.location.href = targetUrl;
+            });
+    };
+
+    const bindOrdersInteractions = () => {
+        if (!ordersContainer) return;
+        const filterForm = ordersContainer.querySelector('[data-profile-filters]');
+        if (!filterForm) return;
+
+        initFilePickers(ordersContainer);
+        setCustomRangeVisibility(ordersContainer);
+
+        const submitForm = () => {
+            if (typeof filterForm.reportValidity === 'function' && !filterForm.reportValidity()) {
+                return;
+            }
+            const params = new URLSearchParams(new FormData(filterForm));
+            fetchAndReplace(`${window.location.pathname}?${params.toString()}`);
+        };
+
+        filterForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            submitForm();
+        });
+
+        const instantSelectors = [
+            'select[name="status"]',
+            'select[name="period"]',
+            'select[name="sort"]',
+            'input[name="date_from"]',
+            'input[name="date_to"]',
+            'input[name="missing_track"]',
+        ];
+        instantSelectors.forEach((selector) => {
+            const control = filterForm.querySelector(selector);
+            if (!control) return;
+            control.addEventListener('change', () => {
+                setCustomRangeVisibility(ordersContainer);
+                submitForm();
+            });
+        });
+
+        ordersContainer.querySelectorAll('.pager a').forEach((link) => {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                fetchAndReplace(link.href);
+            });
+        });
+
+        ordersContainer.querySelectorAll('.pager form.page-jump').forEach((form) => {
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const params = new URLSearchParams(new FormData(form));
+                fetchAndReplace(`${window.location.pathname}?${params.toString()}`);
+            });
+        });
+    };
+
+    bindAvatarPreview();
+    bindProfileValidation();
+    bindOrdersInteractions();
+    initFilePickers(document);
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1453 545" role="img" aria-labelledby="title desc">
+  <title id="title">AkmalExpress Ex logo</title>
+  <desc id="desc">Orange Ex logotype with arrow mark on black background.</desc>
+  <rect width="1453" height="545" fill="#000000"/>
+  <polygon fill="#FA4700" points="29,282 446,130 392,242"/>
+  <polygon fill="#FA4700" points="37,322 361,315 322,394"/>
+  <text
+    x="920"
+    y="440"
+    fill="#FA4700"
+    font-size="350"
+    font-family="'Arial Black', Arial, sans-serif"
+    font-weight="900"
+    letter-spacing="2"
+  >
+    Ex
+  </text>
+</svg>

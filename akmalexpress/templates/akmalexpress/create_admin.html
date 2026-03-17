@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% load number_format i18n %}
+
+{% block title %}{% trans "Управление администраторами | AkmalExpress" %}{% endblock %}
+
+{% block content %}
+<section class="content-card admin-manage-card">
+    <div class="section-head">
+        <div>
+            <h1 class="section-title">{% trans "Управление администраторами" %}</h1>
+            <p class="section-subtitle">{% trans "Добавление, активация, деактивация и аналитика по администраторам." %}</p>
+        </div>
+    </div>
+
+    <form method="post" class="admin-create-form">
+        {% csrf_token %}
+        <div class="stack-grid stack-grid-auto-220">
+            <div>
+                <label for="admin-username">{% trans "Логин" %}</label>
+                <input required type="text" name="username" id="admin-username" minlength="3" maxlength="150" placeholder="admin_user">
+            </div>
+            <div>
+                <label for="admin-password1">{% trans "Пароль" %}</label>
+                <input required type="password" id="admin-password1" name="password1" minlength="6" placeholder="••••••••">
+            </div>
+            <div>
+                <label for="admin-password2">{% trans "Повторите пароль" %}</label>
+                <input required type="password" id="admin-password2" name="password2" minlength="6" placeholder="••••••••">
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary admin-create-btn">{% trans "Добавить администратора" %}</button>
+        </div>
+    </form>
+</section>
+
+<section class="content-card admin-filter-card">
+    <div class="section-head">
+        <div>
+            <h2 class="section-title">{% trans "Фильтры и аналитика" %}</h2>
+            <p class="section-subtitle">{% trans "Фильтруйте по статусу заказов, периоду и состоянию аккаунта." %}</p>
+        </div>
+    </div>
+
+    <form method="get" class="profile-filter-bar">
+        <div class="profile-filter-field">
+            <label for="admins-select-user">{% trans "Администратор" %}</label>
+            <select id="admins-select-user" name="admin_id">
+                <option value="all" {% if filters.admin_id == 'all' %}selected{% endif %}>{% trans "Все админы" %}</option>
+                {% for admin_user in admin_filter_users %}
+                <option value="{{ admin_user.id }}" {% if filters.admin_id == admin_user.id|stringformat:'s' %}selected{% endif %}>@{{ admin_user.username }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="profile-filter-field">
+            <label for="admins-account-status">{% trans "Статус аккаунта" %}</label>
+            <select id="admins-account-status" name="account_status">
+                {% for value, label in admin_account_status_options %}
+                <option value="{{ value }}" {% if filters.account_status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="profile-filter-field">
+            <label for="admins-order-status">{% trans "Статус заказа" %}</label>
+            <select id="admins-order-status" name="order_status">
+                {% for value, label in admin_order_status_options %}
+                <option value="{{ value }}" {% if filters.order_status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="profile-filter-field">
+            <label for="admins-period">{% trans "Период" %}</label>
+            <select id="admins-period" name="period">
+                {% for value, label in admin_period_options %}
+                <option value="{{ value }}" {% if filters.period == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="profile-filter-field">
+            <label for="admins-date-from">{% trans "Дата от" %}</label>
+            <input id="admins-date-from" type="date" name="date_from" value="{{ filters.date_from }}">
+        </div>
+        <div class="profile-filter-field">
+            <label for="admins-date-to">{% trans "Дата до" %}</label>
+            <input id="admins-date-to" type="date" name="date_to" value="{{ filters.date_to }}">
+        </div>
+        <div class="profile-filter-actions">
+            <button type="submit" class="btn-primary">{% trans "Применить" %}</button>
+            <a href="{% url 'create_admin' %}" class="btn-ghost">{% trans "Сбросить" %}</a>
+        </div>
+    </form>
+
+    <div class="summary-grid">
+        <article class="summary-pill">
+            <span>{% trans "Админов" %}</span>
+            <b>{{ admin_count }}</b>
+        </article>
+        <article class="summary-pill">
+            <span>{% trans "Обработано заказов" %}</span>
+            <b>{{ summary.processed }}</b>
+        </article>
+        <article class="summary-pill">
+            <span>{% trans "Выполнено" %}</span>
+            <b>{{ summary.completed }}</b>
+        </article>
+        <article class="summary-pill">
+            <span>{% trans "Отменено" %}</span>
+            <b>{{ summary.cancelled }}</b>
+        </article>
+        <article class="summary-pill">
+            <span>{% trans "В обработке" %}</span>
+            <b>{{ summary.processing }}</b>
+        </article>
+        <article class="summary-pill">
+            <span>{% trans "Общая сумма" %}</span>
+            <b>{{ summary.total_amount|money:2 }}</b>
+        </article>
+    </div>
+</section>
+
+<section class="content-card">
+    <div class="section-head">
+        <div>
+            <h2 class="section-title">{% trans "Список администраторов" %}</h2>
+            <p class="section-subtitle">{% trans "Количество заказов и финансовые показатели считаются по выбранному периоду. Нажмите на карточку, чтобы увидеть детали." %}</p>
+        </div>
+    </div>
+
+    <div class="admin-list-stack">
+        {% for row in admin_rows %}
+        <details class="admin-row-card" {% if forloop.first %}open{% endif %}>
+            <summary class="admin-row-card__summary">
+                <div class="admin-row-card__identity">
+                    <b>@{{ row.user.username }}</b>
+                    <span>
+                        {% if row.user.first_name or row.user.last_name %}
+                        {{ row.user.first_name }} {{ row.user.last_name }}
+                    {% else %}
+                        {% trans "ФИО не заполнено" %}
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="admin-row-card__chips">
+                    {% if row.user.is_active %}
+                    <span class="status-badge status-done">{% trans "Активен" %}</span>
+                    {% else %}
+                    <span class="status-badge status-cancelled">{% trans "Деактивирован" %}</span>
+                    {% endif %}
+                    <span class="admin-chip">{% trans "Заказов:" %} <b>{{ row.processed_orders }}</b></span>
+                    <span class="admin-chip">{% trans "Сумма:" %} <b>{{ row.total_amount|money:2 }}</b></span>
+                </div>
+            </summary>
+            <div class="admin-row-card__body">
+                <div class="admin-row-card__grid">
+                    <article class="admin-row-card__metric">
+                        <span>{% trans "Дата регистрации" %}</span>
+                        <b>{{ row.user.date_joined|date:"d.m.Y H:i" }}</b>
+                    </article>
+                    <article class="admin-row-card__metric">
+                        <span>{% trans "Выполнено" %}</span>
+                        <b>{{ row.completed_orders }}</b>
+                    </article>
+                    <article class="admin-row-card__metric">
+                        <span>{% trans "Отменено" %}</span>
+                        <b>{{ row.cancelled_orders }}</b>
+                    </article>
+                    <article class="admin-row-card__metric">
+                        <span>{% trans "В обработке" %}</span>
+                        <b>{{ row.processing_orders }}</b>
+                    </article>
+                    <article class="admin-row-card__metric">
+                        <span>{% trans "Последняя активность" %}</span>
+                        <b>{% if row.last_activity %}{{ row.last_activity|date:"d.m.Y H:i" }}{% else %}-{% endif %}</b>
+                    </article>
+                </div>
+                <div class="inline-actions admin-row-card__actions">
+                    {% if row.user.is_active %}
+                        <form method="post" action="{% url 'toggle_status' row.user.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="deactivate">
+                            <button type="submit" class="action-delete">{% trans "Деактивировать" %}</button>
+                        </form>
+                    {% else %}
+                        <form method="post" action="{% url 'toggle_status' row.user.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="activate">
+                            <button type="submit" class="action-edit">{% trans "Активировать" %}</button>
+                        </form>
+                    {% endif %}
+
+                    <form method="post" action="{% url 'delete_admin' row.user.id %}" onsubmit="return confirm('Удалить админа @{{ row.user.username }}?');">
+                        {% csrf_token %}
+                        <button type="submit" class="action-delete">{% trans "Удалить" %}</button>
+                    </form>
+                </div>
+            </div>
+        </details>
+        {% empty %}
+        <p class="muted">{% trans "Администраторы по текущим фильтрам не найдены." %}</p>
+        {% endfor %}
+    </div>
+</section>
+
+<script>
+(function () {
+    const periodSelect = document.getElementById('admins-period');
+    const dateFrom = document.getElementById('admins-date-from');
+    const dateTo = document.getElementById('admins-date-to');
+    if (!periodSelect || !dateFrom || !dateTo) return;
+
+    const syncCustomRange = () => {
+        const isCustom = periodSelect.value === 'custom';
+        [dateFrom, dateTo].forEach((input) => {
+            input.required = isCustom;
+            input.disabled = !isCustom;
+            const field = input.closest('.profile-filter-field');
+            if (field) field.hidden = !isCustom;
+        });
+    };
+
+    periodSelect.addEventListener('change', syncCustomRange);
+    syncCustomRange();
+})();
+</script>
+{% endblock %}

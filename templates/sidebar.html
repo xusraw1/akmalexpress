@@ -1,0 +1,102 @@
+{% load i18n %}
+<aside id="appSidebar" class="app-sidebar" aria-label="{% trans 'Основное меню' %}">
+    <div class="sidebar-scroll">
+        <div class="sidebar-brand sidebar-brand--head">
+            <div class="sidebar-brand__text">
+                <p class="sidebar-kicker">AkmalExpress</p>
+                <h2>{% trans "Панель управления" %}</h2>
+            </div>
+            <button id="sidebarCollapse" class="sidebar-collapse-btn" type="button" aria-pressed="false" aria-label="{% trans 'Свернуть меню' %}" title="{% trans 'Свернуть меню' %}">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="m15 6-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav">
+            {% if user.is_staff or user.is_superuser %}
+            <a href="{% url 'orders' %}" class="sidebar-link">
+                <span class="icon-wrap">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                </span>
+                <span>{% trans "Все заказы" %}</span>
+            </a>
+
+            <a href="{% url 'track_center' %}" class="sidebar-link">
+                <span class="icon-wrap">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8h8M7 12h10M6 16h12M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm4 0v4m6-4v4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span>{% trans "Сканер треков" %}</span>
+            </a>
+
+            <a href="{% url 'dispatch_orders' %}" class="sidebar-link">
+                <span class="icon-wrap">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11M3 12h7M3 17h11M15 9h6v8h-6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span>{% trans "Заказы на отправку" %}</span>
+            </a>
+
+            <a href="{% url 'create_order' %}" class="sidebar-link">
+                <span class="icon-wrap">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M4 12h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                </span>
+                <span>{% trans "Новый заказ + товар" %}</span>
+            </a>
+            {% endif %}
+
+            {% if user.is_authenticated %}
+                {% if user.is_staff or user.is_superuser %}
+                <a href="{% url 'profile' request.user.username %}" class="sidebar-link">
+                    <span class="icon-wrap">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-7.5 9a7.5 7.5 0 0 1 15 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                    </span>
+                    <span>{% trans "Мой профиль" %}</span>
+                </a>
+                {% endif %}
+                <a href="{% url 'logout' %}" class="sidebar-link">
+                    <span class="icon-wrap">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3M16 17l5-5-5-5M21 12H9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                    </span>
+                    <span>{% trans "Выход" %}</span>
+                </a>
+            {% else %}
+                <a href="{% url 'staff_login' %}" class="sidebar-link">
+                    <span class="icon-wrap">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3M16 17l5-5-5-5M21 12H9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                    </span>
+                    <span>{% trans "Вход администратора" %}</span>
+                </a>
+            {% endif %}
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="{% url 'about' %}" class="sidebar-link sidebar-link--muted">
+                <span class="icon-wrap">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM10.75 10.25h1.25V17h1.25M12 3.5a8.5 8.5 0 1 1 0 17 8.5 8.5 0 0 1 0-17Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span>{% trans "О нас" %}</span>
+            </a>
+
+            <a href="{% url 'faq' %}" class="sidebar-link sidebar-link--muted">
+                <span class="icon-wrap">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8h8M8 12h6M8 16h4M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span>{% trans "FAQ" %}</span>
+            </a>
+
+            <a href="{% url 'contacts' %}" class="sidebar-link sidebar-link--muted">
+                <span class="icon-wrap">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.5A2.5 2.5 0 0 1 7 3h2a2 2 0 0 1 2 1.7l.4 2.7a2 2 0 0 1-.6 1.7l-1.2 1.2a14.5 14.5 0 0 0 4.9 4.9l1.2-1.2a2 2 0 0 1 1.7-.6l2.7.4A2 2 0 0 1 21 15v2a2.5 2.5 0 0 1-2.5 2.5H17C9.8 19.5 4.5 14.2 4.5 7V5.5Z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                </span>
+                <span>{% trans "Контакты" %}</span>
+            </a>
+
+            <button type="button" onclick="window.history.back()" class="sidebar-link sidebar-link--muted sidebar-link--button">
+                <span class="icon-wrap">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6-6 6 6 6M4 12h10a6 6 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                </span>
+                <span>{% trans "Назад" %}</span>
+            </button>
+        </div>
+    </div>
+</aside>

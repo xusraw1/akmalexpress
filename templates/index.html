@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load number_format i18n %}
+
+{% block title %}{% trans "Главная | AkmalExpress" %}{% endblock %}
+
+{% block content %}
+<section class="search-layout" data-search-layout>
+    <article class="hero-card search-layout__main">
+        <div class="search-layout__head">
+            <h1>{% trans "Поиск заказов" %}</h1>
+        </div>
+        <p class="section-subtitle">
+            {% trans "Поиск работает только по номеру квитанции, ФИО клиента, номеру телефона или трек-номеру." %}
+        </p>
+
+        <form class="search-form" method="get">
+            <div class="search-row">
+                <label for="order-search" class="sr-only">{% trans "Поиск заказа" %}</label>
+                <input id="order-search" type="search" name="search" value="{{ search_query }}" placeholder="{% trans '№ квитанции, ФИО, телефон или трек' %}" autocomplete="off">
+                <button type="submit" class="btn-primary">{% trans "Поиск" %}</button>
+            </div>
+            <div class="search-filters search-filters--compact">
+                <div class="search-filter-actions">
+                    {% if search_query %}
+                    <a href="{% url 'index' %}" class="btn-ghost">{% trans "Сброс" %}</a>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </article>
+
+</section>
+
+{% if orders %}
+<section class="content-card search-results-card">
+    <div class="section-head">
+        <div>
+            <h2 class="section-title">{% trans "Результаты поиска" %}</h2>
+            <p class="section-subtitle">{% trans "Найдено заказов:" %} {{ orders.paginator.count }} | {% trans "Показано:" %} {{ orders|length }}</p>
+        </div>
+    </div>
+
+    <div class="search-result-stack">
+        {% for order in orders %}
+        <details class="search-order-card search-order-card--{{ order.status }} search-order-card--reveal" style="--search-stagger: {{ forloop.counter0 }};" {% if forloop.first %}open{% endif %}>
+            <summary class="search-order-summary">
+                <div class="search-order-summary__main">
+                    <a class="receipt-link receipt-link--{{ order.status }}" href="{% url 'detail_order' order.slug %}">№{{ order.receipt_number }}</a>
+                    <div>
+                        <p class="search-order-client">{{ order.first_name }} {{ order.last_name }}</p>
+                        <p class="search-order-meta">{{ order.order_date|date:"d.m.Y" }} · {{ order.phone1 }} · @{{ order.user|default:"-" }}</p>
+                    </div>
+                </div>
+                <div class="search-order-summary__side">
+                    {% include 'partials/status_badge.html' %}
+                    <b class="search-order-total">{{ order.get_final_total|money:2 }} {{ order.get_current }}</b>
+                    <span class="muted muted-no-top">{% trans "Баланс:" %} {{ order.get_balance|money:2 }} {{ order.get_current }}</span>
+                </div>
+            </summary>
+
+            <div class="search-order-body">
+                <div class="search-order-grid">
+                    <article class="search-order-info">
+                        <h3>{% trans "Товар" %}</h3>
+                        <p>{{ order.get_display_product_name }}</p>
+                    </article>
+                    <article class="search-order-info">
+                        <h3>{% trans "Клиент" %}</h3>
+                        <p>{{ order.first_name }} {{ order.last_name }}</p>
+                    </article>
+                    <article class="search-order-info">
+                        <h3>{% trans "Телефон" %}</h3>
+                        <p>{{ order.phone1 }}</p>
+                    </article>
+                    <article class="search-order-info">
+                        <h3>{% trans "Баланс" %}</h3>
+                        <p>{{ order.get_balance|money:2 }} {{ order.get_current }}</p>
+                    </article>
+                </div>
+
+                <div class="inline-actions search-order-actions">
+                    <a class="action-print" href="{% url 'detail_order' order.slug %}">{% trans "Открыть" %}</a>
+                    {% if request.user.is_staff or request.user.is_superuser %}
+                    <a class="action-edit" href="{% url 'change_order' order.slug %}">{% trans "Изменить" %}</a>
+                    <a class="action-delete" href="{% url 'delete_order' order.slug %}">{% trans "Удалить" %}</a>
+                    {% endif %}
+                </div>
+            </div>
+        </details>
+        {% endfor %}
+    </div>
+
+    {% include 'partials/pagination.html' with page_obj=orders %}
+</section>
+{% endif %}
+{% endblock %}

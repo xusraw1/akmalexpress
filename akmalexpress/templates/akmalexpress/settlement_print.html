@@ -1,0 +1,126 @@
+{% load number_format %}
+<!DOCTYPE html>
+<html lang="{{ current_lang|default:'ru' }}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Расчет №{{ sheet.receipt_number }} | AkmalExpress</title>
+    <style>
+        :root {
+            --receipt-width: 56mm;
+        }
+
+        @page {
+            size: 56mm auto;
+            margin: 0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-weight: inherit;
+        }
+
+        body {
+            font-family: "Arial", "Segoe UI", sans-serif;
+            font-size: 10pt;
+            font-weight: 800;
+            line-height: 1.25;
+            background: #ecf2f8;
+            color: #0f172a;
+            padding: 10px;
+        }
+
+        .print-actions {
+            width: var(--receipt-width);
+            margin: 0 auto 10px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .print-actions a,
+        .print-actions button {
+            flex: 1;
+            border: 1px solid #b7c7d8;
+            border-radius: 10px;
+            background: #fff;
+            color: #0f172a;
+            padding: 8px 10px;
+            text-align: center;
+            font-size: 10pt;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .print-actions button {
+            background: #0f766e;
+            color: #fff;
+            border-color: #0f766e;
+        }
+
+        .receipt {
+            width: var(--receipt-width);
+            margin: 0 auto;
+            background: #fff;
+            border: 1px solid #94a3b8;
+            padding: 8px 8px 10px;
+        }
+
+        .line {
+            margin-bottom: 5px;
+            font-size: 9.6pt;
+            word-break: break-word;
+        }
+
+        .line b {
+            font-weight: 900;
+        }
+
+        .line-total {
+            border-top: 1.6px solid #0f172a;
+            border-bottom: 1.6px solid #0f172a;
+            padding: 4px 0;
+            margin: 7px 0;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .receipt {
+                border: 0;
+                width: 100%;
+                margin: 0;
+                padding: 4mm 2.5mm 5mm;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="print-actions no-print">
+        <a href="{% url 'print_settlement_sheet' order.slug %}">Назад</a>
+        <button type="button" onclick="window.print()">Печать</button>
+    </div>
+
+    <section class="receipt">
+        <p class="line"><b>{{ sheet.receipt_number }} {{ sheet.full_name }}</b></p>
+        <p class="line"><b>Tannarxi:</b> {{ sheet.product_cost|money:0 }}</p>
+        <p class="line"><b>Kargo:</b> {{ sheet.cargo_cost|money:0 }}</p>
+        <p class="line"><b>Xizmat:</b> {{ sheet.service_cost|money:0 }}</p>
+        <p class="line line-total"><b>Tannarx+Kargo+Xizmat:</b> {{ sheet.total_amount|money:0 }}</p>
+        <p class="line"><b>Kargo + Xizmat:</b> {{ sheet.due_amount|money:0 }}</p>
+        <p class="line"><b>Telnomer:</b> {% if sheet.phone %}{{ sheet.phone }}{% else %}-{% endif %}</p>
+    </section>
+</body>
+
+</html>

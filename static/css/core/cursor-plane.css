@@ -1,0 +1,86 @@
+@media (hover: hover) and (pointer: fine) {
+    body.plane-cursor-enabled,
+    body.plane-cursor-enabled * {
+        cursor: none !important;
+    }
+
+    .plane-cursor {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 24px;
+        height: 24px;
+        pointer-events: none;
+        z-index: 2200;
+        opacity: 0;
+        --cursor-x: -120px;
+        --cursor-y: -120px;
+        --cursor-scale: 1;
+        transform: translate3d(
+                calc(var(--cursor-x) - 50%),
+                calc(var(--cursor-y) - 50%),
+                0
+            )
+            scale(var(--cursor-scale));
+        transform-origin: center;
+        transition: opacity 0.18s ease;
+        will-change: transform, opacity;
+    }
+
+    .plane-cursor.is-active {
+        opacity: 1;
+    }
+
+    .plane-cursor__halo,
+    .plane-cursor__dot {
+        position: absolute;
+        border-radius: 999px;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+    }
+
+    .plane-cursor__halo {
+        width: 24px;
+        height: 24px;
+        border: 1px solid rgba(15, 23, 42, 0.92);
+        background: radial-gradient(circle, rgba(15, 23, 42, 0.28) 0%, rgba(15, 23, 42, 0.14) 62%, rgba(15, 23, 42, 0) 100%);
+        box-shadow:
+            0 0 0 1px rgba(15, 23, 42, 0.24) inset,
+            0 0 24px rgba(15, 23, 42, 0.42),
+            0 0 34px rgba(15, 23, 42, 0.24);
+        animation: smooth-cursor-pulse 1.65s ease-in-out infinite;
+    }
+
+    .plane-cursor__dot {
+        width: 6px;
+        height: 6px;
+        background: #0f172a;
+        box-shadow:
+            0 0 6px rgba(15, 23, 42, 0.72),
+            0 0 12px rgba(15, 23, 42, 0.36);
+    }
+
+    .plane-cursor.is-pressed .plane-cursor__halo {
+        transform: translate(-50%, -50%) scale(0.9);
+        border-color: rgba(2, 6, 23, 1);
+        box-shadow:
+            0 0 0 1px rgba(2, 6, 23, 0.28) inset,
+            0 0 28px rgba(15, 23, 42, 0.52),
+            0 0 42px rgba(2, 6, 23, 0.34);
+    }
+}
+
+@keyframes smooth-cursor-pulse {
+    0%,
+    100% {
+        opacity: 0.82;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.06);
+    }
+}

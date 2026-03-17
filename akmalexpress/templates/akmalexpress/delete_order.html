@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Удалить заказ | AkmalExpress{% endblock %}
+
+{% block content %}
+<section class="form-panel">
+    <h1 class="panel-title">Удаление заказа №{{ order.receipt_number }}</h1>
+    <p class="panel-subtitle">Это действие необратимо. После удаления восстановить заказ нельзя.</p>
+
+    <div class="content-card content-card-muted-dashed">
+        <p class="muted muted-no-top">
+            Клиент: <b>{{ order.first_name }} {{ order.last_name }}</b><br>
+            Продукт: <b>{{ order.product }}</b>
+        </p>
+
+        <form action="" method="post">
+            {% csrf_token %}
+            <div class="form-actions">
+                <button type="submit" class="btn-danger">Да, удалить заказ</button>
+                <a href="{% url 'detail_order' order.slug %}" class="btn-ghost">Отменить</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

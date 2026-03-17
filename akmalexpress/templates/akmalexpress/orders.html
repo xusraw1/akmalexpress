@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load number_format %}
+
+{% block title %}Все заказы | AkmalExpress{% endblock %}
+
+{% block content %}
+<section class="content-card">
+    <div class="section-head">
+        <div>
+            <h1 class="section-title">Все заказы</h1>
+            <p class="section-subtitle">Показано: {{ orders|length }} из {{ orders.paginator.count }}</p>
+        </div>
+        <div class="inline-actions inline-actions--excel">
+            <a class="action-print" href="{% url 'orders_export_excel' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}">Скачать Excel</a>
+            <form method="post" enctype="multipart/form-data" action="{% url 'orders_import_excel' %}" class="excel-upload-form">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <div class="file-picker file-picker--compact" data-file-picker>
+                    <input class="excel-file-input" type="file" name="excel_file" id="orders-excel-file" accept=".xlsx" data-file-input required>
+                    <label class="file-picker__button" for="orders-excel-file">Выбрать файл</label>
+                    <span class="file-picker__name" data-file-name>Файл не выбран</span>
+                    <button type="button" class="file-picker__clear" data-file-clear title="Очистить файл" aria-label="Очистить файл" hidden>×</button>
+                </div>
+                <button type="submit" class="action-edit">Загрузить Excel</button>
+            </form>
+        </div>
+    </div>
+
+    <form class="search-form search-form--orders" method="get">
+        <div class="search-row">
+            <label for="orders-search" class="sr-only">Поиск заказов</label>
+            <input id="orders-search" type="search" name="search" value="{{ search_query }}" placeholder="Квитанция, клиент, телефон, трек или товар" autocomplete="off">
+            <button type="submit" class="btn-primary">Поиск</button>
+            {% if search_query or missing_track_only %}
+            <a href="{% url 'orders' %}" class="btn-ghost">Сброс</a>
+            {% endif %}
+        </div>
+        <div class="search-filters search-filters--compact">
+            <label class="toggle-check">
+                <input type="checkbox" name="missing_track" value="1" {% if missing_track_only %}checked{% endif %}>
+                <span class="toggle-slider" aria-hidden="true"></span>
+                <span class="toggle-text">Только без трек-номера</span>
+            </label>
+        </div>
+    </form>
+
+    <div class="search-result-stack table-wrap-spaced">
+        {% for order in orders %}
+        <details class="search-order-card search-order-card--{{ order.status }}" {% if forloop.first %}open{% endif %}>
+            <summary class="search-order-summary">
+                <div class="search-order-summary__main">
+                    <a class="receipt-link receipt-link--{{ order.status }}" href="{% url 'detail_order' order.slug %}">№{{ order.receipt_number }}</a>
+                    <div>
+                        <p class="search-order-client">{{ order.first_name }} {{ order.last_name }}</p>
+                        <p class="search-order-meta">{{ order.order_date|date:"d.m.Y" }} · {{ order.phone1 }}</p>
+                    </div>
+                </div>
+                <div class="search-order-summary__side">
+                    {% include 'partials/status_badge.html' %}
+                    <b class="search-order-total">{{ order.get_final_total|money:2 }} {{ order.get_current }}</b>
+                    <span class="muted muted-no-top">Баланс: {{ order.get_balance|money:2 }} {{ order.get_current }}</span>
+                </div>
+            </summary>
+
+            <div class="search-order-body">
+                <div class="search-order-grid">
+                    <article class="search-order-info">
+                        <h3>Товар</h3>
+                        <p>{{ order.get_display_product_name }}</p>
+                    </article>
+                    <article class="search-order-info">
+                        <h3>Тип отправки</h3>
+                        <p>{{ order.shipping_method_summary }}</p>
+                    </article>
+                    <article class="search-order-info">
+                        <h3>Треки товаров</h3>
+                        <p>{{ order.item_track_summary }}</p>
+                    </article>
+                    <article class="search-order-info">
+                        <h3>Баланс</h3>
+                        <p>{{ order.get_balance|money:2 }} {{ order.get_current }}</p>
+                    </article>
+                </div>
+
+                <div class="inline-actions search-order-actions">
+                    <a class="action-print" href="{% url 'detail_order' order.slug %}">Открыть</a>
+                    {% if request.user.is_staff or request.user.is_superuser %}
+                    <a class="action-print" href="{% url 'print_receipt' order.slug %}" target="_blank" rel="noopener">Печать</a>
+                    <a class="action-print" href="{% url 'print_settlement_sheet' order.slug %}">Расчет</a>
+                    <a class="action-edit" href="{% url 'change_order' order.slug %}">Изменить</a>
+                    <a class="action-delete" href="{% url 'delete_order' order.slug %}">Удалить</a>
+                    {% endif %}
+                </div>
+            </div>
+        </details>
+        {% endfor %}
+    </div>
+
+    {% include 'partials/pagination.html' with page_obj=orders %}
+</section>
+{% endblock %}

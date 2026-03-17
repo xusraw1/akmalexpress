@@ -1,0 +1,13 @@
+{% if order.status == 'accepted' %}
+<span class="status-badge status-accepted">{{ order.get_status_display }}</span>
+{% elif order.status == 'ordered' %}
+<span class="status-badge status-ordered">{{ order.get_status_display }}</span>
+{% elif order.status == 'transit' %}
+<span class="status-badge status-transit">{{ order.get_status_display }}</span>
+{% elif order.status == 'arrived' %}
+<span class="status-badge status-done">{{ order.get_status_display }}</span>
+{% elif order.status == 'cancelled' %}
+<span class="status-badge status-cancelled">{{ order.get_status_display }}</span>
+{% else %}
+<span class="status-badge status-default">{{ order.get_status_display }}</span>
+{% endif %}

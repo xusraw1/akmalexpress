@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+
+{% block title %}{% trans "FAQ | AkmalExpress" %}{% endblock %}
+
+{% block content %}
+<section class="faq-page">
+    <article class="content-card faq-hero" data-interactive-card>
+        <div class="faq-hero__text">
+            <p class="faq-hero__eyebrow">FAQ</p>
+            <h1>{% trans "Частые вопросы" %}</h1>
+            <p>{% trans "Здесь собраны ответы по доставке, оплате и срокам. Также ниже есть отдельный блок с запрещёнными товарами." %}</p>
+            <div class="faq-hero__actions">
+                <a href="{% url 'contacts' %}" class="btn-primary">{% trans "Связаться с нами" %}</a>
+                <a href="{% url 'about' %}" class="btn-ghost">{% trans "О компании" %}</a>
+            </div>
+        </div>
+        <div class="faq-hero__stats">
+            <div class="faq-hero__stat">
+                <span>{% trans "Ответов" %}</span>
+                <b>10+</b>
+            </div>
+            <div class="faq-hero__stat">
+                <span>{% trans "Обновлено" %}</span>
+                <b>2026</b>
+            </div>
+            <div class="faq-hero__stat">
+                <span>{% trans "Поддержка" %}</span>
+                <b>7 {% trans "дней" %}</b>
+            </div>
+        </div>
+    </article>
+
+    <article class="content-card faq-ban-card" data-interactive-card>
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">{% trans "Запрещённые товары" %}</h2>
+                <p class="section-subtitle">{% trans "Эти категории мы не принимаем к международной доставке." %}</p>
+            </div>
+        </div>
+        <div class="faq-ban-grid">
+            <article class="faq-ban-item">
+                <span class="faq-ban-item__icon faq-ban-item__icon--red" aria-hidden="true">🔥</span>
+                <div>
+                    <strong>{% trans "Горючие товары" %}</strong>
+                    <p>{% trans "Спички, зажигалки и другие легковоспламеняющиеся материалы." %}</p>
+                </div>
+            </article>
+            <article class="faq-ban-item">
+                <span class="faq-ban-item__icon faq-ban-item__icon--steel" aria-hidden="true">🛡️</span>
+                <div>
+                    <strong>{% trans "Военные товары" %}</strong>
+                    <p>{% trans "Оружие, ножи, тактическое снаряжение и похожие позиции." %}</p>
+                </div>
+            </article>
+            <article class="faq-ban-item">
+                <span class="faq-ban-item__icon faq-ban-item__icon--violet" aria-hidden="true">18+</span>
+                <div>
+                    <strong>{% trans "Товары 18+" %}</strong>
+                    <p>{% trans "Категория товаров для взрослых к перевозке не принимается." %}</p>
+                </div>
+            </article>
+            <article class="faq-ban-item">
+                <span class="faq-ban-item__icon faq-ban-item__icon--amber" aria-hidden="true">🥫</span>
+                <div>
+                    <strong>{% trans "Продукты питания" %}</strong>
+                    <p>{% trans "Пищевые продукты, напитки и скоропортящиеся категории." %}</p>
+                </div>
+            </article>
+            <article class="faq-ban-item">
+                <span class="faq-ban-item__icon faq-ban-item__icon--blue" aria-hidden="true">🚨</span>
+                <div>
+                    <strong>{% trans "Сирены и спецсигналы" %}</strong>
+                    <p>{% trans "Сирены, мигалки, отдельные электронные сигнальные устройства." %}</p>
+                </div>
+            </article>
+            <article class="faq-ban-item">
+                <span class="faq-ban-item__icon faq-ban-item__icon--rose" aria-hidden="true">💎</span>
+                <div>
+                    <strong>{% trans "Драгоценные изделия" %}</strong>
+                    <p>{% trans "Ювелирные украшения и изделия из драгоценных/цветных металлов." %}</p>
+                </div>
+            </article>
+            <article class="faq-ban-item">
+                <span class="faq-ban-item__icon faq-ban-item__icon--brown" aria-hidden="true">🚬</span>
+                <div>
+                    <strong>{% trans "Табак и алкоголь" %}</strong>
+                    <p>{% trans "Табачные изделия, алкоголь и связанные товары." %}</p>
+                </div>
+            </article>
+            <article class="faq-ban-item">
+                <span class="faq-ban-item__icon faq-ban-item__icon--teal" aria-hidden="true">❓</span>
+                <div>
+                    <strong>{% trans "Сомнительная категория" %}</strong>
+                    <p>{% trans "Если не уверены, заранее уточните у менеджера перед оплатой." %}</p>
+                </div>
+            </article>
+        </div>
+    </article>
+
+    <article class="content-card faq-slider-card" data-interactive-card>
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">{% trans "Полезные подсказки" %}</h2>
+                <p class="section-subtitle">{% trans "Листайте карточки: они адаптированы под телефон и планшет." %}</p>
+            </div>
+            <div class="faq-slider-controls">
+                <button type="button" class="btn-ghost" data-faq-scroll="-1" aria-label="{% trans 'Назад' %}">←</button>
+                <button type="button" class="btn-ghost" data-faq-scroll="1" aria-label="{% trans 'Вперед' %}">→</button>
+            </div>
+        </div>
+        <div class="faq-slider" id="faqSlider">
+            <article class="faq-slide">
+                <img src="{% static 'img/logo-ex.png' %}" alt="AkmalExpress" class="faq-slide__image">
+                <div class="faq-slide__caption">
+                    <strong>{% trans "Перед заказом" %}</strong>
+                    <p>{% trans "Отправьте ссылку и характеристики товара." %}</p>
+                </div>
+            </article>
+            <article class="faq-slide">
+                <img src="{% static 'img/logo-ex.png' %}" alt="AkmalExpress" class="faq-slide__image">
+                <div class="faq-slide__caption">
+                    <strong>{% trans "Во время оформления" %}</strong>
+                    <p>{% trans "Проверяйте ФИО и номер телефона без ошибок." %}</p>
+                </div>
+            </article>
+            <article class="faq-slide faq-slide--icon">
+                <div class="faq-slide__icon">📦</div>
+                <div class="faq-slide__caption">
+                    <strong>{% trans "По упаковке" %}</strong>
+                    <p>{% trans "Хрупкие вещи отправляем только с усиленной защитой." %}</p>
+                </div>
+            </article>
+            <article class="faq-slide faq-slide--icon">
+                <div class="faq-slide__icon">🚚</div>
+                <div class="faq-slide__caption">
+                    <strong>{% trans "По доставке" %}</strong>
+                    <p>{% trans "AVIA: 5-10 дней, Avto (Fura): 15-20 дней, iPost: 20-25 дней." %}</p>
+                </div>
+            </article>
+            <article class="faq-slide faq-slide--icon">
+                <div class="faq-slide__icon">💬</div>
+                <div class="faq-slide__caption">
+                    <strong>{% trans "По поддержке" %}</strong>
+                    <p>{% trans "Всегда можно уточнить статус заказа по квитанции." %}</p>
+                </div>
+            </article>
+        </div>
+    </article>
+
+    <article class="content-card faq-list-card" data-interactive-card>
+        <h2 class="section-title">{% trans "Вопросы и ответы" %}</h2>
+        <div class="faq-list">
+            <details class="faq-item" open>
+                <summary>{% trans "1. Как оформить заказ онлайн или в офисе?" %}</summary>
+                <p>{% trans "Можно отправить ссылку менеджеру в Telegram/по телефону или прийти в офис. Мы считаем итоговую стоимость на месте, и если вас всё устраивает — сразу оформляем заказ." %}</p>
+            </details>
+            <details class="faq-item">
+                <summary>{% trans "2. Какие сроки доставки?" %}</summary>
+                <p>{% trans "AVIA занимает около 5-10 дней, Avto (Fura) — около 15-20 дней, iPost — около 20-25 дней." %}</p>
+            </details>
+            <details class="faq-item">
+                <summary>{% trans "3. Как проходит оплата?" %}</summary>
+                <p>{% trans "Для телефонов — полная оплата. Для обычных товаров, готовых к доставке, оплачивается себестоимость. Для станков и оборудования: 30-40% до подготовки к отправке из Китая, после подготовки — оставшаяся часть себестоимости, а по прибытию — карго и услуга." %}</p>
+            </details>
+            <details class="faq-item">
+                <summary>{% trans "4. Какие способы оплаты принимаете?" %}</summary>
+                <p>{% trans "Принимаем оплату картой, переводом по реквизитам (счет) и наличными в офисе." %}</p>
+            </details>
+            <details class="faq-item">
+                <summary>{% trans "5. Можно ли изменить или отменить заказ?" %}</summary>
+                <p>{% trans "Изменение или отмена возможны, если продавец еще не отправил товар." %}</p>
+            </details>
+            <details class="faq-item">
+                <summary>{% trans "6. Что делать, если пришел не тот товар или есть брак?" %}</summary>
+                <p>{% trans "До открытия упаковки обязательно снимите видео распаковки. По этому доказательству продавец может вернуть полную сумму, часть суммы или попросить возврат товара с последующим возвратом денег." %}</p>
+            </details>
+            <details class="faq-item">
+                <summary>{% trans "7. Даете ли вы гарантию на товар?" %}</summary>
+                <p>{% trans "Мы даем гарантию на доставку товара. Гарантию на сам товар предоставляет продавец." %}</p>
+            </details>
+            <details class="faq-item">
+                <summary>{% trans "8. Как отслеживать заказ?" %}</summary>
+                <p>{% trans "Можно любым удобным способом: по номеру квитанции, ФИО, номеру телефона или трек-номеру." %}</p>
+            </details>
+            <details class="faq-item">
+                <summary>{% trans "9. Есть ли доставка по регионам Узбекистана?" %}</summary>
+                <p>{% trans "Да, есть. По Узбекистану отправляем через BTS." %}</p>
+            </details>
+            <details class="faq-item">
+                <summary>{% trans "10. Какой у вас график работы?" %}</summary>
+                <p>{% trans "Понедельник-пятница: 09:00-19:00. Суббота: 09:00-18:00. Воскресенье — выходной. По международным праздникам — выходной." %}</p>
+            </details>
+        </div>
+    </article>
+</section>
+
+<script>
+(function () {
+    const slider = document.getElementById('faqSlider');
+    if (!slider) return;
+    const buttons = document.querySelectorAll('[data-faq-scroll]');
+    buttons.forEach((button) => {
+        button.addEventListener('click', () => {
+            const direction = Number(button.getAttribute('data-faq-scroll') || '0');
+            if (!direction) return;
+            const step = Math.max(280, Math.round(slider.clientWidth * 0.78));
+            slider.scrollBy({ left: direction * step, behavior: 'smooth' });
+        });
+    });
+})();
+</script>
+{% endblock %}

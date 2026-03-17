@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Вход администратора | AkmalExpress" %}{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+    <section class="content-card auth-card">
+        <h1 class="section-title">{% trans "Служебный вход" %}</h1>
+        <p class="section-subtitle">{% trans "Эта страница доступна только администраторам и суперпользователям." %}</p>
+
+        <form method="post">
+            {% csrf_token %}
+            {% if request.GET.next %}
+            <input type="hidden" name="next" value="{{ request.GET.next }}">
+            {% endif %}
+
+            <div class="stack-grid">
+                <div>
+                    <label for="username">{% trans "Никнейм" %}</label>
+                    <input type="text" name="username" id="username" placeholder="{% trans 'Введите никнейм' %}" required>
+                </div>
+                <div>
+                    <label for="password">{% trans "Пароль" %}</label>
+                    <input type="password" name="password" id="password" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">{% trans "Войти" %}</button>
+                <a href="{% url 'index' %}" class="btn-ghost">{% trans "На главную" %}</a>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}

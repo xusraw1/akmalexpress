@@ -1,0 +1,406 @@
+{% extends 'base.html' %}
+
+{% block title %}Изменить заказ | AkmalExpress{% endblock %}
+
+{% block content %}
+<section class="form-panel">
+    <h1 class="panel-title">Обновление заказа №{{ orderr.receipt_number }}</h1>
+    <p class="panel-subtitle">Проверьте данные заказа и сохраните изменения.</p>
+
+    {% if form.non_field_errors or item_formset.non_form_errors %}
+    <div class="alert alert-error">
+        <p>
+            {{ form.non_field_errors|striptags }}
+            {{ item_formset.non_form_errors|striptags }}
+        </p>
+    </div>
+    {% endif %}
+
+    <form method="post" class="unified-form">
+        {% csrf_token %}
+
+        <article class="content-card form-block">
+            <h2 class="section-title form-block-title">Данные заказа</h2>
+            <div class="form-grid two-col">
+                <div class="field">
+                    <label for="{{ form.receipt_number.id_for_label }}">{{ form.receipt_number.label }}</label>
+                    {{ form.receipt_number }}
+                    {% if form.receipt_number.errors %}<p class="field-error">{{ form.receipt_number.errors|striptags }}</p>{% endif %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.order_date.id_for_label }}">{{ form.order_date.label }}</label>
+                    {{ form.order_date }}
+                    {% if form.order_date.errors %}<p class="field-error">{{ form.order_date.errors|striptags }}</p>{% endif %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}<p class="field-error">{{ form.first_name.errors|striptags }}</p>{% endif %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}<p class="field-error">{{ form.last_name.errors|striptags }}</p>{% endif %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.phone1.id_for_label }}">{{ form.phone1.label }}</label>
+                    {{ form.phone1 }}
+                    {% if form.phone1.errors %}<p class="field-error">{{ form.phone1.errors|striptags }}</p>{% endif %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.phone2.id_for_label }}">{{ form.phone2.label }}</label>
+                    {{ form.phone2 }}
+                    {% if form.phone2.errors %}<p class="field-error">{{ form.phone2.errors|striptags }}</p>{% endif %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.debt.id_for_label }}">{{ form.debt.label }}</label>
+                    {{ form.debt }}
+                    {% if form.debt.errors %}<p class="field-error">{{ form.debt.errors|striptags }}</p>{% endif %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.balance.id_for_label }}">{{ form.balance.label }}</label>
+                    {{ form.balance }}
+                    {% if form.balance.errors %}<p class="field-error">{{ form.balance.errors|striptags }}</p>{% endif %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>
+                    {{ form.status }}
+                    {% if form.status.errors %}<p class="field-error">{{ form.status.errors|striptags }}</p>{% endif %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.usd_rate.id_for_label }}">{{ form.usd_rate.label }}</label>
+                    {{ form.usd_rate }}
+                    {% if form.usd_rate.errors %}<p class="field-error">{{ form.usd_rate.errors|striptags }}</p>{% endif %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.rmb_rate.id_for_label }}">{{ form.rmb_rate.label }}</label>
+                    {{ form.rmb_rate }}
+                    {% if form.rmb_rate.errors %}<p class="field-error">{{ form.rmb_rate.errors|striptags }}</p>{% endif %}
+                </div>
+            </div>
+        </article>
+
+        <article class="content-card form-block">
+            <h2 class="section-title form-block-title">Товары в заказе</h2>
+            <p class="section-subtitle">Изменяйте название, количество, себестоимость, магазин и ссылку.</p>
+
+            {{ item_formset.management_form }}
+            <div id="items-stack" class="items-stack">
+                {% for item_form in item_formset %}
+                <div class="item-card" data-item-row>
+                    {{ item_form.DELETE }}
+                    <div class="form-grid two-col">
+                        <div class="field">
+                            <label for="{{ item_form.product_name.id_for_label }}">{{ item_form.product_name.label }}</label>
+                            {{ item_form.product_name }}
+                            {% if item_form.product_name.errors %}<p class="field-error">{{ item_form.product_name.errors|striptags }}</p>{% endif %}
+                        </div>
+                        <div class="field">
+                            <label for="{{ item_form.product_quantity.id_for_label }}">{{ item_form.product_quantity.label }}</label>
+                            {{ item_form.product_quantity }}
+                            {% if item_form.product_quantity.errors %}<p class="field-error">{{ item_form.product_quantity.errors|striptags }}</p>{% endif %}
+                        </div>
+                        <div class="field">
+                            <label for="{{ item_form.product_price_currency.id_for_label }}">{{ item_form.product_price_currency.label }}</label>
+                            {{ item_form.product_price_currency }}
+                            {% if item_form.product_price_currency.errors %}<p class="field-error">{{ item_form.product_price_currency.errors|striptags }}</p>{% endif %}
+                        </div>
+                        <div class="field">
+                            <label for="{{ item_form.product_price.id_for_label }}">{{ item_form.product_price.label }}</label>
+                            {{ item_form.product_price }}
+                            {% if item_form.product_price.errors %}<p class="field-error">{{ item_form.product_price.errors|striptags }}</p>{% endif %}
+                        </div>
+                        <div class="field">
+                            <label for="{{ item_form.shipping_method.id_for_label }}">{{ item_form.shipping_method.label }}</label>
+                            {{ item_form.shipping_method }}
+                            {% if item_form.shipping_method.errors %}<p class="field-error">{{ item_form.shipping_method.errors|striptags }}</p>{% endif %}
+                        </div>
+                        <div class="field">
+                            <label for="{{ item_form.track_number.id_for_label }}">{{ item_form.track_number.label }}</label>
+                            {{ item_form.track_number }}
+                            {% if item_form.track_number.errors %}<p class="field-error">{{ item_form.track_number.errors|striptags }}</p>{% endif %}
+                        </div>
+                        <div class="field">
+                            <label for="{{ item_form.store.id_for_label }}">{{ item_form.store.label }}</label>
+                            {{ item_form.store }}
+                            {% if item_form.store.errors %}<p class="field-error">{{ item_form.store.errors|striptags }}</p>{% endif %}
+                        </div>
+                        <div class="field">
+                            <label for="{{ item_form.link.id_for_label }}">{{ item_form.link.label }}</label>
+                            {{ item_form.link }}
+                            {% if item_form.link.errors %}<p class="field-error">{{ item_form.link.errors|striptags }}</p>{% endif %}
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button type="button" class="chip-btn chip-btn-danger" data-remove-item>Убрать товар</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <template id="empty-item-template">
+                <div class="item-card" data-item-row>
+                    <input type="checkbox" name="items-__prefix__-DELETE" id="id_items-__prefix__-DELETE" hidden>
+                    <div class="form-grid two-col">
+                        <div class="field">
+                            <label for="id_items-__prefix__-product_name">Название товара</label>
+                            <input type="text" name="items-__prefix__-product_name" id="id_items-__prefix__-product_name">
+                        </div>
+                        <div class="field">
+                            <label for="id_items-__prefix__-product_quantity">Количество</label>
+                            <input type="number" name="items-__prefix__-product_quantity" id="id_items-__prefix__-product_quantity" min="1" value="1">
+                        </div>
+                        <div class="field">
+                            <label for="id_items-__prefix__-product_price_currency">Валюта</label>
+                            <select name="items-__prefix__-product_price_currency" id="id_items-__prefix__-product_price_currency">
+                                <option value="USD">USD</option>
+                                <option value="UZS" selected>UZS</option>
+                                <option value="RMB">RMB</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="id_items-__prefix__-product_price">Себестоимость</label>
+                            <input type="number" step="0.001" min="0" name="items-__prefix__-product_price" id="id_items-__prefix__-product_price">
+                        </div>
+                        <div class="field">
+                            <label for="id_items-__prefix__-shipping_method">Тип доставки</label>
+                            <select name="items-__prefix__-shipping_method" id="id_items-__prefix__-shipping_method">
+                                <option value="AVIA" selected>АВИА</option>
+                                <option value="iPost">iPost</option>
+                                <option value="17994">17994</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="id_items-__prefix__-track_number">Трек-номер товара</label>
+                            <input type="text" name="items-__prefix__-track_number" id="id_items-__prefix__-track_number">
+                        </div>
+                        <div class="field">
+                            <label for="id_items-__prefix__-store">Магазин</label>
+                            <select name="items-__prefix__-store" id="id_items-__prefix__-store">
+                                <option value="None">None</option>
+                                <option value="Taobao">Taobao</option>
+                                <option value="Alibaba">Alibaba</option>
+                                <option value="AliExpress">AliExpress</option>
+                                <option value="Pinduoduo">Pinduoduo</option>
+                                <option value="Poizon">Poizon</option>
+                                <option value="1688">1688</option>
+                                <option value="95">95</option>
+                                <option value="MadeChina">Made in China</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="id_items-__prefix__-link">Ссылка</label>
+                            <input type="url" name="items-__prefix__-link" id="id_items-__prefix__-link">
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button type="button" class="chip-btn chip-btn-danger" data-remove-item>Убрать товар</button>
+                    </div>
+                </div>
+            </template>
+
+            <button type="button" id="add-item-btn" class="chip-btn mt-sm">+ Добавить товар</button>
+        </article>
+
+        <article class="content-card form-block">
+            <h2 class="section-title form-block-title">Комментарий</h2>
+            <div class="field upload-field">
+                <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+                {{ form.description }}
+                {% if form.description.errors %}<p class="field-error">{{ form.description.errors|striptags }}</p>{% endif %}
+            </div>
+        </article>
+
+        <article class="content-card form-block order-total-card">
+            <h2 class="section-title form-block-title">Итог по заказу</h2>
+            <p class="section-subtitle" id="pricing-note">Итоговая сумма считается автоматически после изменения товаров и курсов.</p>
+            <div class="form-grid two-col">
+                <div class="field">
+                    <label for="order-items-total-preview">Сумма товаров (авто)</label>
+                    <input id="order-items-total-preview" type="text" value="0.00" readonly>
+                </div>
+                <div class="field">
+                    <label for="{{ form.manual_total.id_for_label }}">Итоговая сумма</label>
+                    {{ form.manual_total }}
+                    <p class="hint">Поле заполняется автоматически, при необходимости можно изменить прямо здесь.</p>
+                    {% if form.manual_total.errors %}<p class="field-error">{{ form.manual_total.errors|striptags }}</p>{% endif %}
+                </div>
+            </div>
+        </article>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Сохранить изменения</button>
+            <a href="{% url 'detail_order' orderr.slug %}" class="btn-ghost">Вернуться к заказу</a>
+        </div>
+    </form>
+</section>
+
+<script>
+(function () {
+    const usdRateInput = document.getElementById('id_usd_rate');
+    const rmbRateInput = document.getElementById('id_rmb_rate');
+    const itemsTotalPreview = document.getElementById('order-items-total-preview');
+    const manualTotalInput = document.getElementById('id_manual_total');
+    const totalFormsInput = document.getElementById('id_items-TOTAL_FORMS');
+    const itemsStack = document.getElementById('items-stack');
+    const addItemBtn = document.getElementById('add-item-btn');
+    const itemTemplate = document.getElementById('empty-item-template');
+    let manualTotalOverridden = false;
+    let lastAutoTotal = '0.00';
+
+    const collectItemsPayload = () => {
+        if (!itemsStack) return [];
+        return Array.from(itemsStack.querySelectorAll('[data-item-row]')).map((row) => {
+            const quantityInput = row.querySelector('input[name$="-product_quantity"]');
+            const priceInput = row.querySelector('input[name$="-product_price"]');
+            const currencyInput = row.querySelector('select[name$="-product_price_currency"]');
+            const deleteInput = row.querySelector('input[name$="-DELETE"]');
+            return {
+                quantity: quantityInput ? quantityInput.value : '',
+                price: priceInput ? priceInput.value : '',
+                currency: currencyInput ? currencyInput.value : 'UZS',
+                delete: row.hidden || (deleteInput ? deleteInput.checked : false),
+            };
+        });
+    };
+
+    const parseNumber = (value) => {
+        const normalized = String(value ?? '').replace(/\s+/g, '').replace(',', '.');
+        const parsed = Number.parseFloat(normalized);
+        return Number.isFinite(parsed) ? parsed : 0;
+    };
+
+    const formatMoney = (value) => parseNumber(value).toFixed(2);
+
+    const getDefaultItemShipping = () => {
+        if (!itemsStack) return 'AVIA';
+        const firstShipping = itemsStack.querySelector('[data-item-row]:not([hidden]) select[name$="-shipping_method"]');
+        return firstShipping && firstShipping.value ? firstShipping.value : 'AVIA';
+    };
+
+    const updateManualOverrideState = () => {
+        if (!manualTotalInput) return;
+        const raw = String(manualTotalInput.value || '').trim();
+        if (!raw) {
+            manualTotalOverridden = false;
+            return;
+        }
+        const current = parseNumber(raw);
+        const auto = parseNumber(lastAutoTotal);
+        manualTotalOverridden = Math.abs(current - auto) >= 0.01;
+    };
+
+    const setPreviewValues = (itemsTotal, autoTotal) => {
+        lastAutoTotal = autoTotal;
+        if (itemsTotalPreview) itemsTotalPreview.value = itemsTotal;
+        if (!manualTotalInput) return;
+        if (!manualTotalOverridden || !String(manualTotalInput.value || '').trim()) {
+            manualTotalInput.value = autoTotal;
+            manualTotalOverridden = false;
+        }
+    };
+
+    const requestTotalsPreview = () => {
+        const usdRate = parseNumber(usdRateInput ? usdRateInput.value : '0');
+        const rmbRate = parseNumber(rmbRateInput ? rmbRateInput.value : '0');
+        const items = collectItemsPayload();
+        let itemsTotal = 0;
+
+        items.forEach((item) => {
+            if (item.delete) return;
+            const qty = parseNumber(item.quantity);
+            const price = parseNumber(item.price);
+            if (qty <= 0 || price < 0) return;
+
+            let subtotal = qty * price;
+            if (item.currency === 'USD') {
+                subtotal *= usdRate;
+            } else if (item.currency === 'RMB') {
+                subtotal *= rmbRate;
+            }
+            itemsTotal += subtotal;
+        });
+
+        const autoTotal = itemsTotal;
+        setPreviewValues(formatMoney(itemsTotal), formatMoney(autoTotal));
+    };
+
+    const bindRemoveButtons = () => {
+        if (!itemsStack) return;
+        itemsStack.querySelectorAll('[data-remove-item]').forEach((btn) => {
+            if (btn.dataset.bound === '1') return;
+            btn.dataset.bound = '1';
+            btn.addEventListener('click', () => {
+                const row = btn.closest('[data-item-row]');
+                if (!row) return;
+                const deleteInput = row.querySelector('input[name$="-DELETE"]');
+                if (deleteInput) deleteInput.checked = true;
+                row.hidden = true;
+                requestTotalsPreview();
+            });
+        });
+    };
+
+    const bindPriceInputs = () => {
+        if (!itemsStack) return;
+        const selectors = [
+            'input[name$="-product_quantity"]',
+            'input[name$="-product_price"]',
+            'select[name$="-product_price_currency"]',
+        ];
+        selectors.forEach((selector) => {
+            itemsStack.querySelectorAll(selector).forEach((input) => {
+                if (input.dataset.totalBound === '1') return;
+                input.dataset.totalBound = '1';
+                input.addEventListener('input', requestTotalsPreview);
+                input.addEventListener('change', requestTotalsPreview);
+            });
+        });
+    };
+
+    const addItemRow = () => {
+        if (!totalFormsInput || !itemsStack || !itemTemplate) return;
+        const index = Number(totalFormsInput.value || '0');
+        const html = itemTemplate.innerHTML.replaceAll('__prefix__', String(index));
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html.trim();
+        const row = wrapper.firstElementChild;
+        if (!row) return;
+        itemsStack.appendChild(row);
+        totalFormsInput.value = String(index + 1);
+        const shippingSelect = row.querySelector('select[name$="-shipping_method"]');
+        if (shippingSelect) shippingSelect.value = getDefaultItemShipping();
+        bindRemoveButtons();
+        bindPriceInputs();
+        requestTotalsPreview();
+    };
+
+    if (usdRateInput) {
+        usdRateInput.addEventListener('input', requestTotalsPreview);
+        usdRateInput.addEventListener('change', requestTotalsPreview);
+    }
+    if (rmbRateInput) {
+        rmbRateInput.addEventListener('input', requestTotalsPreview);
+        rmbRateInput.addEventListener('change', requestTotalsPreview);
+    }
+    if (manualTotalInput) {
+        manualTotalInput.addEventListener('input', updateManualOverrideState);
+        manualTotalInput.addEventListener('change', updateManualOverrideState);
+        manualTotalInput.addEventListener('blur', () => {
+            if (!manualTotalInput.value) {
+                manualTotalInput.value = lastAutoTotal;
+            }
+            updateManualOverrideState();
+        });
+        updateManualOverrideState();
+    }
+    if (addItemBtn) {
+        addItemBtn.addEventListener('click', addItemRow);
+    }
+
+    bindRemoveButtons();
+    bindPriceInputs();
+    requestTotalsPreview();
+})();
+</script>
+{% endblock %}

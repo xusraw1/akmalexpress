@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load number_format %}
+
+{% block title %}Расчет клиента №{{ order.receipt_number }} | AkmalExpress{% endblock %}
+
+{% block content %}
+<section class="content-card">
+    <div class="section-head">
+        <div>
+            <h1 class="section-title">Расчет клиента</h1>
+            <p class="section-subtitle">Заполните данные и нажмите «Сформировать для печати».</p>
+        </div>
+    </div>
+
+    <form method="post" class="unified-form" id="settlementForm">
+        {% csrf_token %}
+        <div class="form-grid two-col">
+            <div class="field">
+                <label for="sheet-receipt">Квитанция</label>
+                <input id="sheet-receipt" type="text" name="receipt_number" value="{{ sheet.receipt_number }}" required>
+            </div>
+            <div class="field">
+                <label for="sheet-full-name">Имя и фамилия</label>
+                <input id="sheet-full-name" type="text" name="full_name" value="{{ sheet.full_name }}" required>
+            </div>
+            <div class="field">
+                <label for="sheet-product-cost">Tannarxi (себестоимость)</label>
+                <input id="sheet-product-cost" type="number" name="product_cost" step="0.01" min="0" value="{{ sheet.product_cost|floatformat:'2' }}" data-sheet-product required>
+            </div>
+            <div class="field">
+                <label for="sheet-cargo">Kargo</label>
+                <input id="sheet-cargo" type="number" name="cargo_cost" step="0.01" min="0" value="{{ sheet.cargo_cost|floatformat:'2' }}" data-sheet-cargo required>
+            </div>
+            <div class="field">
+                <label for="sheet-service">Xizmat</label>
+                <input id="sheet-service" type="number" name="service_cost" step="0.01" min="0" value="{{ sheet.service_cost|floatformat:'2' }}" data-sheet-service readonly>
+                <small class="muted">Авто: до 70 000 сум — 10%, выше — 15%</small>
+            </div>
+            <div class="field">
+                <label for="sheet-total">Tannarx + Kargo + Xizmat</label>
+                <input id="sheet-total" type="number" name="total_amount" step="0.01" min="0" value="{{ sheet.total_amount|floatformat:'2' }}" data-sheet-total readonly>
+            </div>
+            <div class="field">
+                <label for="sheet-due">Kargo + Xizmat (клиент дает)</label>
+                <input id="sheet-due" type="number" name="due_amount" step="0.01" min="0" value="{{ sheet.due_amount|floatformat:'2' }}" data-sheet-due readonly>
+            </div>
+            <div class="field">
+                <label for="sheet-phone">Телефон</label>
+                <input id="sheet-phone" type="text" name="phone" value="{{ sheet.phone }}" required>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Сформировать для печати</button>
+            <a href="{% url 'detail_order' order.slug %}" class="btn-ghost">К заказу</a>
+        </div>
+    </form>
+</section>
+
+<script>
+(function () {
+    const productInput = document.querySelector('[data-sheet-product]');
+    const cargoInput = document.querySelector('[data-sheet-cargo]');
+    const serviceInput = document.querySelector('[data-sheet-service]');
+    const totalInput = document.querySelector('[data-sheet-total]');
+    const dueInput = document.querySelector('[data-sheet-due]');
+    if (!productInput || !cargoInput || !serviceInput || !totalInput || !dueInput) return;
+
+    const SERVICE_THRESHOLD = 70000;
+    const LOW_RATE = 0.10;
+    const HIGH_RATE = 0.15;
+
+    const parseNumber = (value) => {
+        const cleaned = String(value || '').replace(',', '.').trim();
+        const number = Number.parseFloat(cleaned);
+        if (!Number.isFinite(number) || number < 0) return 0;
+        return number;
+    };
+
+    const round2 = (value) => Math.round(value * 100) / 100;
+
+    const recalc = () => {
+        const product = parseNumber(productInput.value);
+        const cargo = parseNumber(cargoInput.value);
+        const base = product + cargo;
+        const rate = base <= SERVICE_THRESHOLD ? LOW_RATE : HIGH_RATE;
+        const service = round2(base * rate);
+        serviceInput.value = service.toFixed(2);
+        totalInput.value = round2(product + cargo + service).toFixed(2);
+        dueInput.value = round2(cargo + service).toFixed(2);
+    };
+
+    [productInput, cargoInput].forEach((input) => {
+        input.addEventListener('input', recalc);
+        input.addEventListener('change', recalc);
+    });
+
+    recalc();
+})();
+</script>
+{% endblock %}
