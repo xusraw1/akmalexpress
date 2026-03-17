@@ -85,8 +85,7 @@
     place-items: center;
 }
 
-.track-camera__frame::before {
-    content: "";
+.track-camera__focus {
     width: min(70vw, 320px);
     height: clamp(110px, 22vh, 180px);
     border: 2px solid rgba(14, 165, 233, 0.9);
@@ -94,7 +93,7 @@
     box-shadow: 0 0 0 999px rgba(2, 6, 23, 0.28) inset;
 }
 
-.track-camera.is-scanning .track-camera__frame::before {
+.track-camera.is-scanning .track-camera__focus {
     animation: trackFramePulse 1.2s ease-in-out infinite;
 }
 

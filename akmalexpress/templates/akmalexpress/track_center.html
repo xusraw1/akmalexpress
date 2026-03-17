@@ -45,6 +45,7 @@
         <div class="track-camera__viewport" data-camera-viewport hidden>
             <video class="track-camera__video" data-camera-video playsinline muted></video>
             <div class="track-camera__frame" aria-hidden="true">
+                <div class="track-camera__focus" data-camera-focus></div>
                 <span>{% trans "Наведите камеру на штрихкод или QR" %}</span>
             </div>
         </div>
@@ -200,6 +201,7 @@
     const status = root.querySelector('[data-camera-status]');
     const viewport = root.querySelector('[data-camera-viewport]');
     const video = root.querySelector('[data-camera-video]');
+    const focusFrame = root.querySelector('[data-camera-focus]');
     const cameraSelect = root.querySelector('[data-camera-select]');
     const soundButton = root.querySelector('[data-sound-toggle]');
 
@@ -213,7 +215,7 @@
     let lastDetectFrameAt = 0;
     let trackVotes = new Map();
     let soundEnabled = window.localStorage.getItem('trackScannerSound') !== 'off';
-    const REQUIRED_STABLE_FRAMES = 2;
+    const REQUIRED_STABLE_FRAMES = 3;
 
     const canUseCamera = () => {
         const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
@@ -244,17 +246,23 @@
                 audioCtx.resume();
             }
             const now = audioCtx.currentTime;
-            const oscillator = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            oscillator.type = 'triangle';
-            oscillator.frequency.setValueAtTime(1040, now);
-            gain.gain.setValueAtTime(0.0001, now);
-            gain.gain.exponentialRampToValueAtTime(0.18, now + 0.015);
-            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
-            oscillator.connect(gain);
-            gain.connect(audioCtx.destination);
-            oscillator.start(now);
-            oscillator.stop(now + 0.17);
+            const playTone = (frequency, startAt, duration, peakGain) => {
+                const oscillator = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(frequency, startAt);
+                oscillator.frequency.exponentialRampToValueAtTime(frequency * 1.06, startAt + duration);
+                gain.gain.setValueAtTime(0.0001, startAt);
+                gain.gain.exponentialRampToValueAtTime(peakGain, startAt + 0.018);
+                gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+                oscillator.connect(gain);
+                gain.connect(audioCtx.destination);
+                oscillator.start(startAt);
+                oscillator.stop(startAt + duration + 0.02);
+            };
+
+            playTone(920, now, 0.12, 0.26);
+            playTone(1320, now + 0.09, 0.15, 0.24);
         } catch (_err) {
             // Audio API may be blocked by browser settings.
         }
@@ -308,6 +316,114 @@
             ...baseConfig,
             facingMode: { ideal: 'environment' },
         };
+    };
+
+    const buildRect = (left, top, width, height) => ({
+        left,
+        top,
+        width,
+        height,
+        right: left + width,
+        bottom: top + height,
+        centerX: left + (width / 2),
+        centerY: top + (height / 2),
+    });
+
+    const rectArea = (rect) => Math.max(0, rect.width) * Math.max(0, rect.height);
+
+    const intersectionArea = (rectA, rectB) => {
+        const overlapW = Math.max(0, Math.min(rectA.right, rectB.right) - Math.max(rectA.left, rectB.left));
+        const overlapH = Math.max(0, Math.min(rectA.bottom, rectB.bottom) - Math.max(rectA.top, rectB.top));
+        return overlapW * overlapH;
+    };
+
+    const getFocusRect = () => {
+        if (!focusFrame) return null;
+        const rect = focusFrame.getBoundingClientRect();
+        if (!rect.width || !rect.height) return null;
+        const insetX = rect.width * 0.08;
+        const insetY = rect.height * 0.08;
+        return buildRect(
+            rect.left + insetX,
+            rect.top + insetY,
+            Math.max(0, rect.width - insetX * 2),
+            Math.max(0, rect.height - insetY * 2),
+        );
+    };
+
+    const getVideoGeometry = () => {
+        if (!video || !video.videoWidth || !video.videoHeight) return null;
+        const viewportRect = video.getBoundingClientRect();
+        if (!viewportRect.width || !viewportRect.height) return null;
+        const sourceWidth = video.videoWidth;
+        const sourceHeight = video.videoHeight;
+        const scale = Math.max(viewportRect.width / sourceWidth, viewportRect.height / sourceHeight);
+        const renderedWidth = sourceWidth * scale;
+        const renderedHeight = sourceHeight * scale;
+        const offsetX = (viewportRect.width - renderedWidth) / 2;
+        const offsetY = (viewportRect.height - renderedHeight) / 2;
+        return {
+            viewportRect,
+            scale,
+            offsetX,
+            offsetY,
+        };
+    };
+
+    const extractBarcodeBounds = (barcode) => {
+        if (barcode && barcode.boundingBox) {
+            const { x, y, width, height } = barcode.boundingBox;
+            if ([x, y, width, height].every((value) => Number.isFinite(value))) {
+                return { x, y, width, height };
+            }
+        }
+        if (barcode && Array.isArray(barcode.cornerPoints) && barcode.cornerPoints.length) {
+            const xs = barcode.cornerPoints.map((point) => point.x).filter(Number.isFinite);
+            const ys = barcode.cornerPoints.map((point) => point.y).filter(Number.isFinite);
+            if (xs.length && ys.length) {
+                const minX = Math.min(...xs);
+                const maxX = Math.max(...xs);
+                const minY = Math.min(...ys);
+                const maxY = Math.max(...ys);
+                return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+            }
+        }
+        return null;
+    };
+
+    const sourceRectToViewportRect = (sourceRect, geometry) => {
+        const left = geometry.viewportRect.left + (sourceRect.x * geometry.scale) + geometry.offsetX;
+        const top = geometry.viewportRect.top + (sourceRect.y * geometry.scale) + geometry.offsetY;
+        const width = sourceRect.width * geometry.scale;
+        const height = sourceRect.height * geometry.scale;
+        return buildRect(left, top, width, height);
+    };
+
+    const evaluateBarcodeCandidate = (barcode) => {
+        const normalized = normalizeTrack(barcode.rawValue || '');
+        if (!normalized || normalized.length < 4) return null;
+
+        const geometry = getVideoGeometry();
+        const focusRect = getFocusRect();
+        const sourceRect = extractBarcodeBounds(barcode);
+        if (!geometry || !focusRect || !sourceRect) {
+            return { normalized, score: 1, overlapRatio: 1 };
+        }
+
+        const viewportRect = sourceRectToViewportRect(sourceRect, geometry);
+        const overlap = intersectionArea(viewportRect, focusRect);
+        const targetArea = rectArea(viewportRect) || 1;
+        const overlapRatio = overlap / targetArea;
+        if (overlapRatio < 0.16) return null;
+
+        const dx = viewportRect.centerX - focusRect.centerX;
+        const dy = viewportRect.centerY - focusRect.centerY;
+        const focusRadius = Math.hypot(focusRect.width, focusRect.height) / 2 || 1;
+        const distanceRatio = Math.min(1, Math.hypot(dx, dy) / focusRadius);
+        const centerScore = 1 - distanceRatio;
+        const score = (overlapRatio * 0.75) + (centerScore * 0.25);
+
+        return { normalized, score, overlapRatio };
     };
 
     const stopCamera = () => {
@@ -396,19 +512,47 @@
         try {
             const barcodes = await detector.detect(video);
             if (barcodes && barcodes.length) {
-                const normalizedCandidates = [];
+                const scoredCandidates = [];
                 for (const barcode of barcodes) {
-                    const normalized = normalizeTrack(barcode.rawValue || '');
-                    if (normalized && normalized.length >= 4) {
-                        normalizedCandidates.push(normalized);
+                    const candidate = evaluateBarcodeCandidate(barcode);
+                    if (candidate) {
+                        scoredCandidates.push(candidate);
                     }
                 }
-                const uniqueCandidates = [...new Set(normalizedCandidates)];
-                if (uniqueCandidates.length > 1) {
+
+                if (!scoredCandidates.length) {
+                    resetTrackVotes();
+                    setStatus(i18n.scanning);
+                    rafId = window.requestAnimationFrame(scanLoop);
+                    return;
+                }
+
+                const bestByTrack = new Map();
+                scoredCandidates.forEach((candidate) => {
+                    const previous = bestByTrack.get(candidate.normalized);
+                    if (!previous || candidate.score > previous.score) {
+                        bestByTrack.set(candidate.normalized, candidate);
+                    }
+                });
+                const rankedCandidates = Array.from(bestByTrack.values()).sort((a, b) => b.score - a.score);
+
+                let resolvedCandidate = null;
+                if (rankedCandidates.length > 1) {
+                    const best = rankedCandidates[0];
+                    const second = rankedCandidates[1];
+                    const confidentlyDominant = (best.score - second.score >= 0.2) && best.overlapRatio >= 0.35;
+                    if (confidentlyDominant) {
+                        resolvedCandidate = best;
+                    }
+                } else {
+                    [resolvedCandidate] = rankedCandidates;
+                }
+
+                if (!resolvedCandidate) {
                     resetTrackVotes();
                     setStatus(i18n.multiple);
-                } else if (uniqueCandidates.length === 1) {
-                    const candidate = uniqueCandidates[0];
+                } else {
+                    const candidate = resolvedCandidate.normalized;
                     const currentCount = (trackVotes.get(candidate) || 0) + 1;
                     resetTrackVotes();
                     trackVotes.set(candidate, currentCount);
