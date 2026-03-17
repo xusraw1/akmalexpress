@@ -6,7 +6,7 @@ from openpyxl import Workbook, load_workbook
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse, translate_url
 from datetime import timedelta
 from django.utils.crypto import get_random_string
@@ -300,6 +300,59 @@ class StaffEntryPointTests(TestCase):
             follow=False,
         )
         self.assertRedirects(response, reverse('index'), fetch_redirect_response=False)
+
+    @override_settings(
+        STAFF_LOGIN_RATE_LIMIT_ATTEMPTS=3,
+        STAFF_LOGIN_RATE_LIMIT_WINDOW_SECONDS=600,
+        STAFF_LOGIN_RATE_LIMIT_LOCK_SECONDS=600,
+    )
+    def test_login_rate_limit_blocks_after_repeated_failures(self):
+        password = get_random_string(24)
+        user = User.objects.create_user(
+            username='ratelimitstaff',
+            password=password,
+            is_staff=True,
+            is_active=True,
+        )
+        login_url = reverse('staff_login')
+        for _ in range(3):
+            response = self.client.post(
+                login_url,
+                {'username': user.username, 'password': 'wrong-password'},
+                follow=False,
+            )
+            self.assertEqual(response.status_code, 302)
+
+        blocked_response = self.client.post(
+            login_url,
+            {'username': user.username, 'password': password},
+            follow=True,
+        )
+        self.assertEqual(blocked_response.status_code, 200)
+        self.assertContains(blocked_response, 'Слишком много попыток входа')
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_security_headers_are_present(self):
+        response = self.client.get(reverse('index'))
+        self.assertIn('Content-Security-Policy', response)
+        self.assertIn('Permissions-Policy', response)
+        self.assertEqual(response['Cross-Origin-Resource-Policy'], 'same-origin')
+
+    @override_settings(
+        LANGUAGE_COOKIE_SECURE=True,
+        LANGUAGE_COOKIE_SAMESITE='Lax',
+        LANGUAGE_COOKIE_HTTPONLY=False,
+    )
+    def test_language_cookie_uses_secure_flags(self):
+        response = self.client.get(reverse('set_language', args=['uz']) + '?next=/')
+        language_cookie = response.cookies.get(settings.LANGUAGE_COOKIE_NAME)
+        site_cookie = response.cookies.get('site_language')
+        self.assertIsNotNone(language_cookie)
+        self.assertIsNotNone(site_cookie)
+        self.assertEqual(language_cookie['samesite'], 'Lax')
+        self.assertEqual(site_cookie['samesite'], 'Lax')
+        self.assertTrue(bool(language_cookie['secure']))
+        self.assertTrue(bool(site_cookie['secure']))
 
 
 class DispatchOrdersTests(TestCase):

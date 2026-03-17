@@ -1,3 +1,4 @@
+import hashlib
 from datetime import timedelta
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
@@ -5,6 +6,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import user_passes_test
+from django.core.cache import cache
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseNotFound, JsonResponse
 from django.shortcuts import redirect, render
@@ -20,6 +22,80 @@ from .models import Order
 from .selectors.orders import apply_public_order_search_filter, orders_with_related
 from .services.exchange_rates import get_exchange_rates
 from .view_helpers import _safe_next_redirect, is_active_superuser
+
+
+def _staff_login_client_ip(request):
+    cf_ip = (request.META.get('HTTP_CF_CONNECTING_IP') or '').strip()
+    if cf_ip:
+        return cf_ip
+
+    forwarded = (request.META.get('HTTP_X_FORWARDED_FOR') or '').strip()
+    if forwarded:
+        return forwarded.split(',')[0].strip()
+
+    return (request.META.get('REMOTE_ADDR') or '').strip() or 'unknown'
+
+
+def _staff_login_limit_keys(request, username):
+    client_ip = _staff_login_client_ip(request)
+    normalized_username = (username or '').strip().lower() or 'anonymous'
+    ip_hash = hashlib.sha256(f"ip|{client_ip}".encode('utf-8')).hexdigest()[:24]
+    combo_hash = hashlib.sha256(f"ip_user|{client_ip}|{normalized_username}".encode('utf-8')).hexdigest()[:24]
+    return (
+        (f'staff_login:fail:{ip_hash}', f'staff_login:lock:{ip_hash}'),
+        (f'staff_login:fail:{combo_hash}', f'staff_login:lock:{combo_hash}'),
+    )
+
+
+def _staff_login_lock_seconds_left(request, username):
+    now_ts = timezone.now().timestamp()
+    max_left = 0
+    for _fail_key, lock_key in _staff_login_limit_keys(request, username):
+        lock_until = cache.get(lock_key)
+        if not lock_until:
+            continue
+        try:
+            seconds_left = int(float(lock_until) - now_ts)
+        except (TypeError, ValueError):
+            cache.delete(lock_key)
+            continue
+        if seconds_left <= 0:
+            cache.delete(lock_key)
+            continue
+        max_left = max(max_left, seconds_left)
+    return max_left
+
+
+def _staff_login_register_failure(request, username):
+    attempts_limit = int(getattr(settings, 'STAFF_LOGIN_RATE_LIMIT_ATTEMPTS', 8))
+    window_seconds = int(getattr(settings, 'STAFF_LOGIN_RATE_LIMIT_WINDOW_SECONDS', 900))
+    lock_seconds = int(getattr(settings, 'STAFF_LOGIN_RATE_LIMIT_LOCK_SECONDS', 900))
+
+    should_lock = False
+    for fail_key, _lock_key in _staff_login_limit_keys(request, username):
+        current = cache.get(fail_key)
+        try:
+            current_count = int(current or 0)
+        except (TypeError, ValueError):
+            current_count = 0
+        current_count += 1
+        cache.set(fail_key, current_count, timeout=window_seconds)
+        if current_count >= attempts_limit:
+            should_lock = True
+
+    if should_lock:
+        lock_until = timezone.now().timestamp() + lock_seconds
+        for fail_key, lock_key in _staff_login_limit_keys(request, username):
+            cache.set(lock_key, lock_until, timeout=lock_seconds)
+            cache.delete(fail_key)
+        return lock_seconds
+    return 0
+
+
+def _staff_login_clear_failure_state(request, username):
+    for fail_key, lock_key in _staff_login_limit_keys(request, username):
+        cache.delete(fail_key)
+        cache.delete(lock_key)
 
 
 def index(request):
@@ -201,8 +277,14 @@ def set_language_view(request, lang_code):
             next_url = '/'
 
     response = redirect(next_url)
-    response.set_cookie(settings.LANGUAGE_COOKIE_NAME, language, max_age=60 * 60 * 24 * 365)
-    response.set_cookie('site_language', language, max_age=60 * 60 * 24 * 365)
+    cookie_kwargs = {
+        'max_age': 60 * 60 * 24 * 365,
+        'secure': getattr(settings, 'LANGUAGE_COOKIE_SECURE', False),
+        'httponly': getattr(settings, 'LANGUAGE_COOKIE_HTTPONLY', False),
+        'samesite': getattr(settings, 'LANGUAGE_COOKIE_SAMESITE', 'Lax'),
+    }
+    response.set_cookie(settings.LANGUAGE_COOKIE_NAME, language, **cookie_kwargs)
+    response.set_cookie('site_language', language, **cookie_kwargs)
     return response
 
 
@@ -216,17 +298,43 @@ def login_view(request):
         next_url = _safe_next_redirect(request, reverse('index'), include_referer=False)
         if urlparse(next_url).path.rstrip('/') == reverse('staff_login').rstrip('/'):
             next_url = reverse('index')
+        retry_url = f"{reverse('staff_login')}?{urlencode({'next': next_url})}"
+
+        lock_seconds_left = _staff_login_lock_seconds_left(request, username)
+        if lock_seconds_left > 0:
+            messages.error(
+                request,
+                _('Слишком много попыток входа. Повторите через %(seconds)s сек.') % {'seconds': lock_seconds_left},
+            )
+            return redirect(retry_url)
+
         user = authenticate(request, username=username, password=password)
         if user is not None:
             if not (user.is_staff or user.is_superuser):
+                lock_after_failure = _staff_login_register_failure(request, username)
+                if lock_after_failure > 0:
+                    messages.error(
+                        request,
+                        _('Слишком много попыток входа. Повторите через %(seconds)s сек.') % {
+                            'seconds': lock_after_failure,
+                        },
+                    )
+                    return redirect(retry_url)
                 messages.error(request, _('Служебный вход доступен только администраторам.'))
-                retry_url = f"{reverse('staff_login')}?{urlencode({'next': next_url})}"
                 return redirect(retry_url)
             login(request, user)
+            _staff_login_clear_failure_state(request, username)
             messages.success(request, _('Вы вошли в свой аккаунт'))
             return redirect(next_url)
+
+        lock_after_failure = _staff_login_register_failure(request, username)
+        if lock_after_failure > 0:
+            messages.error(
+                request,
+                _('Слишком много попыток входа. Повторите через %(seconds)s сек.') % {'seconds': lock_after_failure},
+            )
+            return redirect(retry_url)
         messages.error(request, _('Пользователь не найден, попробуйте заново'))
-        retry_url = f"{reverse('staff_login')}?{urlencode({'next': next_url})}"
         return redirect(retry_url)
 
     return render(request, 'akmalexpress/login.html')

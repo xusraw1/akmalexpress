@@ -11,6 +11,16 @@ def env_bool(name: str, default: bool = False) -> bool:
     return raw_value.strip().lower() in {'1', 'true', 'yes', 'on'}
 
 
+def env_int(name: str, default: int) -> int:
+    raw_value = os.environ.get(name)
+    if raw_value is None:
+        return default
+    try:
+        return int(raw_value)
+    except (TypeError, ValueError):
+        return default
+
+
 SECRET_KEY = os.environ.get(
     'SECRET_KEY',
     'change-me-6fA9zQp2LmN8vX4kRtY7uHi3sDwC0bJe5nPo1qRsTuVwXyZ',
@@ -43,6 +53,7 @@ MIDDLEWARE = [
     'django.middleware.locale.LocaleMiddleware',
     'akmalexpress.middleware.LanguageMiddleware',
     'akmalexpress.middleware.NoIndexPrivateRoutesMiddleware',
+    'akmalexpress.middleware.SecurityHeadersMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -131,3 +142,32 @@ SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', False)
 SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '31536000'))
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
+LANGUAGE_COOKIE_SECURE = env_bool('LANGUAGE_COOKIE_SECURE', SESSION_COOKIE_SECURE)
+LANGUAGE_COOKIE_HTTPONLY = env_bool('LANGUAGE_COOKIE_HTTPONLY', False)
+LANGUAGE_COOKIE_SAMESITE = os.environ.get('LANGUAGE_COOKIE_SAMESITE', 'Lax')
+
+STAFF_LOGIN_RATE_LIMIT_ATTEMPTS = max(1, env_int('STAFF_LOGIN_RATE_LIMIT_ATTEMPTS', 8))
+STAFF_LOGIN_RATE_LIMIT_WINDOW_SECONDS = max(60, env_int('STAFF_LOGIN_RATE_LIMIT_WINDOW_SECONDS', 900))
+STAFF_LOGIN_RATE_LIMIT_LOCK_SECONDS = max(60, env_int('STAFF_LOGIN_RATE_LIMIT_LOCK_SECONDS', 900))
+
+CONTENT_SECURITY_POLICY = os.environ.get(
+    'CONTENT_SECURITY_POLICY',
+    "default-src 'self'; "
+    "base-uri 'self'; "
+    "object-src 'none'; "
+    "frame-ancestors 'none'; "
+    "form-action 'self'; "
+    "script-src 'self' 'unsafe-inline'; "
+    "style-src 'self' 'unsafe-inline'; "
+    "img-src 'self' data: blob: https:; "
+    "font-src 'self' data:; "
+    "connect-src 'self'; "
+    "media-src 'self' blob: data:",
+)
+
+PERMISSIONS_POLICY = os.environ.get(
+    'PERMISSIONS_POLICY',
+    'accelerometer=(), autoplay=(), camera=(self), geolocation=(), gyroscope=(), '
+    'magnetometer=(), microphone=(), payment=(), usb=()',
+)

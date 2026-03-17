@@ -24,8 +24,14 @@ class LanguageMiddleware:
         language = normalize_language(
             getattr(request, 'LANGUAGE_CODE', None) or translation.get_language() or request_language
         )
-        response.set_cookie(settings.LANGUAGE_COOKIE_NAME, language, max_age=60 * 60 * 24 * 365)
-        response.set_cookie('site_language', language, max_age=60 * 60 * 24 * 365)
+        cookie_kwargs = {
+            'max_age': 60 * 60 * 24 * 365,
+            'secure': getattr(settings, 'LANGUAGE_COOKIE_SECURE', False),
+            'httponly': getattr(settings, 'LANGUAGE_COOKIE_HTTPONLY', False),
+            'samesite': getattr(settings, 'LANGUAGE_COOKIE_SAMESITE', 'Lax'),
+        }
+        response.set_cookie(settings.LANGUAGE_COOKIE_NAME, language, **cookie_kwargs)
+        response.set_cookie('site_language', language, **cookie_kwargs)
 
         content_type = response.get('Content-Type', '')
         if language == 'uz' and content_type.startswith('text/html') and hasattr(response, 'content'):
@@ -78,4 +84,25 @@ class NoIndexPrivateRoutesMiddleware:
 
         if request.path.startswith(protected_prefixes):
             response['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
+        return response
+
+
+class SecurityHeadersMiddleware:
+    """Attach additional production security headers to all responses."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        csp_policy = (getattr(settings, 'CONTENT_SECURITY_POLICY', '') or '').strip()
+        permissions_policy = (getattr(settings, 'PERMISSIONS_POLICY', '') or '').strip()
+
+        if csp_policy:
+            response.setdefault('Content-Security-Policy', csp_policy)
+        if permissions_policy:
+            response.setdefault('Permissions-Policy', permissions_policy)
+
+        response.setdefault('Cross-Origin-Resource-Policy', 'same-origin')
+        response.setdefault('X-Permitted-Cross-Domain-Policies', 'none')
         return response

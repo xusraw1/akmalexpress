@@ -28,3 +28,13 @@ services:
         value: "true"
       - key: CSRF_COOKIE_SECURE
         value: "true"
+      - key: LANGUAGE_COOKIE_SECURE
+        value: "true"
+      - key: LANGUAGE_COOKIE_SAMESITE
+        value: Lax
+      - key: STAFF_LOGIN_RATE_LIMIT_ATTEMPTS
+        value: "8"
+      - key: STAFF_LOGIN_RATE_LIMIT_WINDOW_SECONDS
+        value: "900"
+      - key: STAFF_LOGIN_RATE_LIMIT_LOCK_SECONDS
+        value: "900"

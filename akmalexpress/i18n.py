@@ -487,6 +487,7 @@ UZ_TRANSLATIONS = {
     'Вы не имеете доступ к этому профилю': 'Sizda ushbu profilga kirish huquqi yo‘q',
     'Вы вошли в свой аккаунт': 'Siz hisobingizga kirdingiz',
     'Пользователь не найден, попробуйте заново': 'Foydalanuvchi topilmadi, qayta urinib ko‘ring',
+    'Слишком много попыток входа. Повторите через %(seconds)s сек.': "Kirish urinishlari juda ko'p. %(seconds)s soniyadan keyin qayta urinib ko'ring.",
     'Сегодня': 'Bugun',
     'Служебный вход доступен только администраторам.': 'Admin kirishi faqat administratorlar uchun ochiq.',
     'Вы вышли из аккаунта': 'Siz hisobdan chiqdingiz',
@@ -773,6 +774,10 @@ UZ_REGEX_REPLACEMENTS = [
     (
         re.compile(r"По вашему запросу &#x27;([^<]+?)&#x27; ничего не найдено"),
         lambda match: f"Sizning &#x27;{match.group(1)}&#x27; so'rovingiz bo'yicha hech narsa topilmadi",
+    ),
+    (
+        re.compile(r"Слишком много попыток входа\.\s*Повторите через\s*(\d+)\s*сек\."),
+        lambda match: f"Kirish urinishlari juda ko'p. {match.group(1)} soniyadan keyin qayta urinib ko'ring.",
     ),
     (
         re.compile(r"Заказ с номером №(\d+) успешно удален"),
