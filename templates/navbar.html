@@ -41,7 +41,6 @@
             {% else %}
             <span class="user-pill">@{{ request.user.username }}</span>
             {% endif %}
-            <a href="{% url 'logout' %}" class="top-action">{% trans "Выход" %}</a>
             {% endif %}
         </div>
     </div>

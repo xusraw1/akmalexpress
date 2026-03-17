@@ -214,7 +214,21 @@
     let lastDetectedAt = 0;
     let lastDetectFrameAt = 0;
     let trackVotes = new Map();
-    let soundEnabled = window.localStorage.getItem('trackScannerSound') !== 'off';
+    const safeStorageGet = (key) => {
+        try {
+            return window.localStorage.getItem(key);
+        } catch (_err) {
+            return null;
+        }
+    };
+    const safeStorageSet = (key, value) => {
+        try {
+            window.localStorage.setItem(key, value);
+        } catch (_err) {
+            // Storage can be blocked in private mode.
+        }
+    };
+    let soundEnabled = safeStorageGet('trackScannerSound') !== 'off';
     const REQUIRED_STABLE_FRAMES = 3;
 
     const canUseCamera = () => {
@@ -633,7 +647,7 @@
     if (soundButton) {
         soundButton.addEventListener('click', () => {
             soundEnabled = !soundEnabled;
-            window.localStorage.setItem('trackScannerSound', soundEnabled ? 'on' : 'off');
+            safeStorageSet('trackScannerSound', soundEnabled ? 'on' : 'off');
             setSoundLabel();
         });
     }
