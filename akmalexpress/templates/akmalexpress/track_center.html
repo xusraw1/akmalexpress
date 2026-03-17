@@ -35,6 +35,11 @@
     <div class="track-camera" data-track-camera>
         <div class="track-camera__head">
             <button type="button" class="btn-secondary track-camera__toggle" data-camera-toggle>{% trans "Сканировать камерой" %}</button>
+            <div class="track-camera__tools">
+                <label for="camera-device-select" class="sr-only">{% trans "Камера" %}</label>
+                <select id="camera-device-select" class="track-camera__select" data-camera-select></select>
+                <button type="button" class="btn-ghost track-camera__sound" data-sound-toggle>{% trans "Звук: вкл" %}</button>
+            </div>
             <p class="track-camera__status muted" data-camera-status>{% trans "Камера выключена." %}</p>
         </div>
         <div class="track-camera__viewport" data-camera-viewport hidden>
@@ -156,13 +161,20 @@
 {% trans "Доступ к камере запрещен. Разрешите камеру в браузере." as i18n_camera_denied %}
 {% trans "Для камеры нужен HTTPS. По локальному Wi-Fi через http камера блокируется браузером." as i18n_camera_secure %}
 {% trans "Браузер не поддерживает авто-распознавание. Используйте ручной ввод." as i18n_camera_unsupported %}
+{% trans "В кадре несколько кодов. Наведите рамку только на один." as i18n_camera_multiple %}
+{% trans "Подтверждаю скан..." as i18n_camera_locking %}
+{% trans "Камера не найдена." as i18n_camera_not_found %}
+{% trans "Камера" as i18n_camera_label %}
+{% trans "Выберите камеру" as i18n_camera_pick %}
 {% trans "Остановить камеру" as i18n_camera_stop %}
 {% trans "Сканировать камерой" as i18n_camera_start %}
+{% trans "Звук: вкл" as i18n_sound_on %}
+{% trans "Звук: выкл" as i18n_sound_off %}
 <script>
 (function () {
     const root = document.querySelector('[data-track-camera]');
-    const form = document.querySelector('form[method="post"]');
     const input = document.getElementById('track-scan-input');
+    const form = input ? input.closest('form') : null;
     if (!root || !form || !input) return;
 
     const i18n = {
@@ -173,22 +185,35 @@
         denied: "{{ i18n_camera_denied|escapejs }}",
         secure: "{{ i18n_camera_secure|escapejs }}",
         unsupported: "{{ i18n_camera_unsupported|escapejs }}",
+        multiple: "{{ i18n_camera_multiple|escapejs }}",
+        locking: "{{ i18n_camera_locking|escapejs }}",
+        notFound: "{{ i18n_camera_not_found|escapejs }}",
+        cameraLabel: "{{ i18n_camera_label|escapejs }}",
+        cameraPick: "{{ i18n_camera_pick|escapejs }}",
         start: "{{ i18n_camera_start|escapejs }}",
         stop: "{{ i18n_camera_stop|escapejs }}",
+        soundOn: "{{ i18n_sound_on|escapejs }}",
+        soundOff: "{{ i18n_sound_off|escapejs }}",
     };
 
     const button = root.querySelector('[data-camera-toggle]');
     const status = root.querySelector('[data-camera-status]');
     const viewport = root.querySelector('[data-camera-viewport]');
     const video = root.querySelector('[data-camera-video]');
+    const cameraSelect = root.querySelector('[data-camera-select]');
+    const soundButton = root.querySelector('[data-sound-toggle]');
 
     let stream = null;
     let rafId = null;
     let isScanning = false;
     let detector = null;
+    let audioCtx = null;
     let lastDetectedTrack = '';
     let lastDetectedAt = 0;
     let lastDetectFrameAt = 0;
+    let trackVotes = new Map();
+    let soundEnabled = window.localStorage.getItem('trackScannerSound') !== 'off';
+    const REQUIRED_STABLE_FRAMES = 2;
 
     const canUseCamera = () => {
         const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
@@ -203,8 +228,92 @@
         if (button) button.textContent = running ? i18n.stop : i18n.start;
     };
 
+    const setSoundLabel = () => {
+        if (!soundButton) return;
+        soundButton.textContent = soundEnabled ? i18n.soundOn : i18n.soundOff;
+        soundButton.setAttribute('aria-pressed', soundEnabled ? 'true' : 'false');
+    };
+
+    const playDetectedBeep = () => {
+        if (!soundEnabled) return;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        try {
+            audioCtx = audioCtx || new AudioCtx();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const now = audioCtx.currentTime;
+            const oscillator = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            oscillator.type = 'triangle';
+            oscillator.frequency.setValueAtTime(1040, now);
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(0.18, now + 0.015);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+            oscillator.connect(gain);
+            gain.connect(audioCtx.destination);
+            oscillator.start(now);
+            oscillator.stop(now + 0.17);
+        } catch (_err) {
+            // Audio API may be blocked by browser settings.
+        }
+    };
+
+    const resetTrackVotes = () => {
+        trackVotes = new Map();
+    };
+
+    const populateCameras = async () => {
+        if (!cameraSelect || !navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+        try {
+            const previousValue = cameraSelect.value;
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const cameras = devices.filter((device) => device.kind === 'videoinput');
+            cameraSelect.innerHTML = '';
+
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = i18n.cameraPick;
+            cameraSelect.appendChild(placeholder);
+
+            cameras.forEach((device, index) => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                option.textContent = device.label || `${i18n.cameraLabel} ${index + 1}`;
+                cameraSelect.appendChild(option);
+            });
+
+            if (previousValue && cameras.some((device) => device.deviceId === previousValue)) {
+                cameraSelect.value = previousValue;
+            }
+            cameraSelect.disabled = cameras.length === 0;
+        } catch (_err) {
+            cameraSelect.disabled = true;
+        }
+    };
+
+    const cameraConstraints = () => {
+        const baseConfig = {
+            width: { ideal: 960 },
+            height: { ideal: 540 },
+        };
+        if (cameraSelect && cameraSelect.value) {
+            return {
+                ...baseConfig,
+                deviceId: { exact: cameraSelect.value },
+            };
+        }
+        return {
+            ...baseConfig,
+            facingMode: { ideal: 'environment' },
+        };
+    };
+
     const stopCamera = () => {
         isScanning = false;
+        root.classList.remove('is-scanning');
+        resetTrackVotes();
         if (rafId) {
             window.cancelAnimationFrame(rafId);
             rafId = null;
@@ -262,6 +371,7 @@
         lastDetectedTrack = normalized;
         lastDetectedAt = now;
         input.value = normalized;
+        playDetectedBeep();
         setStatus(i18n.detected);
         stopCamera();
         if (typeof form.requestSubmit === 'function') {
@@ -286,10 +396,31 @@
         try {
             const barcodes = await detector.detect(video);
             if (barcodes && barcodes.length) {
+                const normalizedCandidates = [];
                 for (const barcode of barcodes) {
-                    if (submitDetectedTrack(barcode.rawValue || '')) {
-                        return;
+                    const normalized = normalizeTrack(barcode.rawValue || '');
+                    if (normalized && normalized.length >= 4) {
+                        normalizedCandidates.push(normalized);
                     }
+                }
+                const uniqueCandidates = [...new Set(normalizedCandidates)];
+                if (uniqueCandidates.length > 1) {
+                    resetTrackVotes();
+                    setStatus(i18n.multiple);
+                } else if (uniqueCandidates.length === 1) {
+                    const candidate = uniqueCandidates[0];
+                    const currentCount = (trackVotes.get(candidate) || 0) + 1;
+                    resetTrackVotes();
+                    trackVotes.set(candidate, currentCount);
+                    if (currentCount >= REQUIRED_STABLE_FRAMES) {
+                        if (submitDetectedTrack(candidate)) {
+                            return;
+                        }
+                    } else {
+                        setStatus(i18n.locking);
+                    }
+                } else {
+                    resetTrackVotes();
                 }
             }
         } catch (_err) {
@@ -319,19 +450,18 @@
             });
             stream = await navigator.mediaDevices.getUserMedia({
                 audio: false,
-                video: {
-                    facingMode: { ideal: 'environment' },
-                    width: { ideal: 960 },
-                    height: { ideal: 540 },
-                },
+                video: cameraConstraints(),
             });
             video.srcObject = stream;
             await video.play();
             viewport.hidden = false;
             isScanning = true;
+            root.classList.add('is-scanning');
+            resetTrackVotes();
             setButtonLabel(true);
             setStatus(i18n.scanning);
             rafId = window.requestAnimationFrame(scanLoop);
+            populateCameras();
         } catch (_err) {
             stopCamera();
             setStatus(i18n.denied);
@@ -348,12 +478,35 @@
         });
     }
 
+    if (cameraSelect) {
+        cameraSelect.addEventListener('change', () => {
+            if (!isScanning) return;
+            stopCamera();
+            startCamera();
+        });
+    }
+
+    if (soundButton) {
+        soundButton.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            window.localStorage.setItem('trackScannerSound', soundEnabled ? 'on' : 'off');
+            setSoundLabel();
+        });
+    }
+
     document.addEventListener('visibilitychange', () => {
         if (document.hidden && isScanning) {
             stopCamera();
         }
     });
     window.addEventListener('beforeunload', stopCamera);
+
+    setSoundLabel();
+    populateCameras().then(() => {
+        if (cameraSelect && cameraSelect.disabled) {
+            setStatus(i18n.notFound);
+        }
+    });
 })();
 </script>
 {% endblock %}

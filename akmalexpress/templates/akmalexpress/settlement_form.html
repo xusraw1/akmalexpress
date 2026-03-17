@@ -25,16 +25,47 @@
             </div>
             <div class="field">
                 <label for="sheet-product-cost">Tannarxi (себестоимость)</label>
-                <input id="sheet-product-cost" type="number" name="product_cost" step="0.01" min="0" value="{{ sheet.product_cost|floatformat:'2' }}" data-sheet-product required>
+                <div class="field-inline-control">
+                    <input
+                        id="sheet-product-cost"
+                        type="number"
+                        name="product_cost"
+                        step="0.01"
+                        min="0"
+                        value="{{ sheet.product_cost|floatformat:'2' }}"
+                        data-sheet-product
+                        data-sheet-product-default="{{ order.get_total_price|floatformat:'2' }}"
+                        required
+                    >
+                    <button type="button" class="btn-ghost btn-inline" data-product-reset>Из заказа</button>
+                </div>
+                <small class="muted">Себестоимость подставляется автоматически из заказа, но вы можете изменить её вручную.</small>
             </div>
             <div class="field">
                 <label for="sheet-cargo">Kargo</label>
                 <input id="sheet-cargo" type="number" name="cargo_cost" step="0.01" min="0" value="{{ sheet.cargo_cost|floatformat:'2' }}" data-sheet-cargo required>
             </div>
+            <div class="field field--wide">
+                <label>Режим услуги</label>
+                <div class="service-mode-group" data-sheet-service-mode>
+                    <label class="service-mode-option">
+                        <input type="radio" name="service_mode" value="auto" {% if sheet.service_mode != 'fixed_10000' and sheet.service_mode != 'percent_15' %}checked{% endif %}>
+                        <span>Авто</span>
+                    </label>
+                    <label class="service-mode-option">
+                        <input type="radio" name="service_mode" value="fixed_10000" {% if sheet.service_mode == 'fixed_10000' %}checked{% endif %}>
+                        <span>10 000</span>
+                    </label>
+                    <label class="service-mode-option">
+                        <input type="radio" name="service_mode" value="percent_15" {% if sheet.service_mode == 'percent_15' %}checked{% endif %}>
+                        <span>15%</span>
+                    </label>
+                </div>
+                <small class="muted">Авто: если себестоимость + карго меньше 70 000 — 10 000 сум, иначе 15%.</small>
+            </div>
             <div class="field">
                 <label for="sheet-service">Xizmat</label>
                 <input id="sheet-service" type="number" name="service_cost" step="0.01" min="0" value="{{ sheet.service_cost|floatformat:'2' }}" data-sheet-service readonly>
-                <small class="muted">Авто: до 70 000 сум — 10%, выше — 15%</small>
             </div>
             <div class="field">
                 <label for="sheet-total">Tannarx + Kargo + Xizmat</label>
@@ -64,10 +95,12 @@
     const serviceInput = document.querySelector('[data-sheet-service]');
     const totalInput = document.querySelector('[data-sheet-total]');
     const dueInput = document.querySelector('[data-sheet-due]');
-    if (!productInput || !cargoInput || !serviceInput || !totalInput || !dueInput) return;
+    const serviceModeInputs = Array.from(document.querySelectorAll('input[name="service_mode"]'));
+    const productResetButton = document.querySelector('[data-product-reset]');
+    if (!productInput || !cargoInput || !serviceInput || !totalInput || !dueInput || !serviceModeInputs.length) return;
 
     const SERVICE_THRESHOLD = 70000;
-    const LOW_RATE = 0.10;
+    const SERVICE_FIXED = 10000;
     const HIGH_RATE = 0.15;
 
     const parseNumber = (value) => {
@@ -78,13 +111,25 @@
     };
 
     const round2 = (value) => Math.round(value * 100) / 100;
+    const selectedServiceMode = () => {
+        const selected = serviceModeInputs.find((item) => item.checked);
+        return selected ? selected.value : 'auto';
+    };
+    const defaultProductCost = parseNumber(productInput.dataset.sheetProductDefault || productInput.value);
 
     const recalc = () => {
         const product = parseNumber(productInput.value);
         const cargo = parseNumber(cargoInput.value);
         const base = product + cargo;
-        const rate = base <= SERVICE_THRESHOLD ? LOW_RATE : HIGH_RATE;
-        const service = round2(base * rate);
+        const mode = selectedServiceMode();
+        let service = 0;
+        if (mode === 'fixed_10000') {
+            service = SERVICE_FIXED;
+        } else if (mode === 'percent_15') {
+            service = round2(base * HIGH_RATE);
+        } else {
+            service = base < SERVICE_THRESHOLD ? SERVICE_FIXED : round2(base * HIGH_RATE);
+        }
         serviceInput.value = service.toFixed(2);
         totalInput.value = round2(product + cargo + service).toFixed(2);
         dueInput.value = round2(cargo + service).toFixed(2);
@@ -93,6 +138,23 @@
     [productInput, cargoInput].forEach((input) => {
         input.addEventListener('input', recalc);
         input.addEventListener('change', recalc);
+    });
+    serviceModeInputs.forEach((input) => input.addEventListener('change', recalc));
+
+    if (productResetButton) {
+        productResetButton.addEventListener('click', () => {
+            productInput.value = defaultProductCost.toFixed(2);
+            recalc();
+            productInput.focus();
+        });
+    }
+
+    productInput.addEventListener('blur', () => {
+        const current = String(productInput.value || '').trim();
+        if (!current) {
+            productInput.value = defaultProductCost.toFixed(2);
+            recalc();
+        }
     });
 
     recalc();

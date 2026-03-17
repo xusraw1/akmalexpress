@@ -190,8 +190,73 @@ label {
     display: block;
 }
 
+.field--wide {
+    grid-column: 1 / -1;
+}
+
 .field>label {
     display: block;
+}
+
+.field-inline-control {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.45rem;
+    align-items: center;
+}
+
+.btn-inline {
+    min-height: 42px;
+    white-space: nowrap;
+}
+
+.service-mode-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 0.1rem;
+}
+
+.service-mode-option {
+    position: relative;
+    margin: 0;
+}
+
+.service-mode-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.service-mode-option span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    min-width: 88px;
+    padding: 0.35rem 0.78rem;
+    border-radius: 999px;
+    border: 1px solid #c6d7e5;
+    background: linear-gradient(180deg, #ffffff, #eef6fd);
+    color: var(--ink-700);
+    font-size: 0.84rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.service-mode-option input[type="radio"]:checked+span {
+    border-color: rgba(15, 118, 110, 0.48);
+    background: linear-gradient(180deg, rgba(15, 118, 110, 0.2), rgba(15, 118, 110, 0.12));
+    color: #0f766e;
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+}
+
+.service-mode-option input[type="radio"]:focus-visible+span {
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
 }
 
 .field-error {
@@ -568,3 +633,12 @@ input[name$="-DELETE"][hidden] {
     color: var(--danger);
 }
 
+@media (max-width: 640px) {
+    .field-inline-control {
+        grid-template-columns: 1fr;
+    }
+
+    .field-inline-control .btn-inline {
+        width: 100%;
+    }
+}

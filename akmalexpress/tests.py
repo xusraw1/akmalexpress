@@ -560,6 +560,44 @@ class SettlementPrintTests(TestCase):
         self.assertContains(response, '309 350')
         self.assertContains(response, '119 350')
 
+    def test_settlement_auto_mode_below_threshold_sets_fixed_service(self):
+        self.client.login(username=self.staff.username, password=self.staff_password)
+        response = self.client.post(
+            reverse('print_settlement_sheet', args=[self.order.slug]),
+            {
+                'receipt_number': '905',
+                'full_name': 'Bahriddin Pirov',
+                'product_cost': '50000',
+                'cargo_cost': '10000',
+                'service_mode': 'auto',
+                'phone': '941958228',
+            },
+            follow=False,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '10 000')
+        self.assertContains(response, '70 000')
+        self.assertContains(response, '20 000')
+
+    def test_settlement_manual_service_mode_can_force_fixed_amount(self):
+        self.client.login(username=self.staff.username, password=self.staff_password)
+        response = self.client.post(
+            reverse('print_settlement_sheet', args=[self.order.slug]),
+            {
+                'receipt_number': '905',
+                'full_name': 'Bahriddin Pirov',
+                'product_cost': '190000',
+                'cargo_cost': '79000',
+                'service_mode': 'fixed_10000',
+                'phone': '941958228',
+            },
+            follow=False,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '10 000')
+        self.assertContains(response, '279 000')
+        self.assertContains(response, '89 000')
+
 
 class TrackReminderDismissTests(TestCase):
     def setUp(self):
