@@ -33,6 +33,7 @@
                 <div class="dispatch-order-meta">
                     <span class="dispatch-chip">{{ order.shipping_method_summary }}</span>
                     <span class="dispatch-order-price">{{ order.get_final_total|money:2 }} {{ order.get_current }}</span>
+                    <span class="dispatch-chip">Долг: {{ order.get_pickup_due|money:2 }} {{ order.get_current }}</span>
                     <span
                         data-status-badge
                         class="status-badge {% if order.status == 'accepted' %}status-accepted{% elif order.status == 'ordered' %}status-ordered{% elif order.status == 'transit' %}status-transit{% elif order.status == 'arrived' %}status-done{% elif order.status == 'cancelled' %}status-cancelled{% else %}status-default{% endif %}"
@@ -55,6 +56,8 @@
                         <h3>Цена и комментарий</h3>
                         <p><b>Себестоимость:</b> {{ order.get_total_price|money:2 }} {{ order.get_current }}</p>
                         <p><b>Итог:</b> {{ order.get_final_total|money:2 }} {{ order.get_current }}</p>
+                        <p><b>Долг:</b> {{ order.get_pickup_due|money:2 }} {{ order.get_current }}</p>
+                        <p><b>Баланс:</b> {{ order.get_balance|money:2 }} {{ order.get_current }}</p>
                         <p><b>Описание:</b> {{ order.description|default:"-" }}</p>
                     </article>
 

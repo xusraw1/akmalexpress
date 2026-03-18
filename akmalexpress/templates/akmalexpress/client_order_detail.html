@@ -31,6 +31,10 @@
             <span>{{ order.get_status_display }}</span>
         </div>
         <div class="meta-item">
+            <strong>Долг</strong>
+            <span>{{ order.get_pickup_due|money:2 }} {{ order.get_current }}</span>
+        </div>
+        <div class="meta-item">
             <strong>Баланс</strong>
             <span>{{ order.get_balance|money:2 }} {{ order.get_current }}</span>
         </div>
@@ -109,12 +113,10 @@
                 <td>Итог к оплате</td>
                 <td><b>{{ order.get_final_total|money:2 }} {{ order.get_current }}</b></td>
             </tr>
-            {% if order.debt %}
             <tr>
                 <td>Долг клиента</td>
                 <td><b>{{ order.get_pickup_due|money:2 }} {{ order.get_current }}</b></td>
             </tr>
-            {% endif %}
             <tr>
                 <td>Баланс</td>
                 <td><b>{{ order.get_balance|money:2 }} {{ order.get_current }}</b></td>

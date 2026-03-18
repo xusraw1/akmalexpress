@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load number_format %}
 
 {% block title %}{% trans "Сканер треков | AkmalExpress" %}{% endblock %}
 
@@ -65,6 +66,7 @@
             {% if selected_track_match.product_name %}
             <p><b>{% trans "Товар" %}:</b> {{ selected_track_match.product_name }}</p>
             {% endif %}
+            <p><b>{% trans "Долг" %}:</b> {{ selected_track_match.order.get_pickup_due|money:2 }} {{ selected_track_match.order.get_current }}</p>
             <p>
                 <b>{% trans "Текущий статус" %}:</b>
                 {% with order=selected_track_match.order %}{% include 'partials/status_badge.html' %}{% endwith %}
@@ -126,6 +128,7 @@
                     <th>{% trans "Клиент" %}</th>
                     <th>{% trans "Товар" %}</th>
                     <th>{% trans "Трек" %}</th>
+                    <th>{% trans "Долг" %}</th>
                     <th>{% trans "Прибыл" %}</th>
                     <th>{% trans "Действие" %}</th>
                 </tr>
@@ -137,6 +140,7 @@
                     <td data-label="{% trans 'Клиент' %}">{{ item.order.first_name }} {{ item.order.last_name }}</td>
                     <td data-label="{% trans 'Товар' %}">{{ item.product_name }}</td>
                     <td data-label="{% trans 'Трек' %}"><b>{{ item.track_number }}</b></td>
+                    <td data-label="{% trans 'Долг' %}">{{ item.order.get_pickup_due|money:2 }} {{ item.order.get_current }}</td>
                     <td data-label="{% trans 'Прибыл' %}">
                         {% if item.order.come %}{{ item.order.come|date:"d.m.Y H:i" }}{% else %}-{% endif %}
                     </td>
@@ -146,7 +150,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6">{% trans "Пока нет прибывших заказов." %}</td>
+                    <td colspan="7">{% trans "Пока нет прибывших заказов." %}</td>
                 </tr>
                 {% endfor %}
             </tbody>

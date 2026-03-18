@@ -81,6 +81,7 @@
                     <th>{% trans "Продукт" %}</th>
                     <th>{% trans "Дата" %}</th>
                     <th>{% trans "Статус" %}</th>
+                    <th>{% trans "Долг" %}</th>
                     <th>{% trans "Итог" %}</th>
                     {% if request.user.is_staff or request.user.is_superuser %}
                     <th>{% trans "Действия" %}</th>
@@ -97,6 +98,7 @@
                     <td data-label="{% trans 'Продукт' %}">{{ order.get_display_product_name }}</td>
                     <td data-label="{% trans 'Дата' %}">{{ order.order_date|date:"d.m.Y" }}</td>
                     <td data-label="{% trans 'Статус' %}">{% include 'partials/status_badge.html' %}</td>
+                    <td data-label="{% trans 'Долг' %}"><b>{{ order.get_pickup_due|money:2 }} {{ order.get_current }}</b></td>
                     <td data-label="{% trans 'Итог' %}"><b>{{ order.get_final_total|money:2 }} {{ order.get_current }}</b></td>
                     {% if request.user.is_staff or request.user.is_superuser %}
                     <td data-label="{% trans 'Действия' %}">
@@ -110,7 +112,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="{% if request.user.is_staff or request.user.is_superuser %}7{% else %}6{% endif %}">{% trans "По выбранным фильтрам заказы не найдены." %}</td>
+                    <td colspan="{% if request.user.is_staff or request.user.is_superuser %}8{% else %}7{% endif %}">{% trans "По выбранным фильтрам заказы не найдены." %}</td>
                 </tr>
                 {% endfor %}
             </tbody>

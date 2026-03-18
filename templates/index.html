@@ -54,6 +54,7 @@
                 <div class="search-order-summary__side">
                     {% include 'partials/status_badge.html' %}
                     <b class="search-order-total">{{ order.get_final_total|money:2 }} {{ order.get_current }}</b>
+                    <span class="muted muted-no-top">{% trans "Долг" %}: {{ order.get_pickup_due|money:2 }} {{ order.get_current }}</span>
                     <span class="muted muted-no-top">{% trans "Баланс:" %} {{ order.get_balance|money:2 }} {{ order.get_current }}</span>
                 </div>
             </summary>
@@ -71,6 +72,10 @@
                     <article class="search-order-info">
                         <h3>{% trans "Телефон" %}</h3>
                         <p>{{ order.phone1 }}</p>
+                    </article>
+                    <article class="search-order-info">
+                        <h3>{% trans "Долг" %}</h3>
+                        <p>{{ order.get_pickup_due|money:2 }} {{ order.get_current }}</p>
                     </article>
                     <article class="search-order-info">
                         <h3>{% trans "Баланс" %}</h3>

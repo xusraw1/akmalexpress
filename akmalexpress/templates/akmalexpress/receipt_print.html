@@ -77,14 +77,14 @@
         }
 
         .receipt-head .company {
-            font-size: 10.5pt;
+            font-size: 9.2pt;
             font-weight: 800;
             line-height: 1.15;
         }
 
         .receipt-head .meta-line {
             margin-top: 3px;
-            font-size: 9.4pt;
+            font-size: 8.2pt;
         }
 
         .section {
@@ -134,13 +134,6 @@
         .item-price {
             white-space: nowrap;
             text-align: right;
-        }
-
-        .hand-line {
-            margin: 5px 0;
-            border-bottom: 1.3px dashed #0f172a;
-            padding-bottom: 3px;
-            font-size: 9pt;
         }
 
         .total-row {
@@ -197,7 +190,6 @@
             <p class="line"><span class="label">ФИ:</span>{{ order.first_name }} {{ order.last_name }}</p>
             <p class="line"><span class="label">Телефон:</span>{% if order.phone1 %}{{ order.phone1 }}{% else %}-{% endif %}{% if order.phone2 %}, {{ order.phone2 }}{% endif %}</p>
             <p class="line"><span class="label">Дата заказа:</span>{{ order.order_date|date:"d.m.Y" }}</p>
-            <p class="line"><span class="label">Админ:</span>@{{ order.user|default:"-" }}</p>
         </section>
 
         <section class="items-box">
@@ -226,14 +218,12 @@
             </div>
         </section>
 
-        <p class="hand-line">Доп. отметка: ____________________</p>
-
         <div class="total-row">
             <span>ОБЩАЯ СТОИМОСТЬ</span>
             <span>{{ order.get_final_total|money:2 }} {{ order.get_current }}</span>
         </div>
-
-        <p class="hand-line">Подпись админа: ____________________</p>
+        <p class="line"><span class="label">Долг:</span>{{ order.get_pickup_due|money:2 }} {{ order.get_current }}</p>
+        <p class="line"><span class="label">Баланс:</span>{{ order.get_balance|money:2 }} {{ order.get_current }}</p>
 
         <p class="footer-note">№{{ order.receipt_number }} · {{ order.order_date|date:"d.m.Y" }}</p>
     </section>
