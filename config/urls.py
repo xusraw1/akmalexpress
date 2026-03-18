@@ -1,3 +1,5 @@
+import re
+
 from django.contrib import admin
 from django.http import HttpResponseNotFound
 from django.shortcuts import redirect
@@ -5,6 +7,7 @@ from django.urls import path, include, re_path
 from django.conf.urls.i18n import i18n_patterns
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.static import serve as serve_static
 from akmalexpress.views import robots_txt, custom_404_debug
 
 handler404 = 'akmalexpress.views.custom_404'
@@ -44,4 +47,13 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += [path('<path:unmatched_path>', custom_404_debug, name='debug_404')]
 elif settings.SERVE_MEDIA_FILES:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    media_prefix = settings.MEDIA_URL.strip('/')
+    if media_prefix:
+        urlpatterns += [
+            re_path(
+                rf'^{re.escape(media_prefix)}/(?P<path>.*)$',
+                serve_static,
+                {'document_root': settings.MEDIA_ROOT},
+                name='media_serve',
+            )
+        ]
