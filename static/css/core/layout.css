@@ -346,6 +346,115 @@ button {
     border-color: var(--ink-500);
 }
 
+body.page-loading {
+    cursor: progress;
+}
+
+.page-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    background: rgba(8, 16, 26, 0.24);
+    backdrop-filter: blur(8px) saturate(120%);
+    -webkit-backdrop-filter: blur(8px) saturate(120%);
+    transition: opacity 0.22s ease, visibility 0.22s ease;
+}
+
+.page-loader.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.page-loader__panel {
+    width: min(100%, 360px);
+    border-radius: 16px;
+    border: 1px solid rgba(15, 118, 110, 0.24);
+    background:
+        radial-gradient(circle at 12% 0, rgba(15, 118, 110, 0.14), transparent 48%),
+        radial-gradient(circle at 100% 100%, rgba(234, 88, 12, 0.1), transparent 44%),
+        rgba(255, 255, 255, 0.92);
+    box-shadow: 0 18px 34px rgba(16, 32, 56, 0.22);
+    padding: 1rem;
+    display: grid;
+    gap: 0.42rem;
+    text-align: center;
+}
+
+.page-loader__panel strong {
+    color: var(--ink-900);
+    font-size: 1rem;
+}
+
+.page-loader__panel p {
+    margin: 0;
+    color: var(--ink-700);
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.page-loader__spinner,
+.btn-spinner {
+    border-radius: 999px;
+    animation: uiSpin 0.75s linear infinite;
+}
+
+.page-loader__spinner {
+    width: 36px;
+    height: 36px;
+    margin: 0 auto 0.06rem;
+    border: 3px solid rgba(15, 118, 110, 0.2);
+    border-top-color: var(--accent);
+}
+
+.btn-spinner {
+    width: 0.95rem;
+    height: 0.95rem;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: rgba(255, 255, 255, 0.95);
+    flex: 0 0 auto;
+}
+
+.btn-ghost .btn-spinner,
+.btn-secondary .btn-spinner,
+.btn-danger .btn-spinner {
+    border-color: rgba(19, 35, 51, 0.2);
+    border-top-color: currentColor;
+}
+
+.top-action.is-loading,
+.btn-primary.is-loading,
+.btn-secondary.is-loading,
+.btn-danger.is-loading,
+.btn-ghost.is-loading {
+    transform: none !important;
+    pointer-events: none;
+    opacity: 0.9;
+}
+
+@keyframes uiSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .page-loader {
+        transition: none;
+    }
+
+    .page-loader__spinner,
+    .btn-spinner {
+        animation: none;
+    }
+}
+
 .app-shell {
     position: relative;
 }

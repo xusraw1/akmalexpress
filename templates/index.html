@@ -13,7 +13,7 @@
             {% trans "Поиск работает только по номеру квитанции, ФИО клиента, номеру телефона или трек-номеру." %}
         </p>
 
-        <form class="search-form" method="get">
+        <form class="search-form" method="get" data-loading-form data-loading-message="{% trans 'Ищем подходящие заказы...' %}" data-loading-button="{% trans 'Ищем...' %}">
             <div class="search-row">
                 <label for="order-search" class="sr-only">{% trans "Поиск заказа" %}</label>
                 <input id="order-search" type="search" name="search" value="{{ search_query }}" placeholder="{% trans '№ квитанции, ФИО, телефон или трек' %}" autocomplete="off">

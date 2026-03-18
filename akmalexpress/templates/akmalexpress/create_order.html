@@ -19,7 +19,7 @@
     </div>
     {% endif %}
 
-    <form method="post" enctype="multipart/form-data" class="unified-form">
+    <form method="post" enctype="multipart/form-data" class="unified-form" data-loading-form data-loading-message="Сохраняем заказ и фото..." data-loading-button="Сохраняем...">
         {% csrf_token %}
 
         <article class="content-card form-block">

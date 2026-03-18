@@ -53,6 +53,13 @@
             <p id="imageLightboxCaption" class="image-lightbox__caption" hidden></p>
         </div>
     </div>
+    <div class="page-loader" id="pageLoader" hidden>
+        <div class="page-loader__panel" role="status" aria-live="polite" aria-atomic="true">
+            <span class="page-loader__spinner" aria-hidden="true"></span>
+            <strong>{% trans "Подождите..." %}</strong>
+            <p id="pageLoaderMessage">{% trans "Выполняем запрос, пожалуйста подождите." %}</p>
+        </div>
+    </div>
 
     {% trans "Развернуть меню" as i18n_expand_menu %}
     {% trans "Свернуть меню" as i18n_collapse_menu %}
@@ -63,6 +70,10 @@
     {% trans "Скопировано" as i18n_copy_success %}
     {% trans "Ошибка" as i18n_copy_error %}
     {% trans "Копировать" as i18n_copy_default %}
+    {% trans "Выполняем запрос, пожалуйста подождите." as i18n_loading_default %}
+    {% trans "Ищем данные..." as i18n_loading_search %}
+    {% trans "Сохраняем данные..." as i18n_loading_save %}
+    {% trans "Загрузка..." as i18n_loading_button %}
 
     <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
     <script>
@@ -77,18 +88,26 @@
                 copySuccess: "{{ i18n_copy_success|escapejs }}",
                 copyError: "{{ i18n_copy_error|escapejs }}",
                 copyDefault: "{{ i18n_copy_default|escapejs }}",
+                loadingDefault: "{{ i18n_loading_default|escapejs }}",
+                loadingSearch: "{{ i18n_loading_search|escapejs }}",
+                loadingSave: "{{ i18n_loading_save|escapejs }}",
+                loadingButton: "{{ i18n_loading_button|escapejs }}",
             };
             const compactLayoutQuery = '(max-width: 1240px)';
             const toggleButton = document.getElementById('sidebarToggle');
             const sidebarCollapseButton = document.getElementById('sidebarCollapse');
             const sidebar = document.getElementById('appSidebar');
             const overlay = document.getElementById('sidebarOverlay');
+            const pageLoader = document.getElementById('pageLoader');
+            const pageLoaderMessage = document.getElementById('pageLoaderMessage');
             const imageLightbox = document.getElementById('imageLightbox');
             const imageLightboxImage = document.getElementById('imageLightboxImage');
             const imageLightboxCaption = document.getElementById('imageLightboxCaption');
             const imageLightboxClose = document.getElementById('imageLightboxClose');
             const isCompactLayout = () => window.matchMedia(compactLayoutQuery).matches;
             const sidebarCollapsedStorageKey = 'akex.sidebar.collapsed';
+            let pageLoaderDelayTimer = null;
+            let pageLoaderVisible = false;
 
             const setSidebarCollapsedState = (collapsed) => {
                 const shouldCollapse = Boolean(collapsed) && !isCompactLayout();
@@ -136,6 +155,70 @@
                 imageLightbox.hidden = true;
                 if (imageLightboxImage) imageLightboxImage.src = '';
                 document.body.classList.remove('modal-open');
+            };
+
+            const setPageLoaderVisible = (visible, message) => {
+                if (!pageLoader) return;
+                if (pageLoaderDelayTimer) {
+                    window.clearTimeout(pageLoaderDelayTimer);
+                    pageLoaderDelayTimer = null;
+                }
+
+                if (!visible) {
+                    pageLoaderVisible = false;
+                    pageLoader.classList.remove('is-visible');
+                    pageLoader.hidden = true;
+                    document.body.classList.remove('page-loading');
+                    return;
+                }
+
+                pageLoaderVisible = true;
+                if (pageLoaderMessage) {
+                    pageLoaderMessage.textContent = message || i18n.loadingDefault;
+                }
+                pageLoader.hidden = false;
+                document.body.classList.add('page-loading');
+                window.requestAnimationFrame(() => {
+                    pageLoader.classList.add('is-visible');
+                });
+            };
+
+            const schedulePageLoader = (message) => {
+                if (!pageLoader || pageLoaderVisible) return;
+                if (pageLoaderMessage) {
+                    pageLoaderMessage.textContent = message || i18n.loadingDefault;
+                }
+                if (pageLoaderDelayTimer) {
+                    window.clearTimeout(pageLoaderDelayTimer);
+                }
+                pageLoaderDelayTimer = window.setTimeout(() => {
+                    setPageLoaderVisible(true);
+                }, 120);
+            };
+
+            const setSubmitControlLoading = (control, loadingLabel) => {
+                if (!control) return;
+                control.disabled = true;
+                control.classList.add('is-loading');
+                control.setAttribute('aria-busy', 'true');
+                if (control instanceof HTMLButtonElement) {
+                    if (control.dataset.originalLabel === undefined) {
+                        control.dataset.originalLabel = control.innerHTML;
+                    }
+                    const spinner = document.createElement('span');
+                    spinner.className = 'btn-spinner';
+                    spinner.setAttribute('aria-hidden', 'true');
+                    const text = document.createElement('span');
+                    text.textContent = loadingLabel;
+                    control.replaceChildren(spinner, text);
+                    return;
+                }
+                if (control instanceof HTMLInputElement && control.type === 'submit') {
+                    if (control.dataset.originalLabel === undefined) {
+                        control.dataset.originalLabel = control.value;
+                    }
+                    control.value = loadingLabel;
+                }
             };
 
             const openImageLightbox = (src, caption) => {
@@ -210,6 +293,7 @@
             window.addEventListener('pageshow', () => {
                 closeSidebar();
                 restoreSidebarCollapsedState();
+                setPageLoaderVisible(false);
             });
 
             document.addEventListener('keydown', (event) => {
@@ -505,11 +589,49 @@
                 });
             };
 
+            const setupFormLoadingStates = () => {
+                document.querySelectorAll('form[data-loading-form], form.search-form').forEach((form) => {
+                    if (form.dataset.loadingBound === '1') return;
+                    form.dataset.loadingBound = '1';
+                    form.addEventListener('submit', (event) => {
+                        if (form.dataset.loadingDisabled === '1') return;
+                        if (typeof form.checkValidity === 'function' && !form.checkValidity()) return;
+
+                        const method = (form.getAttribute('method') || 'get').toLowerCase();
+                        const loadingMessage = form.getAttribute('data-loading-message')
+                            || (method === 'get' ? i18n.loadingSearch : i18n.loadingSave)
+                            || i18n.loadingDefault;
+                        const loadingButtonLabel = form.getAttribute('data-loading-button') || i18n.loadingButton;
+                        schedulePageLoader(loadingMessage);
+
+                        const submitControls = Array.from(
+                            form.querySelectorAll('button[type="submit"], input[type="submit"]')
+                        );
+                        if (!submitControls.length) return;
+
+                        const submitter = event.submitter && submitControls.includes(event.submitter)
+                            ? event.submitter
+                            : submitControls[0];
+
+                        submitControls.forEach((control) => {
+                            if (control === submitter) {
+                                setSubmitControlLoading(control, loadingButtonLabel);
+                            } else {
+                                control.disabled = true;
+                                control.classList.add('is-loading');
+                                control.setAttribute('aria-busy', 'true');
+                            }
+                        });
+                    });
+                });
+            };
+
             closeSidebar();
             restoreSidebarCollapsedState();
             setupInteractiveCards();
             setupExchangeRateAutofill();
             setupClickableRows();
+            setupFormLoadingStates();
         })();
     </script>
 </body>
