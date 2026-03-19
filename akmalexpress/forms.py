@@ -345,6 +345,8 @@ def save_order_items(order, item_formset):
 
 
 class ChangeOrderForm(forms.ModelForm):
+    attachments = MultiFileField(required=False, label='Фото заказа (добавить новые)')
+
     class Meta:
         model = Order
         fields = [
@@ -389,6 +391,12 @@ class ChangeOrderForm(forms.ModelForm):
         )
         self.fields['manual_total'].label = 'Итоговая сумма'
         self.fields['description'].widget.attrs.update({'placeholder': 'Комментарий к заказу'})
+        self.fields['attachments'].widget.attrs.update(
+            {
+                'class': 'upload-input',
+                'aria-describedby': 'attachments-edit-hint attachments-edit-meta',
+            }
+        )
 
     def clean(self):
         cleaned_data = super().clean()

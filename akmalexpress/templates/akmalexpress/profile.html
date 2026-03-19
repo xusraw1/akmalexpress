@@ -337,6 +337,9 @@
     const fetchAndReplace = (url) => {
         if (!ordersContainer) return;
         const targetUrl = url || window.location.pathname + window.location.search;
+        if (window.akexLoader && typeof window.akexLoader.schedule === 'function') {
+            window.akexLoader.schedule();
+        }
         fetch(targetUrl, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
@@ -353,6 +356,11 @@
             })
             .catch(() => {
                 window.location.href = targetUrl;
+            })
+            .finally(() => {
+                if (window.akexLoader && typeof window.akexLoader.hide === 'function') {
+                    window.akexLoader.hide();
+                }
             });
     };
 

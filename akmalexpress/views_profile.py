@@ -13,6 +13,7 @@ from django.utils.translation import gettext_lazy as _
 from openpyxl import load_workbook
 
 from .models import Order, UserProfile
+from .i18n import translate_html_content
 from .selectors.orders import apply_missing_track_filter, apply_order_search_filter, orders_with_related, parse_checkbox_flag
 from .services.excel import (
     _build_export_filename,
@@ -255,6 +256,8 @@ def profile_view(request, user):
             orders_partial_context,
             request=request,
         )
+        if str(getattr(request, 'LANGUAGE_CODE', '')).startswith('uz'):
+            html = translate_html_content(html, 'uz')
         return JsonResponse({'html': html})
 
     return render(

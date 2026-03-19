@@ -222,10 +222,11 @@ button {
 }
 
 .brand-mark__logo {
-    width: 74px;
-    height: 28px;
-    border-radius: 6px;
-    object-fit: contain;
+    width: 146px;
+    height: 46px;
+    border-radius: 8px;
+    object-fit: cover;
+    object-position: center 46%;
     box-shadow: none;
 }
 
@@ -360,9 +361,9 @@ body.page-loading {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    background: rgba(8, 16, 26, 0.24);
-    backdrop-filter: blur(8px) saturate(120%);
-    -webkit-backdrop-filter: blur(8px) saturate(120%);
+    background: rgba(8, 16, 26, 0.26);
+    backdrop-filter: blur(10px) saturate(130%);
+    -webkit-backdrop-filter: blur(10px) saturate(130%);
     transition: opacity 0.22s ease, visibility 0.22s ease;
 }
 
@@ -373,30 +374,20 @@ body.page-loading {
 }
 
 .page-loader__panel {
-    width: min(100%, 360px);
-    border-radius: 16px;
-    border: 1px solid rgba(15, 118, 110, 0.24);
+    width: 96px;
+    height: 96px;
+    border-radius: 28px;
+    border: 1px solid rgba(15, 118, 110, 0.3);
     background:
-        radial-gradient(circle at 12% 0, rgba(15, 118, 110, 0.14), transparent 48%),
-        radial-gradient(circle at 100% 100%, rgba(234, 88, 12, 0.1), transparent 44%),
-        rgba(255, 255, 255, 0.92);
-    box-shadow: 0 18px 34px rgba(16, 32, 56, 0.22);
-    padding: 1rem;
-    display: grid;
-    gap: 0.42rem;
-    text-align: center;
-}
-
-.page-loader__panel strong {
-    color: var(--ink-900);
-    font-size: 1rem;
-}
-
-.page-loader__panel p {
-    margin: 0;
-    color: var(--ink-700);
-    font-size: 0.88rem;
-    font-weight: 600;
+        radial-gradient(circle at 16% 0, rgba(15, 118, 110, 0.22), transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(234, 88, 12, 0.18), transparent 58%),
+        rgba(255, 255, 255, 0.9);
+    box-shadow:
+        0 18px 34px rgba(16, 32, 56, 0.24),
+        inset 0 1px 0 rgba(255, 255, 255, 0.82);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .page-loader__spinner,
@@ -406,16 +397,28 @@ body.page-loading {
 }
 
 .page-loader__spinner {
-    width: 36px;
-    height: 36px;
-    margin: 0 auto 0.06rem;
-    border: 3px solid rgba(15, 118, 110, 0.2);
+    width: 42px;
+    height: 42px;
+    border: 3px solid rgba(15, 118, 110, 0.22);
     border-top-color: var(--accent);
+    border-right-color: var(--accent-warm);
+    position: relative;
+}
+
+.page-loader__spinner::after {
+    content: "";
+    position: absolute;
+    inset: 8px;
+    border-radius: inherit;
+    border: 2px solid rgba(15, 118, 110, 0.18);
+    border-top-color: rgba(15, 118, 110, 0.7);
+    border-left-color: rgba(234, 88, 12, 0.68);
+    animation: uiSpin 0.9s linear infinite reverse;
 }
 
 .btn-spinner {
-    width: 0.95rem;
-    height: 0.95rem;
+    width: 1rem;
+    height: 1rem;
     border: 2px solid rgba(255, 255, 255, 0.35);
     border-top-color: rgba(255, 255, 255, 0.95);
     flex: 0 0 auto;
@@ -916,4 +919,19 @@ body.sidebar-collapsed .sidebar-collapse-btn svg {
 .content-shell {
     width: min(100%, 1020px);
     max-width: 100%;
+}
+
+@media (max-width: 860px) {
+    .brand-mark__logo {
+        width: 122px;
+        height: 40px;
+    }
+}
+
+@media (max-width: 520px) {
+    .brand-mark__logo {
+        width: 104px;
+        height: 34px;
+        border-radius: 7px;
+    }
 }

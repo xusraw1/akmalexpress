@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
     <link rel="stylesheet" href="{% static 'css/pages/about-faq.css' %}">
     <link rel="stylesheet" href="{% static 'css/pages/dashboard.css' %}">
+    <link rel="icon" type="image/jpeg" href="{% static 'img/logo.jpg' %}">
+    <link rel="apple-touch-icon" href="{% static 'img/logo.jpg' %}">
 </head>
 
 <body class="app-body">
@@ -56,8 +58,6 @@
     <div class="page-loader" id="pageLoader" hidden>
         <div class="page-loader__panel" role="status" aria-live="polite" aria-atomic="true">
             <span class="page-loader__spinner" aria-hidden="true"></span>
-            <strong>{% trans "Подождите..." %}</strong>
-            <p id="pageLoaderMessage">{% trans "Выполняем запрос, пожалуйста подождите." %}</p>
         </div>
     </div>
 
@@ -70,10 +70,6 @@
     {% trans "Скопировано" as i18n_copy_success %}
     {% trans "Ошибка" as i18n_copy_error %}
     {% trans "Копировать" as i18n_copy_default %}
-    {% trans "Выполняем запрос, пожалуйста подождите." as i18n_loading_default %}
-    {% trans "Ищем данные..." as i18n_loading_search %}
-    {% trans "Сохраняем данные..." as i18n_loading_save %}
-    {% trans "Загрузка..." as i18n_loading_button %}
 
     <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
     <script>
@@ -88,10 +84,6 @@
                 copySuccess: "{{ i18n_copy_success|escapejs }}",
                 copyError: "{{ i18n_copy_error|escapejs }}",
                 copyDefault: "{{ i18n_copy_default|escapejs }}",
-                loadingDefault: "{{ i18n_loading_default|escapejs }}",
-                loadingSearch: "{{ i18n_loading_search|escapejs }}",
-                loadingSave: "{{ i18n_loading_save|escapejs }}",
-                loadingButton: "{{ i18n_loading_button|escapejs }}",
             };
             const compactLayoutQuery = '(max-width: 1240px)';
             const toggleButton = document.getElementById('sidebarToggle');
@@ -99,7 +91,6 @@
             const sidebar = document.getElementById('appSidebar');
             const overlay = document.getElementById('sidebarOverlay');
             const pageLoader = document.getElementById('pageLoader');
-            const pageLoaderMessage = document.getElementById('pageLoaderMessage');
             const imageLightbox = document.getElementById('imageLightbox');
             const imageLightboxImage = document.getElementById('imageLightboxImage');
             const imageLightboxCaption = document.getElementById('imageLightboxCaption');
@@ -157,7 +148,7 @@
                 document.body.classList.remove('modal-open');
             };
 
-            const setPageLoaderVisible = (visible, message) => {
+            const setPageLoaderVisible = (visible) => {
                 if (!pageLoader) return;
                 if (pageLoaderDelayTimer) {
                     window.clearTimeout(pageLoaderDelayTimer);
@@ -173,9 +164,6 @@
                 }
 
                 pageLoaderVisible = true;
-                if (pageLoaderMessage) {
-                    pageLoaderMessage.textContent = message || i18n.loadingDefault;
-                }
                 pageLoader.hidden = false;
                 document.body.classList.add('page-loading');
                 window.requestAnimationFrame(() => {
@@ -183,11 +171,8 @@
                 });
             };
 
-            const schedulePageLoader = (message) => {
+            const schedulePageLoader = () => {
                 if (!pageLoader || pageLoaderVisible) return;
-                if (pageLoaderMessage) {
-                    pageLoaderMessage.textContent = message || i18n.loadingDefault;
-                }
                 if (pageLoaderDelayTimer) {
                     window.clearTimeout(pageLoaderDelayTimer);
                 }
@@ -196,7 +181,13 @@
                 }, 120);
             };
 
-            const setSubmitControlLoading = (control, loadingLabel) => {
+            window.akexLoader = {
+                show: () => setPageLoaderVisible(true),
+                hide: () => setPageLoaderVisible(false),
+                schedule: () => schedulePageLoader(),
+            };
+
+            const setSubmitControlLoading = (control) => {
                 if (!control) return;
                 control.disabled = true;
                 control.classList.add('is-loading');
@@ -205,19 +196,15 @@
                     if (control.dataset.originalLabel === undefined) {
                         control.dataset.originalLabel = control.innerHTML;
                     }
+                    if (control.dataset.originalWidth === undefined) {
+                        control.dataset.originalWidth = `${control.offsetWidth}px`;
+                        control.style.minWidth = control.dataset.originalWidth;
+                    }
                     const spinner = document.createElement('span');
                     spinner.className = 'btn-spinner';
                     spinner.setAttribute('aria-hidden', 'true');
-                    const text = document.createElement('span');
-                    text.textContent = loadingLabel;
-                    control.replaceChildren(spinner, text);
+                    control.replaceChildren(spinner);
                     return;
-                }
-                if (control instanceof HTMLInputElement && control.type === 'submit') {
-                    if (control.dataset.originalLabel === undefined) {
-                        control.dataset.originalLabel = control.value;
-                    }
-                    control.value = loadingLabel;
                 }
             };
 
@@ -590,19 +577,14 @@
             };
 
             const setupFormLoadingStates = () => {
-                document.querySelectorAll('form[data-loading-form], form.search-form').forEach((form) => {
+                document.querySelectorAll('form').forEach((form) => {
                     if (form.dataset.loadingBound === '1') return;
                     form.dataset.loadingBound = '1';
                     form.addEventListener('submit', (event) => {
+                        if (event.defaultPrevented) return;
                         if (form.dataset.loadingDisabled === '1') return;
                         if (typeof form.checkValidity === 'function' && !form.checkValidity()) return;
-
-                        const method = (form.getAttribute('method') || 'get').toLowerCase();
-                        const loadingMessage = form.getAttribute('data-loading-message')
-                            || (method === 'get' ? i18n.loadingSearch : i18n.loadingSave)
-                            || i18n.loadingDefault;
-                        const loadingButtonLabel = form.getAttribute('data-loading-button') || i18n.loadingButton;
-                        schedulePageLoader(loadingMessage);
+                        schedulePageLoader();
 
                         const submitControls = Array.from(
                             form.querySelectorAll('button[type="submit"], input[type="submit"]')
@@ -615,7 +597,7 @@
 
                         submitControls.forEach((control) => {
                             if (control === submitter) {
-                                setSubmitControlLoading(control, loadingButtonLabel);
+                                setSubmitControlLoading(control);
                             } else {
                                 control.disabled = true;
                                 control.classList.add('is-loading');

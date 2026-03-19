@@ -16,7 +16,7 @@
     </div>
     {% endif %}
 
-    <form method="post" class="unified-form">
+    <form method="post" enctype="multipart/form-data" class="unified-form">
         {% csrf_token %}
 
         <article class="content-card form-block">
@@ -203,6 +203,54 @@
         </article>
 
         <article class="content-card form-block">
+            <h2 class="section-title form-block-title">Фото заказа</h2>
+            <p class="section-subtitle">Можно добавить новые фото и удалить старые.</p>
+
+            <div class="field upload-field">
+                <label for="{{ form.attachments.id_for_label }}">{{ form.attachments.label }}</label>
+                <div class="upload-zone">
+                    <div class="file-picker" data-file-picker>
+                        <input
+                            class="upload-input"
+                            type="file"
+                            name="attachments"
+                            id="{{ form.attachments.id_for_label }}"
+                            accept="image/*"
+                            multiple
+                            data-file-input
+                        >
+                        <label class="file-picker__button" for="{{ form.attachments.id_for_label }}">Выбрать фото</label>
+                        <span class="file-picker__name" data-file-name>Фото не выбраны</span>
+                        <button type="button" class="file-picker__clear" id="attachments-clear-btn-edit" title="Очистить фото" aria-label="Очистить фото" hidden>×</button>
+                    </div>
+                    <p class="hint" id="attachments-edit-hint">Поддерживаются изображения до 10MB.</p>
+                    <p class="upload-meta" id="attachments-edit-meta">Новые фото не выбраны.</p>
+                    <div class="attachments-preview" id="attachments-preview-edit"></div>
+                </div>
+                {% if form.attachments.errors %}<p class="field-error">{{ form.attachments.errors|striptags }}</p>{% endif %}
+            </div>
+
+            {% with existing_attachments=orderr.attachments.all %}
+            {% if existing_attachments %}
+            <div class="field mt-sm">
+                <label>Текущие фото</label>
+                <div class="attachments-preview">
+                    {% for attachment in existing_attachments %}
+                    <article class="preview-tile">
+                        <img src="{{ attachment.image.url }}" alt="Фото заказа {{ forloop.counter }}">
+                        <label class="preview-tile__remove-check">
+                            <input type="checkbox" name="remove_attachment_ids" value="{{ attachment.id }}">
+                            Удалить это фото
+                        </label>
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% endwith %}
+        </article>
+
+        <article class="content-card form-block">
             <h2 class="section-title form-block-title">Комментарий</h2>
             <div class="field upload-field">
                 <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
@@ -241,10 +289,19 @@
     const rmbRateInput = document.getElementById('id_rmb_rate');
     const itemsTotalPreview = document.getElementById('order-items-total-preview');
     const manualTotalInput = document.getElementById('id_manual_total');
+    const attachmentsInput = document.getElementById('{{ form.attachments.id_for_label }}');
+    const attachmentsPickerName = attachmentsInput
+        ? attachmentsInput.closest('.file-picker')?.querySelector('[data-file-name]')
+        : null;
+    const attachmentsClearBtn = document.getElementById('attachments-clear-btn-edit');
+    const attachmentsMeta = document.getElementById('attachments-edit-meta');
+    const attachmentsPreview = document.getElementById('attachments-preview-edit');
+    const uploadZone = attachmentsInput ? attachmentsInput.closest('.upload-zone') : null;
     const totalFormsInput = document.getElementById('id_items-TOTAL_FORMS');
     const itemsStack = document.getElementById('items-stack');
     const addItemBtn = document.getElementById('add-item-btn');
     const itemTemplate = document.getElementById('empty-item-template');
+    const attachmentFiles = [];
     let manualTotalOverridden = false;
     let lastAutoTotal = '0.00';
 
@@ -358,6 +415,92 @@
         });
     };
 
+    const syncAttachmentInput = () => {
+        if (!attachmentsInput) return;
+        if (typeof DataTransfer === 'undefined') {
+            if (!attachmentFiles.length) attachmentsInput.value = '';
+            return;
+        }
+        const dataTransfer = new DataTransfer();
+        attachmentFiles.forEach((file) => dataTransfer.items.add(file));
+        attachmentsInput.files = dataTransfer.files;
+    };
+
+    const refreshAttachmentPicker = () => {
+        if (attachmentsPickerName) {
+            if (!attachmentFiles.length) {
+                attachmentsPickerName.textContent = 'Новые фото не выбраны';
+            } else if (attachmentFiles.length === 1) {
+                attachmentsPickerName.textContent = attachmentFiles[0].name;
+            } else {
+                attachmentsPickerName.textContent = `Выбрано новых фото: ${attachmentFiles.length}`;
+            }
+        }
+        if (attachmentsClearBtn) {
+            attachmentsClearBtn.hidden = !attachmentFiles.length;
+        }
+    };
+
+    const mergeAttachmentFiles = (newFiles) => {
+        const signatures = new Set(attachmentFiles.map((file) => `${file.name}:${file.size}:${file.lastModified}`));
+        newFiles.forEach((file) => {
+            const isImage = (file.type || '').startsWith('image/');
+            if (!isImage) return;
+            const signature = `${file.name}:${file.size}:${file.lastModified}`;
+            if (signatures.has(signature)) return;
+            signatures.add(signature);
+            attachmentFiles.push(file);
+        });
+        syncAttachmentInput();
+        refreshAttachmentPicker();
+        updateAttachmentPreview();
+    };
+
+    const updateAttachmentPreview = () => {
+        if (!attachmentsMeta || !attachmentsPreview) return;
+
+        if (!attachmentFiles.length) {
+            attachmentsMeta.textContent = 'Новые фото не выбраны.';
+            attachmentsPreview.innerHTML = '';
+            refreshAttachmentPicker();
+            return;
+        }
+
+        attachmentsMeta.textContent = `Выбрано новых фото: ${attachmentFiles.length}`;
+        attachmentsPreview.innerHTML = '';
+
+        attachmentFiles.forEach((file, fileIndex) => {
+            const tile = document.createElement('article');
+            tile.className = 'preview-tile';
+
+            const image = document.createElement('img');
+            image.alt = file.name;
+            image.src = URL.createObjectURL(file);
+            image.onload = () => URL.revokeObjectURL(image.src);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'preview-tile__remove';
+            removeBtn.setAttribute('aria-label', `Удалить ${file.name}`);
+            removeBtn.textContent = '×';
+            removeBtn.addEventListener('click', () => {
+                attachmentFiles.splice(fileIndex, 1);
+                syncAttachmentInput();
+                updateAttachmentPreview();
+            });
+
+            const name = document.createElement('p');
+            name.textContent = file.name;
+            name.title = file.name;
+
+            tile.appendChild(removeBtn);
+            tile.appendChild(image);
+            tile.appendChild(name);
+            attachmentsPreview.appendChild(tile);
+        });
+        refreshAttachmentPicker();
+    };
+
     const addItemRow = () => {
         if (!totalFormsInput || !itemsStack || !itemTemplate) return;
         const index = Number(totalFormsInput.value || '0');
@@ -397,9 +540,46 @@
     if (addItemBtn) {
         addItemBtn.addEventListener('click', addItemRow);
     }
+    if (attachmentsInput) {
+        attachmentsInput.addEventListener('change', () => {
+            attachmentFiles.length = 0;
+            mergeAttachmentFiles(Array.from(attachmentsInput.files || []));
+        });
+        updateAttachmentPreview();
+    }
+    if (attachmentsClearBtn) {
+        attachmentsClearBtn.addEventListener('click', () => {
+            attachmentFiles.length = 0;
+            syncAttachmentInput();
+            updateAttachmentPreview();
+        });
+    }
 
     bindRemoveButtons();
     bindPriceInputs();
+    if (attachmentsInput) {
+        attachmentFiles.push(...Array.from(attachmentsInput.files || []));
+        syncAttachmentInput();
+        updateAttachmentPreview();
+    }
+    document.addEventListener('paste', (event) => {
+        if (!attachmentsInput) return;
+        const target = event.target;
+        if (target && target.closest('input:not([type="file"]), textarea, [contenteditable="true"]')) return;
+        const clipboard = event.clipboardData;
+        if (!clipboard) return;
+        const imageFiles = Array.from(clipboard.files || []).filter((file) => (file.type || '').startsWith('image/'));
+        if (!imageFiles.length) return;
+        event.preventDefault();
+        mergeAttachmentFiles(imageFiles);
+    });
+    if (uploadZone) {
+        uploadZone.addEventListener('click', (event) => {
+            const target = event.target;
+            if (target && target.closest('a, button, input, textarea, select, label')) return;
+            attachmentsInput.click();
+        });
+    }
     requestTotalsPreview();
 })();
 </script>

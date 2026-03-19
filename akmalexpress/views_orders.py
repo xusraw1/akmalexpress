@@ -190,7 +190,7 @@ def change_order(request, slug):
 
     if request.method == 'POST':
         has_item_formset_post = any(key.startswith('items-') for key in request.POST.keys())
-        form = ChangeOrderForm(request.POST, instance=orderr)
+        form = ChangeOrderForm(request.POST, request.FILES, instance=orderr)
         if has_item_formset_post:
             item_formset = configure_order_item_formset(OrderItemFormSet(request.POST, prefix='items'))
 
@@ -209,6 +209,21 @@ def change_order(request, slug):
             if has_item_formset_post:
                 order.items.all().delete()
                 save_order_items(order, item_formset)
+
+            remove_attachment_ids = []
+            for raw_id in request.POST.getlist('remove_attachment_ids'):
+                if str(raw_id).isdigit():
+                    remove_attachment_ids.append(int(raw_id))
+
+            if remove_attachment_ids:
+                for attachment in order.attachments.filter(id__in=remove_attachment_ids):
+                    if attachment.image:
+                        attachment.image.delete(save=False)
+                    attachment.delete()
+
+            for image in form.cleaned_data.get('attachments', []):
+                order.attachments.create(image=image)
+
             messages.success(request, _("Заказ с квитанцией №%(receipt)s обновлен") % {'receipt': order.receipt_number})
             return redirect('orders')
 
