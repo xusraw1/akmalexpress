@@ -475,6 +475,15 @@ UZ_TRANSLATIONS = {
     'Общие напоминания по трек-номерам': 'Trek-raqam bo‘yicha umumiy eslatmalar',
     'Ваши напоминания по трек-номерам': 'Sizning trek-raqam bo‘yicha eslatmalaringiz',
     'Заказы на отправку': "Yuborishga buyurtmalar",
+    'Заказы на отправку | AkmalExpress': "Yuborishga buyurtmalar | AkmalExpress",
+    'Показаны только новые заказы со статусом «Принят».': "Faqat «Qabul qilindi» holatidagi yangi buyurtmalar ko'rsatilgan.",
+    'Требуют внимания': "E'tibor talab qiladi",
+    'Зависшие заказы в активных статусах:': "Faol holatlarda cho'zilgan buyurtmalar:",
+    'Порог: Принят 3д, Заказан 7д, В пути 14д': "Chegara: Qabul qilindi 3 kun, Buyurtma qilindi 7 kun, Yo'lda 14 kun",
+    'Принят:': 'Qabul qilindi:',
+    'Заказан:': "Buyurtma qilindi:",
+    'В пути:': "Yo'lda:",
+    'дн': 'kun',
     'Поиск (квитанция / имя)': "Qidiruv (kvitansiya / ism)",
     'Например: 152 или Akmal': "Masalan: 152 yoki Akmal",
     'За день': 'Bir kun',
@@ -873,6 +882,10 @@ UZ_REGEX_REPLACEMENTS = [
     (
         re.compile(r"Показаны первые 12 фото из (\d+)\."),
         lambda match: f"Birinchi 12 ta rasm ko'rsatildi, jami {match.group(1)}.",
+    ),
+    (
+        re.compile(r"Показаны первые (\d+) заказов\."),
+        lambda match: f"Birinchi {match.group(1)} ta buyurtma ko'rsatildi.",
     ),
 ]
 

@@ -1,22 +1,22 @@
 {% extends 'base.html' %}
-{% load number_format %}
+{% load number_format i18n %}
 
-{% block title %}Заказы на отправку | AkmalExpress{% endblock %}
+{% block title %}{% trans "Заказы на отправку | AkmalExpress" %}{% endblock %}
 
 {% block content %}
 <section class="content-card dispatch-page">
     <div class="section-head">
         <div>
-            <h1 class="section-title">Заказы на отправку</h1>
-            <p class="section-subtitle">Показаны только новые заказы со статусом «Принят».</p>
+            <h1 class="section-title">{% trans "Заказы на отправку" %}</h1>
+            <p class="section-subtitle">{% trans "Показаны только новые заказы со статусом «Принят»." %}</p>
         </div>
         <div class="dispatch-summary">
             <article class="summary-pill">
-                <span>Заказов</span>
+                <span>{% trans "Заказов" %}</span>
                 <b>{{ total_orders }}</b>
             </article>
             <article class="summary-pill">
-                <span>Товарных позиций</span>
+                <span>{% trans "Товарных позиций" %}</span>
                 <b>{{ total_items }}</b>
             </article>
         </div>
@@ -33,7 +33,7 @@
                 <div class="dispatch-order-meta">
                     <span class="dispatch-chip">{{ order.shipping_method_summary }}</span>
                     <span class="dispatch-order-price">{{ order.get_final_total|money:2 }} {{ order.get_current }}</span>
-                    <span class="dispatch-chip">Долг: {{ order.get_pickup_due|money:2 }} {{ order.get_current }}</span>
+                    <span class="dispatch-chip">{% trans "Долг:" %} {{ order.get_pickup_due|money:2 }} {{ order.get_current }}</span>
                     <span
                         data-status-badge
                         class="status-badge {% if order.status == 'accepted' %}status-accepted{% elif order.status == 'ordered' %}status-ordered{% elif order.status == 'transit' %}status-transit{% elif order.status == 'arrived' %}status-done{% elif order.status == 'cancelled' %}status-cancelled{% else %}status-default{% endif %}"
@@ -44,46 +44,47 @@
             <div class="dispatch-order-body">
                 <div class="dispatch-order-grid">
                     <article class="dispatch-info-card">
-                        <h3>Основное</h3>
-                        <p><b>Квитанция:</b> №{{ order.receipt_number }}</p>
-                        <p><b>Клиент:</b> {{ order.first_name }} {{ order.last_name }}</p>
-                        <p><b>Телефон:</b> {{ order.phone1 }}</p>
-                        <p><b>Тип отправки:</b> {{ order.shipping_method_summary }}</p>
-                        <p><b>Дата:</b> {{ order.order_date|date:"d.m.Y" }}</p>
+                        <h3>{% trans "Основное" %}</h3>
+                        <p><b>{% trans "Квитанция:" %}</b> №{{ order.receipt_number }}</p>
+                        <p><b>{% trans "Клиент:" %}</b> {{ order.first_name }} {{ order.last_name }}</p>
+                        <p><b>{% trans "Телефон:" %}</b> {{ order.phone1 }}</p>
+                        <p><b>{% trans "Тип отправки:" %}</b> {{ order.shipping_method_summary }}</p>
+                        <p><b>{% trans "Дата:" %}</b> {{ order.order_date|date:"d.m.Y" }}</p>
                     </article>
 
                     <article class="dispatch-info-card">
-                        <h3>Цена и комментарий</h3>
-                        <p><b>Себестоимость:</b> {{ order.get_total_price|money:2 }} {{ order.get_current }}</p>
-                        <p><b>Итог:</b> {{ order.get_final_total|money:2 }} {{ order.get_current }}</p>
-                        <p><b>Долг:</b> {{ order.get_pickup_due|money:2 }} {{ order.get_current }}</p>
-                        <p><b>Баланс:</b> {{ order.get_balance|money:2 }} {{ order.get_current }}</p>
-                        <p><b>Описание:</b> {{ order.description|default:"-" }}</p>
+                        <h3>{% trans "Цена и комментарий" %}</h3>
+                        <p><b>{% trans "Себестоимость:" %}</b> {{ order.get_total_price|money:2 }} {{ order.get_current }}</p>
+                        <p><b>{% trans "Итог:" %}</b> {{ order.get_final_total|money:2 }} {{ order.get_current }}</p>
+                        <p><b>{% trans "Долг:" %}</b> {{ order.get_pickup_due|money:2 }} {{ order.get_current }}</p>
+                        <p><b>{% trans "Баланс:" %}</b> {{ order.get_balance|money:2 }} {{ order.get_current }}</p>
+                        <p><b>{% trans "Описание:" %}</b> {{ order.description|default:"-" }}</p>
                     </article>
 
                     <article class="dispatch-info-card">
-                        <h3>Статус</h3>
+                        <h3>{% trans "Статус" %}</h3>
                         <form method="post" class="dispatch-status-form">
                             {% csrf_token %}
                             <input type="hidden" name="order_id" value="{{ order.id }}">
-                            <select name="status" data-status-select aria-label="Статус заказа {{ order.receipt_number }}">
+                            {% blocktrans with receipt=order.receipt_number asvar order_status_aria_label %}Статус заказа {{ receipt }}{% endblocktrans %}
+                            <select name="status" data-status-select aria-label="{{ order_status_aria_label }}">
                                 {% for value, label in status_choices %}
                                 <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
                                 {% endfor %}
                             </select>
-                            <button type="submit" class="btn-secondary">Сохранить статус</button>
+                            <button type="submit" class="btn-secondary">{% trans "Сохранить статус" %}</button>
                         </form>
                     </article>
                 </div>
 
                 <article class="dispatch-info-card">
-                    <h3>Товары и ссылки</h3>
+                    <h3>{% trans "Товары и ссылки" %}</h3>
                     <ul class="dispatch-items">
                         {% for item in order.items.all %}
                         <li>
                             <span>{{ item.product_name }} × {{ item.product_quantity }} · {{ item.get_shipping_method_display }}</span>
                             {% if item.link %}
-                            <a href="{{ item.link }}" target="_blank" rel="noopener">Ссылка</a>
+                            <a href="{{ item.link }}" target="_blank" rel="noopener">{% trans "Ссылка" %}</a>
                             {% endif %}
                         </li>
                         {% empty %}
@@ -91,11 +92,11 @@
                         <li>
                             <span>{{ order.product.product_name }} · {{ order.shipping_method_summary }}</span>
                             {% if order.product.link %}
-                            <a href="{{ order.product.link }}" target="_blank" rel="noopener">Ссылка</a>
+                            <a href="{{ order.product.link }}" target="_blank" rel="noopener">{% trans "Ссылка" %}</a>
                             {% endif %}
                         </li>
                         {% else %}
-                        <li><span class="muted">Нет товарных позиций</span></li>
+                        <li><span class="muted">{% trans "Нет товарных позиций" %}</span></li>
                         {% endif %}
                         {% endfor %}
                     </ul>
@@ -104,18 +105,21 @@
                 {% with photos=order.attachments.all %}
                 {% if photos %}
                 <article class="dispatch-info-card">
-                    <h3>Скриншоты / Фото</h3>
+                    <h3>{% trans "Скриншоты / Фото" %}</h3>
                     <details class="dispatch-photos-panel">
-                        <summary class="chip-btn" data-photos-toggle data-open-label="Скрыть фото" data-closed-label="Показать фото ({{ photos|length }})">Показать фото ({{ photos|length }})</summary>
+                        {% blocktrans with count=photos|length asvar show_photos_label %}Показать фото ({{ count }}){% endblocktrans %}
+                        <summary class="chip-btn" data-photos-toggle data-open-label="{% trans 'Скрыть фото' %}" data-closed-label="{{ show_photos_label }}">{{ show_photos_label }}</summary>
                         <div class="dispatch-photos">
                             {% for attachment in photos %}
+                            {% blocktrans with receipt=order.receipt_number asvar photo_title %}Фото заказа №{{ receipt }}{% endblocktrans %}
+                            {% blocktrans with number=forloop.counter asvar photo_alt %}Фото заказа {{ number }}{% endblocktrans %}
                             <a
                                 href="{{ attachment.image.url }}"
                                 class="dispatch-photo-thumb"
                                 data-lightbox-image
-                                data-lightbox-title="Фото заказа №{{ order.receipt_number }}"
+                                data-lightbox-title="{{ photo_title }}"
                             >
-                                <img src="{{ attachment.image.url }}" alt="Фото заказа {{ forloop.counter }}">
+                                <img src="{{ attachment.image.url }}" alt="{{ photo_alt }}">
                             </a>
                             {% endfor %}
                         </div>
@@ -127,7 +131,7 @@
         </details>
         {% empty %}
         <article class="content-card">
-            <p class="section-subtitle">Новых заказов нет.</p>
+            <p class="section-subtitle">{% trans "Новых заказов нет." %}</p>
         </article>
         {% endfor %}
     </section>
@@ -135,8 +139,15 @@
     {% include 'partials/pagination.html' with page_obj=orders %}
 </section>
 
+{% trans "Скрыть фото" as i18n_hide_photos %}
+{% trans "Показать фото" as i18n_show_photos %}
+
 <script>
 (function () {
+    const i18n = {
+        hidePhotos: "{{ i18n_hide_photos|escapejs }}",
+        showPhotos: "{{ i18n_show_photos|escapejs }}",
+    };
     const statusBadgeClassByCode = {
         accepted: 'status-accepted',
         ordered: 'status-ordered',
@@ -176,8 +187,8 @@
 
         const refreshText = () => {
             toggle.textContent = root.open
-                ? (toggle.getAttribute('data-open-label') || 'Скрыть фото')
-                : (toggle.getAttribute('data-closed-label') || 'Показать фото');
+                ? (toggle.getAttribute('data-open-label') || i18n.hidePhotos)
+                : (toggle.getAttribute('data-closed-label') || i18n.showPhotos);
         };
 
         refreshText();

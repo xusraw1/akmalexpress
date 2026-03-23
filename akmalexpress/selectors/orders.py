@@ -1,8 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from django.db.models import Exists, OuterRef, Prefetch, Q
+from django.db.models import Count, Exists, OuterRef, Prefetch, Q
+from django.utils import timezone
 
-from ..models import OrderAttachment, OrderItem
+from ..models import Order, OrderAttachment, OrderItem
 
 
 def orders_with_related(queryset, *, include_attachments=False):
@@ -160,3 +161,67 @@ def apply_missing_track_filter(queryset, enabled=False):
         | Q(_missing_track_has_items=False, track_number__isnull=True)
         | Q(_missing_track_has_items=False, track_number='')
     )
+
+
+def build_stuck_orders_snapshot(queryset, *, limit=8):
+    """
+    Build compact data for orders that are likely stuck in non-final statuses.
+    Thresholds are intentionally conservative to avoid false positives.
+    """
+    today = timezone.localdate()
+    thresholds_by_status = {
+        Order.Status.ACCEPTED: 3,
+        Order.Status.ORDERED: 7,
+        Order.Status.TRANSIT: 14,
+    }
+
+    overdue_q = Q(pk__in=[])
+    for status_code, threshold_days in thresholds_by_status.items():
+        cutoff_date = today - timedelta(days=threshold_days)
+        overdue_q |= Q(status=status_code, order_date__lt=cutoff_date)
+
+    overdue_qs = queryset.filter(overdue_q).order_by('order_date', 'receipt_number')
+    overdue_total = overdue_qs.count()
+
+    status_totals = {code: 0 for code in thresholds_by_status}
+    for row in overdue_qs.values('status').annotate(total=Count('id')):
+        if row['status'] in status_totals:
+            status_totals[row['status']] = row['total']
+
+    rows = []
+    for order in overdue_qs.only(
+        'id',
+        'slug',
+        'receipt_number',
+        'status',
+        'order_date',
+        'first_name',
+        'last_name',
+    )[:limit]:
+        age_days = max(0, (today - order.order_date).days)
+        threshold_days = thresholds_by_status.get(order.status, 0)
+        age_over_threshold = max(0, age_days - threshold_days)
+        severity = 'critical' if age_over_threshold >= 7 else 'warning'
+
+        rows.append(
+            {
+                'slug': order.slug,
+                'receipt_number': order.receipt_number,
+                'full_name': f"{order.first_name} {order.last_name}".strip(),
+                'status_code': order.status,
+                'status_label': order.get_status_display(),
+                'age_days': age_days,
+                'threshold_days': threshold_days,
+                'age_over_threshold': age_over_threshold,
+                'severity': severity,
+            }
+        )
+
+    return {
+        'total': overdue_total,
+        'limit': limit,
+        'rows': rows,
+        'has_more': overdue_total > len(rows),
+        'by_status': status_totals,
+        'thresholds_by_status': thresholds_by_status,
+    }

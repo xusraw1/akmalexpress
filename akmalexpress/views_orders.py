@@ -27,6 +27,7 @@ from .models import Order, OrderItem
 from .selectors.orders import (
     apply_missing_track_filter,
     apply_order_search_filter,
+    build_stuck_orders_snapshot,
     orders_with_related,
     parse_checkbox_flag,
     parse_month_filter,
@@ -372,10 +373,10 @@ def order_list(request):
             selected_month = ''
             messages.warning(request, _('Неверный формат месяца. Используйте YYYY-MM.'))
 
+    filtered_orders_qs = orders_list.distinct()
+    stuck_orders_snapshot = build_stuck_orders_snapshot(filtered_orders_qs, limit=8)
     orders_list = orders_with_related(
-        orders_list
-        .distinct()
-        .order_by('-order_date', '-created_at')
+        filtered_orders_qs.order_by('-order_date', '-created_at')
     )
 
     paginator = Paginator(orders_list, 20)
@@ -393,6 +394,7 @@ def order_list(request):
         'search_query': search_query,
         'selected_month': selected_month,
         'missing_track_only': missing_track_only,
+        'stuck_orders': stuck_orders_snapshot,
     }
     return render(request, 'akmalexpress/orders.html', context)
 

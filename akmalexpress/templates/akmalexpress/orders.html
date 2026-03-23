@@ -1,48 +1,97 @@
 {% extends 'base.html' %}
-{% load number_format %}
+{% load number_format i18n %}
 
-{% block title %}Все заказы | AkmalExpress{% endblock %}
+{% block title %}{% trans "Все заказы | AkmalExpress" %}{% endblock %}
 
 {% block content %}
 <section class="content-card">
     <div class="section-head">
         <div>
-            <h1 class="section-title">Все заказы</h1>
-            <p class="section-subtitle">Показано: {{ orders|length }} из {{ orders.paginator.count }}</p>
+            <h1 class="section-title">{% trans "Все заказы" %}</h1>
+            <p class="section-subtitle">{% blocktrans with shown=orders|length total=orders.paginator.count %}Показано: {{ shown }} из {{ total }}{% endblocktrans %}</p>
         </div>
         <div class="inline-actions inline-actions--excel">
-            <a class="action-print" href="{% url 'orders_export_excel' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}">Скачать Excel</a>
+            <a class="action-print" href="{% url 'orders_export_excel' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}">{% trans "Скачать Excel" %}</a>
             <form method="post" enctype="multipart/form-data" action="{% url 'orders_import_excel' %}" class="excel-upload-form">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
                 <div class="file-picker file-picker--compact" data-file-picker>
                     <input class="excel-file-input" type="file" name="excel_file" id="orders-excel-file" accept=".xlsx" data-file-input required>
-                    <label class="file-picker__button" for="orders-excel-file">Выбрать файл</label>
-                    <span class="file-picker__name" data-file-name>Файл не выбран</span>
-                    <button type="button" class="file-picker__clear" data-file-clear title="Очистить файл" aria-label="Очистить файл" hidden>×</button>
+                    <label class="file-picker__button" for="orders-excel-file">{% trans "Выбрать файл" %}</label>
+                    <span class="file-picker__name" data-file-name>{% trans "Файл не выбран" %}</span>
+                    <button type="button" class="file-picker__clear" data-file-clear title="{% trans 'Очистить файл' %}" aria-label="{% trans 'Очистить файл' %}" hidden>×</button>
                 </div>
-                <button type="submit" class="action-edit">Загрузить Excel</button>
+                <button type="submit" class="action-edit">{% trans "Загрузить Excel" %}</button>
             </form>
         </div>
     </div>
 
     <form class="search-form search-form--orders" method="get">
         <div class="search-row">
-            <label for="orders-search" class="sr-only">Поиск заказов</label>
-            <input id="orders-search" type="search" name="search" value="{{ search_query }}" placeholder="Квитанция, клиент, телефон, трек или товар" autocomplete="off">
-            <button type="submit" class="btn-primary">Поиск</button>
+            <label for="orders-search" class="sr-only">{% trans "Поиск заказов" %}</label>
+            <input id="orders-search" type="search" name="search" value="{{ search_query }}" placeholder="{% trans 'Квитанция, клиент, телефон, трек или товар' %}" autocomplete="off">
+            <button type="submit" class="btn-primary">{% trans "Поиск" %}</button>
             {% if search_query or missing_track_only %}
-            <a href="{% url 'orders' %}" class="btn-ghost">Сброс</a>
+            <a href="{% url 'orders' %}" class="btn-ghost">{% trans "Сброс" %}</a>
             {% endif %}
         </div>
         <div class="search-filters search-filters--compact">
             <label class="toggle-check">
                 <input type="checkbox" name="missing_track" value="1" {% if missing_track_only %}checked{% endif %}>
                 <span class="toggle-slider" aria-hidden="true"></span>
-                <span class="toggle-text">Только без трек-номера</span>
+                <span class="toggle-text">{% trans "Только без трек-номера" %}</span>
             </label>
         </div>
     </form>
+
+    {% if stuck_orders.total %}
+    <section class="orders-stuck-panel table-wrap-spaced-sm">
+        <div class="orders-stuck-panel__head">
+            <div>
+                <h2 class="orders-stuck-panel__title">{% trans "Требуют внимания" %}</h2>
+                <p class="orders-stuck-panel__subtitle">{% trans "Зависшие заказы в активных статусах:" %} {{ stuck_orders.total }}</p>
+            </div>
+            <span class="orders-stuck-panel__hint">{% trans "Порог: Принят 3д, Заказан 7д, В пути 14д" %}</span>
+        </div>
+        <div class="orders-stuck-panel__chips">
+            <span class="orders-stuck-chip">{% trans "Принят:" %} <b>{{ stuck_orders.by_status.accepted }}</b></span>
+            <span class="orders-stuck-chip">{% trans "Заказан:" %} <b>{{ stuck_orders.by_status.ordered }}</b></span>
+            <span class="orders-stuck-chip">{% trans "В пути:" %} <b>{{ stuck_orders.by_status.transit }}</b></span>
+        </div>
+        <div class="orders-stuck-list">
+            {% for row in stuck_orders.rows %}
+            {% if row.slug %}
+            <a class="orders-stuck-item orders-stuck-item--{{ row.severity }}" href="{% url 'detail_order' row.slug %}">
+                <div class="orders-stuck-item__main">
+                    <b>№{{ row.receipt_number }}</b>
+                    <span>{{ row.full_name|default:'-' }}</span>
+                </div>
+                <div class="orders-stuck-item__meta">
+                    <span>{{ row.status_label }}</span>
+                    <span>{{ row.age_days }} {% trans "дн" %}</span>
+                    <span>+{{ row.age_over_threshold }} {% trans "дн" %}</span>
+                </div>
+            </a>
+            {% else %}
+            <div class="orders-stuck-item orders-stuck-item--{{ row.severity }}">
+                <div class="orders-stuck-item__main">
+                    <b>№{{ row.receipt_number }}</b>
+                    <span>{{ row.full_name|default:'-' }}</span>
+                </div>
+                <div class="orders-stuck-item__meta">
+                    <span>{{ row.status_label }}</span>
+                    <span>{{ row.age_days }} {% trans "дн" %}</span>
+                    <span>+{{ row.age_over_threshold }} {% trans "дн" %}</span>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% if stuck_orders.has_more %}
+        <p class="orders-stuck-panel__foot">{% blocktrans with limit=stuck_orders.limit %}Показаны первые {{ limit }} заказов.{% endblocktrans %}</p>
+        {% endif %}
+    </section>
+    {% endif %}
 
     <div class="search-result-stack table-wrap-spaced">
         {% for order in orders %}
@@ -58,42 +107,42 @@
                 <div class="search-order-summary__side">
                     {% include 'partials/status_badge.html' %}
                     <b class="search-order-total">{{ order.get_final_total|money:2 }} {{ order.get_current }}</b>
-                    <span class="muted muted-no-top">Долг: {{ order.get_pickup_due|money:2 }} {{ order.get_current }}</span>
-                    <span class="muted muted-no-top">Баланс: {{ order.get_balance|money:2 }} {{ order.get_current }}</span>
+                    <span class="muted muted-no-top">{% trans "Долг:" %} {{ order.get_pickup_due|money:2 }} {{ order.get_current }}</span>
+                    <span class="muted muted-no-top">{% trans "Баланс:" %} {{ order.get_balance|money:2 }} {{ order.get_current }}</span>
                 </div>
             </summary>
 
             <div class="search-order-body">
                 <div class="search-order-grid">
                     <article class="search-order-info">
-                        <h3>Товар</h3>
+                        <h3>{% trans "Товар" %}</h3>
                         <p>{{ order.get_display_product_name }}</p>
                     </article>
                     <article class="search-order-info">
-                        <h3>Тип отправки</h3>
+                        <h3>{% trans "Тип отправки" %}</h3>
                         <p>{{ order.shipping_method_summary }}</p>
                     </article>
                     <article class="search-order-info">
-                        <h3>Треки товаров</h3>
+                        <h3>{% trans "Треки товаров" %}</h3>
                         <p>{{ order.item_track_summary }}</p>
                     </article>
                     <article class="search-order-info">
-                        <h3>Долг</h3>
+                        <h3>{% trans "Долг" %}</h3>
                         <p>{{ order.get_pickup_due|money:2 }} {{ order.get_current }}</p>
                     </article>
                     <article class="search-order-info">
-                        <h3>Баланс</h3>
+                        <h3>{% trans "Баланс" %}</h3>
                         <p>{{ order.get_balance|money:2 }} {{ order.get_current }}</p>
                     </article>
                 </div>
 
                 <div class="inline-actions search-order-actions">
-                    <a class="action-print" href="{% url 'detail_order' order.slug %}">Открыть</a>
+                    <a class="action-print" href="{% url 'detail_order' order.slug %}">{% trans "Открыть" %}</a>
                     {% if request.user.is_staff or request.user.is_superuser %}
-                    <a class="action-print" href="{% url 'print_receipt' order.slug %}" target="_blank" rel="noopener">Печать</a>
-                    <a class="action-print" href="{% url 'print_settlement_sheet' order.slug %}">Расчет</a>
-                    <a class="action-edit" href="{% url 'change_order' order.slug %}">Изменить</a>
-                    <a class="action-delete" href="{% url 'delete_order' order.slug %}">Удалить</a>
+                    <a class="action-print" href="{% url 'print_receipt' order.slug %}" target="_blank" rel="noopener">{% trans "Печать" %}</a>
+                    <a class="action-print" href="{% url 'print_settlement_sheet' order.slug %}">{% trans "Расчет" %}</a>
+                    <a class="action-edit" href="{% url 'change_order' order.slug %}">{% trans "Изменить" %}</a>
+                    <a class="action-delete" href="{% url 'delete_order' order.slug %}">{% trans "Удалить" %}</a>
                     {% endif %}
                 </div>
             </div>
