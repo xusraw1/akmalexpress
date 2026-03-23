@@ -1,8 +1,12 @@
+import logging
+
 from django.conf import settings
 from django.shortcuts import render
 from django.utils import translation
 
 from .i18n import normalize_language, translate_html_content
+
+logger = logging.getLogger(__name__)
 
 
 class LanguageMiddleware:
@@ -42,6 +46,7 @@ class LanguageMiddleware:
                 response.content = html.encode(charset)
                 response['Content-Length'] = str(len(response.content))
             except Exception:
+                logger.exception('Failed to post-process Uzbek HTML translation response')
                 return response
 
         return response

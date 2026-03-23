@@ -1,5 +1,6 @@
 import json
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from zipfile import BadZipFile
 from urllib.parse import urlencode
 
 from django.contrib import messages
@@ -13,6 +14,7 @@ from django.utils.html import format_html
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from openpyxl import load_workbook
+from openpyxl.utils.exceptions import InvalidFileException
 
 from .forms import (
     ChangeOrderForm,
@@ -630,7 +632,7 @@ def import_orders_excel(request):
     except ValueError as exc:
         messages.error(request, _('Ошибка импорта Excel: %(error)s') % {'error': exc})
         return redirect(next_url)
-    except Exception:
+    except (InvalidFileException, BadZipFile, OSError):
         messages.error(request, _('Не удалось прочитать Excel файл.'))
         return redirect(next_url)
 

@@ -1,4 +1,5 @@
 from decimal import Decimal
+from zipfile import BadZipFile
 
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
@@ -11,6 +12,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from openpyxl import load_workbook
+from openpyxl.utils.exceptions import InvalidFileException
 
 from .models import Order, UserProfile
 from .i18n import translate_html_content
@@ -357,7 +359,7 @@ def import_profile_orders_excel(request, user):
     except ValueError as exc:
         messages.error(request, _('Ошибка импорта Excel: %(error)s') % {'error': exc})
         return redirect(next_url)
-    except Exception:
+    except (InvalidFileException, BadZipFile, OSError):
         messages.error(request, _('Не удалось прочитать Excel файл.'))
         return redirect(next_url)
 

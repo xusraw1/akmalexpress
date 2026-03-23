@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from io import BytesIO
 
 from django.contrib.auth.models import User
@@ -213,7 +213,7 @@ def _parse_excel_decimal(value, default=Decimal('0.00'), allow_none=False):
 
     try:
         return Decimal(text)
-    except Exception:
+    except (InvalidOperation, ValueError, TypeError):
         return default
 
 

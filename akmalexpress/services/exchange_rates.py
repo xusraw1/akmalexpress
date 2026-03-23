@@ -68,7 +68,7 @@ def _fetch_ipakyuli_rates():
     for url in IPAKYULI_RATE_URLS:
         try:
             body = _fetch_text(url)
-        except Exception:
+        except (URLError, TimeoutError, OSError, ValueError):
             continue
 
         usd_rate = _extract_three_column_rate(body, 'USD') or _extract_rate_from_line(body, 'USD')
