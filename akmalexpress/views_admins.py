@@ -1,5 +1,7 @@
 from django.contrib import messages
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext_lazy as _
@@ -64,23 +66,34 @@ def delete_admin(request, user_id):
 def create_admin(request):
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
-        password1 = request.POST.get('password1')
-        password2 = request.POST.get('password2')
-        user = User.objects.filter(username=username)
+        password1 = request.POST.get('password1') or ''
+        password2 = request.POST.get('password2') or ''
+        user_exists = User.objects.filter(username=username).exists()
 
-        if not user:
-            if username and password1 == password2:
-                created_user = User.objects.create_user(username=username, password=password1)
-                created_user.is_staff = True
-                created_user.is_active = True
-                created_user.save(update_fields=['is_staff', 'is_active'])
-                messages.success(request, _("Модератор @%(username)s успешно добавлен") % {'username': username})
-                return redirect('create_admin')
-
-            messages.warning(request, _("Пароли не совпадают или не указано имя пользователя"))
+        if user_exists:
+            messages.warning(request, _("Пользователь с ником %(username)s уже существует!") % {'username': username})
             return redirect('create_admin')
 
-        messages.warning(request, _("Пользователь с ником %(username)s уже существует!") % {'username': username})
+        if not username:
+            messages.warning(request, _("Укажите имя пользователя"))
+            return redirect('create_admin')
+
+        if password1 != password2:
+            messages.warning(request, _("Пароли не совпадают"))
+            return redirect('create_admin')
+
+        try:
+            validate_password(password1)
+        except ValidationError as validation_error:
+            for error_message in validation_error.messages:
+                messages.warning(request, error_message)
+            return redirect('create_admin')
+
+        created_user = User.objects.create_user(username=username, password=password1)
+        created_user.is_staff = True
+        created_user.is_active = True
+        created_user.save(update_fields=['is_staff', 'is_active'])
+        messages.success(request, _("Модератор @%(username)s успешно добавлен") % {'username': username})
         return redirect('create_admin')
 
     account_status = (request.GET.get('account_status') or 'all').strip()

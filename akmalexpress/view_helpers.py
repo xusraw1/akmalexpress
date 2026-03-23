@@ -218,7 +218,7 @@ def _safe_next_redirect(request, fallback_url, include_referer=True):
 
 
 def is_active_superuser(user):
-    return user.is_staff or user.is_superuser
+    return bool(user.is_authenticated and user.is_active and (user.is_staff or user.is_superuser))
 
 
 def user_is_order_creator(view_func):

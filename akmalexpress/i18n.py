@@ -269,8 +269,6 @@ UZ_TRANSLATIONS = {
     'По статусу (Я-А)': 'Holat bo‘yicha (Ya-A)',
     'Статус (А-Я)': 'Holat (A-Ya)',
     'Статус (Я-А)': 'Holat (Ya-A)',
-    'Заказы на отправку': "Yuborishga buyurtmalar",
-    'Сохранить статус': "Holatni saqlash",
     'По выбранным фильтрам заказы не найдены.': "Tanlangan filtrlarda buyurtmalar topilmadi.",
     'Модераторы': 'Moderatorlar',
     'Добавить модератора': "Moderator qo'shish",

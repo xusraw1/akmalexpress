@@ -25,8 +25,9 @@ SECRET_KEY = os.environ.get(
     'SECRET_KEY',
     'change-me-6fA9zQp2LmN8vX4kRtY7uHi3sDwC0bJe5nPo1qRsTuVwXyZ',
 )
-DEBUG = False
+DEBUG = env_bool('DEBUG', False)
 ALLOWED_HOSTS = [host.strip() for host in os.environ.get('ALLOWED_HOSTS', 'localhost').split(',') if host.strip()]
+IS_RENDER = env_bool('RENDER', False)
 
 
 ADMIN_URL = (os.environ.get('ADMIN_URL', 'secure-admin/').strip().strip('/') or 'secure-admin') + '/'
@@ -136,9 +137,11 @@ SECURE_REFERRER_POLICY = 'same-origin'
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
 
-SESSION_COOKIE_SECURE = env_bool('SESSION_COOKIE_SECURE', False)
-CSRF_COOKIE_SECURE = env_bool('CSRF_COOKIE_SECURE', False)
-SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', False)
+SESSION_COOKIE_SECURE = env_bool('SESSION_COOKIE_SECURE', IS_RENDER)
+CSRF_COOKIE_SECURE = env_bool('CSRF_COOKIE_SECURE', IS_RENDER)
+SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', IS_RENDER)
+if IS_RENDER:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '31536000'))
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
