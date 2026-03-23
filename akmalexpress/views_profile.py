@@ -23,6 +23,7 @@ from .services.excel import (
     _excel_workbook_response,
     _import_orders_from_workbook,
 )
+from .services.images import optimize_uploaded_image
 from .view_helpers import (
     PROFILE_PERIOD_OPTIONS,
     PROFILE_STATUS_FILTER_MAP,
@@ -175,7 +176,7 @@ def profile_view(request, user):
             user_profile.avatar.delete(save=False)
             user_profile.avatar = None
         if avatar_file:
-            user_profile.avatar = avatar_file
+            user_profile.avatar = optimize_uploaded_image(avatar_file, max_size=(600, 600), quality=86)
         user_profile.save()
 
         messages.success(request, _('Профиль успешно обновлен.'))
@@ -204,14 +205,15 @@ def profile_view(request, user):
         for error_text in period_errors:
             messages.warning(request, error_text)
 
+    base_profile_orders_qs = Order.objects.filter(user=profile)
     all_profile_orders_qs = orders_with_related(
-        Order.objects.filter(user=profile).order_by('-order_date', '-created_at')
+        base_profile_orders_qs.order_by('-order_date', '-created_at')
     )
     profile_total_amount = sum((o.get_final_total for o in all_profile_orders_qs), Decimal('0.00'))
-    orders_total_count = all_profile_orders_qs.count()
+    orders_total_count = base_profile_orders_qs.count()
 
     profile_orders_qs = _apply_profile_orders_filters(
-        queryset=Order.objects.filter(user=profile),
+        queryset=base_profile_orders_qs,
         request_user=request.user,
         search=search,
         status_filter=status_filter,

@@ -5,6 +5,7 @@ from django.forms import BaseFormSet, formset_factory
 from django.utils import timezone
 
 from .models import Order, OrderAttachment, OrderItem, Product
+from .services.images import optimize_uploaded_image
 from .view_helpers import _calculate_order_totals_payload
 
 
@@ -176,7 +177,8 @@ class CreateOrderForm(forms.Form):
         order.save()
 
         for image in data.get('attachments', []):
-            OrderAttachment.objects.create(order=order, image=image)
+            optimized_image = optimize_uploaded_image(image, max_size=(1800, 1800), quality=84)
+            OrderAttachment.objects.create(order=order, image=optimized_image)
 
         return order
 

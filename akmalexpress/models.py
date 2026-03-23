@@ -114,7 +114,7 @@ class Order(models.Model):
         default=999999999,
         db_index=True,
     )
-    phone2 = models.PositiveBigIntegerField(verbose_name='Raqam #2', blank=True, null=True, default=None)
+    phone2 = models.PositiveBigIntegerField(verbose_name='Raqam #2', blank=True, null=True, default=None, db_index=True)
     debt = models.DecimalField(
         validators=[MinValueValidator(0.0)],
         decimal_places=2,
@@ -175,16 +175,25 @@ class Order(models.Model):
         verbose_name='RMB kursi',
     )
     description = models.TextField(max_length=500, verbose_name='Tarif', default='', blank=True)
-    status = models.CharField(max_length=16, choices=Status.choices, default=Status.ACCEPTED, verbose_name='Status')
-    come = models.DateTimeField(default=timezone.now, blank=True, null=True, verbose_name='Kelgan Sana')
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.ACCEPTED,
+        verbose_name='Status',
+        db_index=True,
+    )
+    come = models.DateTimeField(default=timezone.now, blank=True, null=True, verbose_name='Kelgan Sana', db_index=True)
 
-    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='Yaratilgan Sana')
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='Yaratilgan Sana', db_index=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name='O`zgartirilgan Sana')
 
     class Meta:
         ordering = ['-order_date', '-created_at', '-id']
         indexes = [
             models.Index(fields=['status', 'order_date'], name='order_status_date_idx'),
+            models.Index(fields=['user', 'order_date'], name='order_user_date_idx'),
+            models.Index(fields=['order_date', 'created_at'], name='order_date_created_idx'),
+            models.Index(fields=['status', 'come'], name='order_status_come_idx'),
         ]
         verbose_name = 'Заказ'
         verbose_name_plural = 'Заказы'

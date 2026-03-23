@@ -1,13 +1,33 @@
 from datetime import datetime
 
-from django.db.models import Exists, OuterRef, Q
+from django.db.models import Exists, OuterRef, Prefetch, Q
 
-from ..models import OrderItem
+from ..models import OrderAttachment, OrderItem
 
 
-def orders_with_related(queryset):
-    """Attach related entities to reduce N+1 queries across order pages."""
-    return queryset.select_related('product', 'user').prefetch_related('items', 'attachments')
+def orders_with_related(queryset, *, include_attachments=False):
+    """Attach only required related entities to reduce N+1 and memory pressure."""
+    items_qs = OrderItem.objects.only(
+        'id',
+        'order_id',
+        'product_name',
+        'product_quantity',
+        'product_price_currency',
+        'product_price',
+        'shipping_method',
+        'track_number',
+        'store',
+        'link',
+        'created_at',
+        'updated_at',
+    )
+    qs = queryset.select_related('product', 'user').prefetch_related(
+        Prefetch('items', queryset=items_qs)
+    )
+    if include_attachments:
+        attachments_qs = OrderAttachment.objects.only('id', 'order_id', 'image', 'created_at')
+        qs = qs.prefetch_related(Prefetch('attachments', queryset=attachments_qs))
+    return qs
 
 
 def parse_month_filter(value):

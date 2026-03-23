@@ -37,6 +37,7 @@ from .services.excel import (
     _excel_workbook_response,
     _import_orders_from_workbook,
 )
+from .services.images import optimize_uploaded_image
 from .view_helpers import (
     _build_order_item_initial,
     _calculate_order_totals_payload,
@@ -149,7 +150,7 @@ def _build_settlement_initial(order):
 
 
 def detail_order(request, slug):
-    order = get_object_or_404(orders_with_related(Order.objects.all()), slug=slug)
+    order = get_object_or_404(orders_with_related(Order.objects.all(), include_attachments=True), slug=slug)
     if request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser):
         return render(request, 'akmalexpress/detail_order.html', {'order': order})
     return render(request, 'akmalexpress/client_order_detail.html', {'order': order})
@@ -157,13 +158,13 @@ def detail_order(request, slug):
 
 @user_passes_test(is_active_superuser)
 def print_receipt(request, slug):
-    order = get_object_or_404(orders_with_related(Order.objects.all()), slug=slug)
+    order = get_object_or_404(orders_with_related(Order.objects.all(), include_attachments=True), slug=slug)
     return render(request, 'akmalexpress/receipt_print.html', {'order': order})
 
 
 @user_passes_test(is_active_superuser)
 def print_settlement_sheet(request, slug):
-    order = get_object_or_404(orders_with_related(Order.objects.all()), slug=slug)
+    order = get_object_or_404(orders_with_related(Order.objects.all(), include_attachments=True), slug=slug)
     sheet = _build_settlement_initial(order)
 
     if request.method == 'POST':
@@ -264,7 +265,8 @@ def change_order(request, slug):
                     attachment.delete()
 
             for image in form.cleaned_data.get('attachments', []):
-                order.attachments.create(image=image)
+                optimized_image = optimize_uploaded_image(image, max_size=(1800, 1800), quality=84)
+                order.attachments.create(image=optimized_image)
 
             messages.success(request, _("Заказ с квитанцией №%(receipt)s обновлен") % {'receipt': order.receipt_number})
             return redirect('orders')
@@ -672,14 +674,14 @@ def dispatch_orders_view(request):
 
         return redirect('dispatch_orders')
 
+    dispatch_orders_base_qs = Order.objects.filter(status=Order.Status.ACCEPTED)
     dispatch_orders_qs = orders_with_related(
-        Order.objects.filter(
-            status=Order.Status.ACCEPTED,
-        ).order_by('-order_date', '-created_at')
+        dispatch_orders_base_qs.order_by('-order_date', '-created_at'),
+        include_attachments=True,
     )
 
-    total_orders = dispatch_orders_qs.count()
-    total_items = sum(len(order.items.all()) for order in dispatch_orders_qs)
+    total_orders = dispatch_orders_base_qs.count()
+    total_items = OrderItem.objects.filter(order__status=Order.Status.ACCEPTED).count()
 
     paginator = Paginator(dispatch_orders_qs, 20)
     page_number = request.GET.get('page')
