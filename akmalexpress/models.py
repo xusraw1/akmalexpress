@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from django.contrib.auth.models import User
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
@@ -93,7 +93,7 @@ class Order(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     slug = models.SlugField(unique=True, blank=True, null=True)
     receipt_number = models.PositiveIntegerField(
-        validators=[MaxValueValidator(1500)],
+        validators=[MinValueValidator(1)],
         verbose_name='Kvitansiya Raqam',
         db_index=True,
     )
