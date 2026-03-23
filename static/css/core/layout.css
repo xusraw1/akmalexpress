@@ -1,4 +1,5 @@
 :root {
+    --font-primary: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --bg-main: #f7fafc;
     --bg-soft: #ffffff;
     --ink-900: #132333;
@@ -37,8 +38,8 @@ body {
 }
 
 body.app-body {
-    font-family: "Manrope", sans-serif;
-    font-weight: 400;
+    font-family: var(--font-primary);
+    font-weight: 600;
     color: var(--ink-900);
     background:
         radial-gradient(circle at 8% 0%, rgba(15, 118, 110, 0.2), transparent 36%),
@@ -81,8 +82,8 @@ h5,
 .brand-mark b,
 .section-title,
 .panel-title {
-    font-family: "Outfit", "Manrope", sans-serif;
-    font-weight: 600;
+    font-family: var(--font-primary);
+    font-weight: 700;
     letter-spacing: -0.015em;
     color: var(--ink-900);
 }

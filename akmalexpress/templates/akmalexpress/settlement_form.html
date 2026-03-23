@@ -4,7 +4,7 @@
 {% block title %}Расчет клиента №{{ order.receipt_number }} | AkmalExpress{% endblock %}
 
 {% block content %}
-<section class="content-card">
+<section class="content-card settlement-card">
     <div class="section-head">
         <div>
             <h1 class="section-title">Расчет клиента</h1>
@@ -12,9 +12,9 @@
         </div>
     </div>
 
-    <form method="post" class="unified-form" id="settlementForm">
+    <form method="post" class="unified-form settlement-form" id="settlementForm">
         {% csrf_token %}
-        <div class="form-grid two-col">
+        <div class="form-grid two-col settlement-grid">
             <div class="field">
                 <label for="sheet-receipt">Квитанция</label>
                 <input id="sheet-receipt" type="text" name="receipt_number" value="{{ sheet.receipt_number }}" required>
@@ -49,19 +49,32 @@
                 <label>Режим услуги</label>
                 <div class="service-mode-group" data-sheet-service-mode>
                     <label class="service-mode-option">
-                        <input type="radio" name="service_mode" value="auto" {% if sheet.service_mode != 'fixed_10000' and sheet.service_mode != 'percent_15' %}checked{% endif %}>
-                        <span>Авто</span>
+                        <input type="radio" name="service_mode" value="percent_10" {% if sheet.service_mode == 'percent_10' %}checked{% endif %}>
+                        <span>10%</span>
                     </label>
                     <label class="service-mode-option">
-                        <input type="radio" name="service_mode" value="fixed_10000" {% if sheet.service_mode == 'fixed_10000' %}checked{% endif %}>
-                        <span>10 000</span>
-                    </label>
-                    <label class="service-mode-option">
-                        <input type="radio" name="service_mode" value="percent_15" {% if sheet.service_mode == 'percent_15' %}checked{% endif %}>
+                        <input type="radio" name="service_mode" value="percent_15" {% if sheet.service_mode == 'percent_15' or not sheet.service_mode %}checked{% endif %}>
                         <span>15%</span>
                     </label>
+                    <label class="service-mode-option">
+                        <input type="radio" name="service_mode" value="custom_percent" {% if sheet.service_mode == 'custom_percent' %}checked{% endif %}>
+                        <span>Свой %</span>
+                    </label>
                 </div>
-                <small class="muted">Авто: если себестоимость + карго меньше 70 000 — 10 000 сум, иначе 15%.</small>
+                <div class="service-custom-percent">
+                    <label for="sheet-service-percent">Процент услуги</label>
+                    <input
+                        id="sheet-service-percent"
+                        type="number"
+                        name="service_percent"
+                        step="0.01"
+                        min="0.01"
+                        max="100"
+                        value="{{ sheet.service_percent|default_if_none:'15'|floatformat:'2' }}"
+                        data-sheet-service-percent
+                    >
+                </div>
+                <small class="muted">Услуга считается автоматически от суммы (себестоимость + карго), минимум 10 000 сум.</small>
             </div>
             <div class="field">
                 <label for="sheet-service">Xizmat</label>
@@ -81,7 +94,7 @@
             </div>
         </div>
 
-        <div class="form-actions">
+        <div class="form-actions settlement-actions">
             <button type="submit" class="btn-primary">Сформировать для печати</button>
             <a href="{% url 'detail_order' order.slug %}" class="btn-ghost">К заказу</a>
         </div>
@@ -95,13 +108,14 @@
     const serviceInput = document.querySelector('[data-sheet-service]');
     const totalInput = document.querySelector('[data-sheet-total]');
     const dueInput = document.querySelector('[data-sheet-due]');
+    const servicePercentInput = document.querySelector('[data-sheet-service-percent]');
     const serviceModeInputs = Array.from(document.querySelectorAll('input[name="service_mode"]'));
     const productResetButton = document.querySelector('[data-product-reset]');
-    if (!productInput || !cargoInput || !serviceInput || !totalInput || !dueInput || !serviceModeInputs.length) return;
+    if (!productInput || !cargoInput || !serviceInput || !totalInput || !dueInput || !servicePercentInput || !serviceModeInputs.length) return;
 
-    const SERVICE_THRESHOLD = 70000;
-    const SERVICE_FIXED = 10000;
-    const HIGH_RATE = 0.15;
+    const SERVICE_MIN = 10000;
+    const TEN_PERCENT = 10;
+    const FIFTEEN_PERCENT = 15;
 
     const parseNumber = (value) => {
         const cleaned = String(value || '').replace(',', '.').trim();
@@ -113,22 +127,33 @@
     const round2 = (value) => Math.round(value * 100) / 100;
     const selectedServiceMode = () => {
         const selected = serviceModeInputs.find((item) => item.checked);
-        return selected ? selected.value : 'auto';
+        return selected ? selected.value : 'percent_15';
     };
     const defaultProductCost = parseNumber(productInput.dataset.sheetProductDefault || productInput.value);
+
+    const toggleCustomPercentField = () => {
+        const mode = selectedServiceMode();
+        const isCustom = mode === 'custom_percent';
+        servicePercentInput.disabled = !isCustom;
+        servicePercentInput.required = isCustom;
+    };
 
     const recalc = () => {
         const product = parseNumber(productInput.value);
         const cargo = parseNumber(cargoInput.value);
         const base = product + cargo;
         const mode = selectedServiceMode();
-        let service = 0;
-        if (mode === 'fixed_10000') {
-            service = SERVICE_FIXED;
-        } else if (mode === 'percent_15') {
-            service = round2(base * HIGH_RATE);
-        } else {
-            service = base < SERVICE_THRESHOLD ? SERVICE_FIXED : round2(base * HIGH_RATE);
+        let percent = FIFTEEN_PERCENT;
+
+        if (mode === 'percent_10') {
+            percent = TEN_PERCENT;
+        } else if (mode === 'custom_percent') {
+            percent = parseNumber(servicePercentInput.value) || FIFTEEN_PERCENT;
+        }
+
+        let service = round2(base * (percent / 100));
+        if (base > 0 && service < SERVICE_MIN) {
+            service = SERVICE_MIN;
         }
         serviceInput.value = service.toFixed(2);
         totalInput.value = round2(product + cargo + service).toFixed(2);
@@ -139,7 +164,12 @@
         input.addEventListener('input', recalc);
         input.addEventListener('change', recalc);
     });
-    serviceModeInputs.forEach((input) => input.addEventListener('change', recalc));
+    serviceModeInputs.forEach((input) => input.addEventListener('change', () => {
+        toggleCustomPercentField();
+        recalc();
+    }));
+    servicePercentInput.addEventListener('input', recalc);
+    servicePercentInput.addEventListener('change', recalc);
 
     if (productResetButton) {
         productResetButton.addEventListener('click', () => {
@@ -157,6 +187,7 @@
         }
     });
 
+    toggleCustomPercentField();
     recalc();
 })();
 </script>

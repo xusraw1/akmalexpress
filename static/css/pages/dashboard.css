@@ -1311,7 +1311,7 @@
 .contacts-page {
     display: grid;
     gap: 1rem;
-    font-family: "Manrope", sans-serif;
+    font-family: var(--font-primary);
 }
 
 /* ——— Hero ——— */
@@ -1342,7 +1342,7 @@
 
 .contacts-hero__title {
     margin: 0.55rem 0 0;
-    font-family: "Outfit", "Manrope", sans-serif;
+    font-family: var(--font-primary);
     font-size: clamp(1.6rem, 3.2vw, 2.4rem);
     line-height: 1.08;
     letter-spacing: -0.04em;
@@ -1712,7 +1712,7 @@
 
 .notfound-code {
     margin: 0;
-    font-family: "Outfit", "Manrope", sans-serif;
+    font-family: var(--font-primary);
     font-size: clamp(4rem, 11vw, 8rem);
     line-height: 0.92;
     letter-spacing: -0.04em;

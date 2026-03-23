@@ -48,10 +48,20 @@ TRACK_QUEUE_PAGE_SIZE = 15
 SERVICE_THRESHOLD_SUM = Decimal('70000')
 SERVICE_FLAT_LOW = Decimal('10000')
 SERVICE_RATE_HIGH = Decimal('0.15')
+SERVICE_RATE_TEN = Decimal('0.10')
+SERVICE_RATE_HUNDRED = Decimal('100')
 SERVICE_MODE_AUTO = 'auto'
 SERVICE_MODE_FLAT = 'fixed_10000'
-SERVICE_MODE_PERCENT = 'percent_15'
-SERVICE_MODES = {SERVICE_MODE_AUTO, SERVICE_MODE_FLAT, SERVICE_MODE_PERCENT}
+SERVICE_MODE_PERCENT_10 = 'percent_10'
+SERVICE_MODE_PERCENT_15 = 'percent_15'
+SERVICE_MODE_CUSTOM_PERCENT = 'custom_percent'
+SERVICE_MODES = {
+    SERVICE_MODE_AUTO,
+    SERVICE_MODE_FLAT,
+    SERVICE_MODE_PERCENT_10,
+    SERVICE_MODE_PERCENT_15,
+    SERVICE_MODE_CUSTOM_PERCENT,
+}
 
 
 def _normalize_track_number(raw_value):
@@ -72,35 +82,63 @@ def _parse_sheet_decimal(raw_value, default='0'):
 
 
 def _parse_service_mode(raw_value):
-    mode = (raw_value or SERVICE_MODE_AUTO).strip()
+    mode = (raw_value or SERVICE_MODE_PERCENT_15).strip()
     if mode not in SERVICE_MODES:
-        return SERVICE_MODE_AUTO
+        return SERVICE_MODE_PERCENT_15
     return mode
 
 
-def _calculate_service_cost(product_cost, cargo_cost, mode=SERVICE_MODE_AUTO):
+def _parse_service_percent(raw_value, default='15'):
+    normalized = str(raw_value or '').replace(' ', '').replace(',', '.').strip()
+    if not normalized:
+        return Decimal(default)
+    try:
+        parsed = Decimal(normalized)
+    except (InvalidOperation, ValueError, TypeError):
+        return Decimal(default)
+    if parsed <= 0:
+        return Decimal(default)
+    if parsed > 100:
+        return Decimal('100')
+    return parsed
+
+
+def _calculate_service_cost(product_cost, cargo_cost, mode=SERVICE_MODE_PERCENT_15, custom_percent=None):
     base_sum = (product_cost or Decimal('0')) + (cargo_cost or Decimal('0'))
     service_mode = _parse_service_mode(mode)
+    service_cost = Decimal('0')
+
     if service_mode == SERVICE_MODE_FLAT:
-        return SERVICE_FLAT_LOW.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    if service_mode == SERVICE_MODE_PERCENT:
-        return (base_sum * SERVICE_RATE_HIGH).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    if base_sum < SERVICE_THRESHOLD_SUM:
-        return SERVICE_FLAT_LOW.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    return (base_sum * SERVICE_RATE_HIGH).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        service_cost = SERVICE_FLAT_LOW
+    elif service_mode == SERVICE_MODE_PERCENT_10:
+        service_cost = base_sum * SERVICE_RATE_TEN
+    elif service_mode == SERVICE_MODE_CUSTOM_PERCENT:
+        percent = _parse_service_percent(custom_percent, default='15')
+        service_cost = base_sum * (percent / SERVICE_RATE_HUNDRED)
+    elif service_mode == SERVICE_MODE_AUTO:
+        service_cost = SERVICE_FLAT_LOW if base_sum < SERVICE_THRESHOLD_SUM else (base_sum * SERVICE_RATE_HIGH)
+    else:
+        service_cost = base_sum * SERVICE_RATE_HIGH
+
+    if base_sum > 0 and service_cost < SERVICE_FLAT_LOW:
+        service_cost = SERVICE_FLAT_LOW
+
+    return service_cost.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
 
 def _build_settlement_initial(order):
     full_name = f"{(order.first_name or '').strip()} {(order.last_name or '').strip()}".strip()
     product_cost = Decimal(order.get_total_price or '0')
     cargo_cost = Decimal('0')
-    service_cost = _calculate_service_cost(product_cost, cargo_cost, SERVICE_MODE_AUTO)
+    service_percent = Decimal('15')
+    service_cost = _calculate_service_cost(product_cost, cargo_cost, SERVICE_MODE_PERCENT_15, service_percent)
     return {
         'receipt_number': str(order.receipt_number),
         'full_name': full_name,
         'product_cost': product_cost,
         'cargo_cost': cargo_cost,
-        'service_mode': SERVICE_MODE_AUTO,
+        'service_mode': SERVICE_MODE_PERCENT_15,
+        'service_percent': service_percent,
         'service_cost': service_cost,
         'total_amount': product_cost + cargo_cost + service_cost,
         'due_amount': cargo_cost + service_cost,
@@ -131,10 +169,11 @@ def print_settlement_sheet(request, slug):
         full_name = (request.POST.get('full_name') or sheet['full_name']).strip() or sheet['full_name']
         phone = (request.POST.get('phone') or sheet['phone']).strip()
         service_mode = _parse_service_mode(request.POST.get('service_mode'))
+        service_percent = _parse_service_percent(request.POST.get('service_percent'), default=sheet.get('service_percent', 15))
 
         product_cost = _parse_sheet_decimal(request.POST.get('product_cost'), default=sheet['product_cost'])
         cargo_cost = _parse_sheet_decimal(request.POST.get('cargo_cost'), default='0')
-        service_cost = _calculate_service_cost(product_cost, cargo_cost, service_mode)
+        service_cost = _calculate_service_cost(product_cost, cargo_cost, service_mode, service_percent)
         total_amount = product_cost + cargo_cost + service_cost
         due_amount = cargo_cost + service_cost
 
@@ -145,6 +184,7 @@ def print_settlement_sheet(request, slug):
             'product_cost': product_cost,
             'cargo_cost': cargo_cost,
             'service_mode': service_mode,
+            'service_percent': service_percent,
             'service_cost': service_cost,
             'total_amount': total_amount,
             'due_amount': due_amount,
