@@ -4,8 +4,8 @@
 {% block title %}{% blocktrans with username=profile.username %}Профиль {{ username }} | AkmalExpress{% endblocktrans %}{% endblock %}
 
 {% block content %}
-<section class="profile-grid">
-    <article class="content-card profile-card">
+<section class="profile-grid crm-page-section">
+    <article class="content-card profile-card crm-profile-summary">
         <div id="profileAvatarFrame" class="profile-avatar-frame{% if user_profile and user_profile.avatar %} has-image{% endif %}">
             <img
                 id="profileAvatarPreview"
@@ -55,7 +55,7 @@
         {% endif %}
     </article>
 
-    <article class="content-card profile-personal-card">
+    <article class="content-card profile-personal-card crm-profile-main">
         <h2 class="section-title">{% trans "Личные данные" %}</h2>
         <p class="section-subtitle">{% trans "На этой странице можно изменить фото, имя, фамилию, логин и пароль." %}</p>
 

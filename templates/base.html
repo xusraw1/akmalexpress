@@ -16,11 +16,12 @@
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
     <link rel="stylesheet" href="{% static 'css/pages/about-faq.css' %}">
     <link rel="stylesheet" href="{% static 'css/pages/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/core/crm-redesign.css' %}">
     <link rel="icon" type="image/jpeg" href="{% static 'img/logo.jpg' %}">
     <link rel="apple-touch-icon" href="{% static 'img/logo.jpg' %}">
 </head>
 
-<body class="app-body">
+<body class="app-body page-{{ request.resolver_match.url_name|default:'default' }}">
     <div class="bg-orb orb-one"></div>
     <div class="bg-orb orb-two"></div>
 

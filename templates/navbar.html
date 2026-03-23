@@ -1,47 +1,48 @@
 {% load static i18n %}
+{% with current_url_name=request.resolver_match.url_name %}
 <header class="topbar">
     <div class="topbar-inner">
         <div class="topbar-left">
-                <button id="sidebarToggle" class="menu-btn" type="button" aria-controls="appSidebar" aria-expanded="false">
-                    <span class="sr-only">{% trans "Открыть меню" %}</span>
+            <button id="sidebarToggle" class="menu-btn" type="button" aria-controls="appSidebar" aria-expanded="false">
+                <span class="sr-only">{% trans "Открыть меню" %}</span>
                 <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8"
-                        stroke-linecap="round" />
+                    <path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
                 </svg>
             </button>
             <a href="{% url 'index' %}" class="brand-mark">
                 <img src="{% static 'img/logo.jpg' %}" alt="AkEx" class="brand-mark__logo">
                 <span>
                     <b>AkmalExpress</b>
-                    <small>order dashboard</small>
+                    <small>{% trans "Order CRM" %}</small>
                 </span>
             </a>
         </div>
 
         <div class="topbar-right">
             <div class="lang-switch" aria-label="{% trans 'Выбор языка' %}">
-                <a href="{% url 'set_language' 'ru' %}?next={{ request.get_full_path|urlencode }}"
-                    class="lang-pill {% if current_lang == 'ru' %}is-active{% endif %}">RU</a>
-                <a href="{% url 'set_language' 'uz' %}?next={{ request.get_full_path|urlencode }}"
-                    class="lang-pill {% if current_lang == 'uz' %}is-active{% endif %}">UZ</a>
+                <a href="{% url 'set_language' 'ru' %}?next={{ request.get_full_path|urlencode }}" class="lang-pill {% if current_lang == 'ru' %}is-active{% endif %}">RU</a>
+                <a href="{% url 'set_language' 'uz' %}?next={{ request.get_full_path|urlencode }}" class="lang-pill {% if current_lang == 'uz' %}is-active{% endif %}">UZ</a>
             </div>
-            <a href="{% url 'index' %}" class="top-pill">{% trans "Главная" %}</a>
-            {% if not user.is_staff and not user.is_superuser %}
-            <a href="{% url 'about' %}" class="top-pill">{% trans "О нас" %}</a>
-            <a href="{% url 'faq' %}" class="top-pill">{% trans "FAQ" %}</a>
-            {% endif %}
+
+            <a href="{% url 'index' %}" class="top-pill{% if current_url_name == 'index' %} is-active{% endif %}">{% trans "Главная" %}</a>
+
             {% if user.is_staff or user.is_superuser %}
-            <a href="{% url 'orders' %}" class="top-pill">{% trans "Заказы" %}</a>
-            <a href="{% url 'dispatch_orders' %}" class="top-pill">{% trans "Отправка" %}</a>
+            <a href="{% url 'orders' %}" class="top-pill{% if current_url_name == 'orders' %} is-active{% endif %}">{% trans "Заказы" %}</a>
+            <a href="{% url 'track_center' %}" class="top-pill{% if current_url_name == 'track_center' %} is-active{% endif %}">{% trans "Треки" %}</a>
+            <a href="{% url 'dispatch_orders' %}" class="top-pill{% if current_url_name == 'dispatch_orders' %} is-active{% endif %}">{% trans "Отправка" %}</a>
+            {% else %}
+            <a href="{% url 'about' %}" class="top-pill{% if current_url_name == 'about' %} is-active{% endif %}">{% trans "О нас" %}</a>
+            <a href="{% url 'faq' %}" class="top-pill{% if current_url_name == 'faq' %} is-active{% endif %}">{% trans "FAQ" %}</a>
             {% endif %}
 
             {% if user.is_authenticated %}
-            {% if user.is_staff or user.is_superuser %}
-            <a href="{% url 'profile' request.user.username %}" class="user-pill">@{{ request.user.username }}</a>
-            {% else %}
-            <span class="user-pill">@{{ request.user.username }}</span>
-            {% endif %}
+                {% if user.is_staff or user.is_superuser %}
+                <a href="{% url 'profile' request.user.username %}" class="user-pill{% if current_url_name == 'profile' %} is-active{% endif %}">@{{ request.user.username }}</a>
+                {% else %}
+                <span class="user-pill">@{{ request.user.username }}</span>
+                {% endif %}
             {% endif %}
         </div>
     </div>
 </header>
+{% endwith %}
