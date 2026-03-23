@@ -511,6 +511,8 @@ UZ_TRANSLATIONS = {
     'Суперпользователя нельзя деактивировать через эту форму.': 'Superfoydalanuvchini bu forma orqali faolsizlantirib bo‘lmaydi.',
     'Суперпользователя удалять через эту форму нельзя.': 'Superfoydalanuvchini bu forma orqali o‘chirib bo‘lmaydi.',
     'Нельзя удалить текущего пользователя.': 'Joriy foydalanuvchini o‘chirib bo‘lmaydi.',
+    'Укажите имя пользователя': 'Foydalanuvchi nomini kiriting',
+    'Пароли не совпадают': 'Parollar mos kelmadi',
     'Пароли не совпадают или не указано имя пользователя': 'Parollar mos emas yoki foydalanuvchi nomi kiritilmagan',
     'Введенные данные неверны': "Kiritilgan ma'lumotlar noto'g'ri",
     'Проверьте форму: есть ошибки в данных заказа или товаров.': "Formani tekshiring: buyurtma yoki mahsulot ma'lumotlarida xatolar bor.",
