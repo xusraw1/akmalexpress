@@ -4,7 +4,7 @@
 {% block title %}{% trans "Управление администраторами | AkmalExpress" %}{% endblock %}
 
 {% block content %}
-<section class="content-card admin-manage-card crm-page-section">
+<section class="content-card admin-manage-card">
     <div class="section-head">
         <div>
             <h1 class="section-title">{% trans "Управление администраторами" %}</h1>
@@ -35,7 +35,7 @@
     </form>
 </section>
 
-<section class="content-card admin-filter-card crm-page-section">
+<section class="content-card admin-filter-card">
     <div class="section-head">
         <div>
             <h2 class="section-title">{% trans "Фильтры и аналитика" %}</h2>
@@ -91,7 +91,7 @@
         </div>
     </form>
 
-    <div class="summary-grid summary-grid--admins">
+    <div class="summary-grid">
         <article class="summary-pill">
             <span>{% trans "Админов" %}</span>
             <b>{{ admin_count }}</b>
@@ -119,7 +119,7 @@
     </div>
 </section>
 
-<section class="content-card crm-page-section">
+<section class="content-card">
     <div class="section-head">
         <div>
             <h2 class="section-title">{% trans "Список администраторов" %}</h2>

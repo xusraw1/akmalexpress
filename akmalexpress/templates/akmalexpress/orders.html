@@ -4,7 +4,7 @@
 {% block title %}Все заказы | AkmalExpress{% endblock %}
 
 {% block content %}
-<section class="content-card crm-page-section">
+<section class="content-card">
     <div class="section-head">
         <div>
             <h1 class="section-title">Все заказы</h1>
@@ -44,7 +44,7 @@
         </div>
     </form>
 
-    <div class="search-result-stack table-wrap-spaced crm-order-stack">
+    <div class="search-result-stack table-wrap-spaced">
         {% for order in orders %}
         <details class="search-order-card search-order-card--{{ order.status }}" {% if forloop.first %}open{% endif %}>
             <summary class="search-order-summary">

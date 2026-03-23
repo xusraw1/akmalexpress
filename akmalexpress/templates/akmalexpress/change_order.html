@@ -3,7 +3,7 @@
 {% block title %}Изменить заказ | AkmalExpress{% endblock %}
 
 {% block content %}
-<section class="form-panel crm-page-section crm-form-shell">
+<section class="form-panel">
     <h1 class="panel-title">Обновление заказа №{{ orderr.receipt_number }}</h1>
     <p class="panel-subtitle">Проверьте данные заказа и сохраните изменения.</p>
 
@@ -19,7 +19,7 @@
     <form method="post" enctype="multipart/form-data" class="unified-form">
         {% csrf_token %}
 
-        <article class="content-card form-block crm-form-section">
+        <article class="content-card form-block">
             <h2 class="section-title form-block-title">Данные заказа</h2>
             <div class="form-grid two-col">
                 <div class="field">
@@ -80,7 +80,7 @@
             </div>
         </article>
 
-        <article class="content-card form-block crm-form-section">
+        <article class="content-card form-block">
             <h2 class="section-title form-block-title">Товары в заказе</h2>
             <p class="section-subtitle">Изменяйте название, количество, себестоимость, магазин и ссылку.</p>
 
@@ -202,7 +202,7 @@
             <button type="button" id="add-item-btn" class="chip-btn mt-sm">+ Добавить товар</button>
         </article>
 
-        <article class="content-card form-block crm-form-section">
+        <article class="content-card form-block">
             <h2 class="section-title form-block-title">Фото заказа</h2>
             <p class="section-subtitle">Можно добавить новые фото и удалить старые.</p>
 
@@ -250,7 +250,7 @@
             {% endwith %}
         </article>
 
-        <article class="content-card form-block crm-form-section">
+        <article class="content-card form-block">
             <h2 class="section-title form-block-title">Комментарий</h2>
             <div class="field upload-field">
                 <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
@@ -259,7 +259,7 @@
             </div>
         </article>
 
-        <article class="content-card form-block order-total-card crm-form-section">
+        <article class="content-card form-block order-total-card">
             <h2 class="section-title form-block-title">Итог по заказу</h2>
             <p class="section-subtitle" id="pricing-note">Итоговая сумма считается автоматически после изменения товаров и курсов.</p>
             <div class="form-grid two-col">
@@ -276,7 +276,7 @@
             </div>
         </article>
 
-        <div class="form-actions crm-form-actions">
+        <div class="form-actions">
             <button type="submit" class="btn-primary">Сохранить изменения</button>
             <a href="{% url 'detail_order' orderr.slug %}" class="btn-ghost">Вернуться к заказу</a>
         </div>
