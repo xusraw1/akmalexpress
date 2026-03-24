@@ -2566,3 +2566,216 @@
         border-radius: 8px;
     }
 }
+
+/* Contacts page v2 (minimal) */
+.contacts-page--minimal {
+    gap: 0.9rem;
+}
+
+.contacts-page--minimal .contacts-hero {
+    border-radius: 20px;
+    box-shadow: none;
+    border-color: #d9e4ec;
+    background:
+        radial-gradient(circle at 100% 0%, rgba(15, 118, 110, 0.1), transparent 40%),
+        linear-gradient(170deg, rgba(255, 255, 255, 0.96), rgba(249, 252, 255, 0.98));
+    padding: clamp(0.95rem, 2.3vw, 1.25rem);
+}
+
+.contacts-page--minimal .contacts-hero__title {
+    margin-top: 0.42rem;
+    font-size: clamp(1.4rem, 2.8vw, 2.05rem);
+}
+
+.contacts-page--minimal .contacts-hero__lead {
+    max-width: 66ch;
+    font-size: 0.9rem;
+    margin-top: 0.42rem;
+}
+
+.contacts-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 0.8rem;
+    align-items: start;
+}
+
+.contacts-stack {
+    display: grid;
+    gap: 0.8rem;
+}
+
+.contacts-page--minimal .ct-card {
+    border-radius: 16px;
+    box-shadow: none;
+    border-color: #dbe6ee;
+    background: rgba(255, 255, 255, 0.96);
+    padding: 0.9rem;
+}
+
+.contacts-page--minimal .ct-card:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.contacts-page--minimal .ct-card__head {
+    margin-bottom: 0.62rem;
+}
+
+.contacts-page--minimal .ct-card__head h2 {
+    font-size: 1rem;
+}
+
+.contacts-page--minimal .ct-card__icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+}
+
+.contacts-page--minimal .ct-card__icon--orange {
+    background: rgba(234, 88, 12, 0.12);
+    color: #c2410c;
+}
+
+.ct-list {
+    display: grid;
+    gap: 0.45rem;
+}
+
+.ct-row {
+    display: grid;
+    gap: 0.12rem;
+    border-radius: 11px;
+    border: 1px solid #e1eaf1;
+    background: #fbfdff;
+    padding: 0.52rem 0.62rem;
+    text-decoration: none;
+    transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.ct-row:hover {
+    border-color: #c9d9e5;
+    background: #f7fbfe;
+}
+
+.ct-row__label {
+    color: var(--ink-500);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.ct-row__value {
+    color: var(--ink-900);
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.25;
+    word-break: break-word;
+}
+
+.contacts-page--minimal .contacts-office {
+    border-radius: 16px;
+    box-shadow: none;
+    padding: 0.88rem;
+}
+
+.contacts-page--minimal .contacts-office__inner {
+    gap: 0.72rem;
+}
+
+.contacts-request {
+    align-self: stretch;
+}
+
+.contacts-request__lead {
+    margin: 0;
+    color: var(--ink-600);
+    font-size: 0.86rem;
+}
+
+.contacts-request__form {
+    margin-top: 0.72rem;
+}
+
+.contacts-request__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+}
+
+.contacts-field {
+    display: grid;
+    gap: 0.2rem;
+}
+
+.contacts-field--full {
+    grid-column: 1 / -1;
+}
+
+.contacts-field label {
+    margin: 0;
+    font-size: 0.74rem;
+    color: var(--ink-600);
+    font-weight: 700;
+}
+
+.contacts-field input,
+.contacts-field textarea {
+    width: 100%;
+    min-height: 40px;
+    border-radius: 10px;
+    border: 1px solid #d4e0e9;
+    background: #fff;
+    color: var(--ink-900);
+    padding: 0.5rem 0.6rem;
+    font-size: 0.84rem;
+    line-height: 1.35;
+}
+
+.contacts-field textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.contacts-field input:focus,
+.contacts-field textarea:focus {
+    outline: none;
+    border-color: rgba(15, 118, 110, 0.5);
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+}
+
+.contacts-field__error {
+    margin: 0;
+    color: #b91c1c;
+    font-size: 0.74rem;
+    font-weight: 700;
+}
+
+.contacts-request__submit {
+    margin-top: 0.62rem;
+    width: 100%;
+}
+
+@media (max-width: 1024px) {
+    .contacts-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .contacts-request__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .contacts-page--minimal .contacts-office__inner {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .contacts-page--minimal .contacts-office__btn {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+}

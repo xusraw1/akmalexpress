@@ -36,7 +36,7 @@ from .view_helpers import (
     is_active_superuser,
 )
 
-PROFILE_ORDERS_PAGE_SIZE = 8
+PROFILE_ORDERS_PAGE_SIZE = 10
 
 
 @user_passes_test(is_active_superuser)

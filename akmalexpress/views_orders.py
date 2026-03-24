@@ -50,7 +50,7 @@ from .view_helpers import (
     user_is_order_creator,
 )
 
-TRACK_QUEUE_PAGE_SIZE = 15
+TRACK_QUEUE_PAGE_SIZE = 10
 SERVICE_THRESHOLD_SUM = Decimal('70000')
 SERVICE_FLAT_LOW = Decimal('10000')
 SERVICE_RATE_HIGH = Decimal('0.15')
@@ -482,7 +482,7 @@ def order_list(request):
         filtered_orders_qs.order_by('-order_date', '-created_at')
     )
 
-    paginator = Paginator(orders_list, 20)
+    paginator = Paginator(orders_list, 10)
     page_number = request.GET.get('page')
 
     try:
@@ -794,7 +794,7 @@ def dispatch_orders_view(request):
     total_orders = dispatch_orders_base_qs.count()
     total_items = OrderItem.objects.filter(order__status=Order.Status.ACCEPTED).count()
 
-    paginator = Paginator(dispatch_orders_qs, 20)
+    paginator = Paginator(dispatch_orders_qs, 10)
     page_number = request.GET.get('page')
     try:
         orders = paginator.page(page_number)

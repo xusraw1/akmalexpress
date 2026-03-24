@@ -422,3 +422,26 @@ class ChangeOrderForm(forms.ModelForm):
         cleaned_data['balance'] = balance
 
         return cleaned_data
+
+
+class ContactRequestForm(forms.Form):
+    """Public contact request form used on the Contacts page."""
+
+    name = forms.CharField(max_length=120, label='Имя и фамилия')
+    phone = forms.CharField(max_length=20, label='Номер телефона')
+    email = forms.EmailField(label='E-mail')
+    message = forms.CharField(max_length=2000, widget=forms.Textarea(attrs={'rows': 5}), label='Текст запроса')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['name'].widget.attrs.update({'placeholder': 'Введите имя'})
+        self.fields['phone'].widget.attrs.update({'placeholder': '+998 XX XXX XX XX', 'inputmode': 'tel'})
+        self.fields['email'].widget.attrs.update({'placeholder': 'example@mail.com', 'inputmode': 'email'})
+        self.fields['message'].widget.attrs.update({'placeholder': 'Опишите ваш вопрос'})
+
+    def clean_phone(self):
+        raw_phone = self.cleaned_data.get('phone')
+        digits = ''.join(ch for ch in str(raw_phone or '') if ch.isdigit())
+        if len(digits) < 7:
+            raise forms.ValidationError('Введите корректный номер телефона.')
+        return raw_phone.strip()

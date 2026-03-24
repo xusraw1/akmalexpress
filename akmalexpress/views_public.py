@@ -19,11 +19,14 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
 
 from .context_processors import TRACK_NOTICE_DISMISS_KEY
+from .forms import ContactRequestForm
 from .i18n import normalize_language
 from .models import Order
 from .selectors.orders import apply_public_order_search_filter, orders_with_related
 from .services.exchange_rates import get_exchange_rates
 from .view_helpers import _safe_next_redirect, is_active_superuser
+
+PUBLIC_SEARCH_PAGE_SIZE = 10
 
 
 def _staff_login_client_ip(request):
@@ -123,7 +126,7 @@ def index(request):
         )
 
         if orders_qs.exists():
-            paginator = Paginator(orders_qs, 5)
+            paginator = Paginator(orders_qs, PUBLIC_SEARCH_PAGE_SIZE)
             page_number = request.GET.get('page')
 
             try:
@@ -142,8 +145,15 @@ def index(request):
     return render(request, 'index.html', context)
 
 
-class ContactsView(TemplateView):
-    template_name = 'akmalexpress/contacts.html'
+def contacts_view(request):
+    """Render contacts page and process lightweight callback requests."""
+    contact_form = ContactRequestForm(request.POST or None)
+    if request.method == 'POST':
+        if contact_form.is_valid():
+            messages.success(request, _('Запрос отправлен. Мы свяжемся с вами в ближайшее время.'))
+            return redirect('contacts')
+        messages.warning(request, _('Проверьте форму: заполните все поля корректно.'))
+    return render(request, 'akmalexpress/contacts.html', {'contact_form': contact_form})
 
 
 class AboutView(TemplateView):
@@ -156,7 +166,6 @@ class FaqView(TemplateView):
     template_name = 'akmalexpress/faq.html'
 
 
-contacts_view = ContactsView.as_view()
 about_view = AboutView.as_view()
 faq_view = FaqView.as_view()
 

@@ -1,169 +1,144 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}Контакты | AkmalExpress{% endblock %}
+{% block title %}{% trans "Контакты | AkmalExpress" %}{% endblock %}
 
 {% block content %}
-<div class="contacts-page">
-
-    <!-- ═══════════════ HERO ═══════════════ -->
+<div class="contacts-page contacts-page--minimal">
     <section class="contacts-hero" data-interactive-card>
         <div class="contacts-hero__inner">
             <div class="contacts-hero__badge">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path
                         d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
                 </svg>
-                Связь с нами
+                {% trans "Связь с нами" %}
             </div>
-            <h1 class="contacts-hero__title">Контакты</h1>
-            <p class="contacts-hero__lead">Свяжитесь с нами по телефону, Telegram, e-mail или приходите в офис. Мы&nbsp;работаем каждый день и всегда на связи.</p>
-            <a href="{% url 'about' %}" class="btn-ghost contacts-hero__btn">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M12 16v-4" />
-                    <path d="M12 8h.01" />
-                </svg>
-                О компании
-            </a>
+            <h1 class="contacts-hero__title">{% trans "Контакты" %}</h1>
+            <p class="contacts-hero__lead">{% trans "Позвоните, напишите в Telegram или оставьте запрос через форму — мы ответим максимально быстро." %}</p>
         </div>
     </section>
 
-    <!-- ═══════════════ CARDS ═══════════════ -->
-    <div class="contacts-cards">
-
-        <!-- Телефоны -->
-        <article class="ct-card" data-interactive-card>
-            <div class="ct-card__head">
-                <div class="ct-card__icon ct-card__icon--teal">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path
-                            d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-                    </svg>
+    <div class="contacts-layout">
+        <div class="contacts-stack">
+            <article class="ct-card ct-card--phones" data-interactive-card>
+                <div class="ct-card__head">
+                    <div class="ct-card__icon ct-card__icon--teal">
+                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path
+                                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+                        </svg>
+                    </div>
+                    <h2>{% trans "Телефоны" %}</h2>
                 </div>
-                <h2>Телефоны</h2>
-            </div>
-            <div class="ct-card__links">
-                <a href="tel:+998913227747" class="ct-link">
-                    <span class="ct-link__label">Основной</span>
-                    <span class="ct-link__value">+998 91 322 77 47</span>
-                </a>
-                <a href="tel:+998902887767" class="ct-link">
-                    <span class="ct-link__label">Дополнительный</span>
-                    <span class="ct-link__value">+998 90 288 77 67</span>
-                </a>
-            </div>
-        </article>
-
-        <!-- E-mail -->
-        <article class="ct-card" data-interactive-card>
-            <div class="ct-card__head">
-                <div class="ct-card__icon ct-card__icon--orange">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="5" width="18" height="14" rx="2" />
-                        <path d="m4 7 8 6 8-6" />
-                    </svg>
+                <div class="ct-list">
+                    <a href="tel:+998913227747" class="ct-row">
+                        <span class="ct-row__label">{% trans "Основной" %}</span>
+                        <span class="ct-row__value">+998 91 322 77 47</span>
+                    </a>
+                    <a href="tel:+998902887767" class="ct-row">
+                        <span class="ct-row__label">{% trans "Дополнительный" %}</span>
+                        <span class="ct-row__value">+998 90 288 77 67</span>
+                    </a>
                 </div>
-                <h2>E-mail</h2>
-            </div>
-            <div class="ct-card__links">
-                <a href="mailto:akmalexpressuz@gmail.com" class="ct-link">
-                    <span class="ct-link__label">Почта</span>
-                    <span class="ct-link__value">akmalexpressuz@gmail.com</span>
-                </a>
-            </div>
-        </article>
+            </article>
 
-        <!-- Telegram -->
-        <article class="ct-card" data-interactive-card>
+            <article class="ct-card" data-interactive-card>
+                <div class="ct-card__head">
+                    <div class="ct-card__icon ct-card__icon--orange">
+                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3" y="5" width="18" height="14" rx="2" />
+                            <path d="m4 7 8 6 8-6" />
+                        </svg>
+                    </div>
+                    <h2>{% trans "Почта и Telegram" %}</h2>
+                </div>
+                <div class="ct-list">
+                    <a href="mailto:akmalexpressuz@gmail.com" class="ct-row">
+                        <span class="ct-row__label">{% trans "E-mail" %}</span>
+                        <span class="ct-row__value">akmalexpressuz@gmail.com</span>
+                    </a>
+                    <a href="https://t.me/akmalexpress" target="_blank" rel="noopener" class="ct-row">
+                        <span class="ct-row__label">{% trans "Канал" %}</span>
+                        <span class="ct-row__value">@akmalexpress</span>
+                    </a>
+                    <a href="https://t.me/akexcargo" target="_blank" rel="noopener" class="ct-row">
+                        <span class="ct-row__label">Telegram</span>
+                        <span class="ct-row__value">@akexcargo</span>
+                    </a>
+                </div>
+            </article>
+
+            <section class="contacts-office" data-interactive-card>
+                <div class="contacts-office__inner">
+                    <div class="contacts-office__icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1 1 16 0Z" />
+                            <circle cx="12" cy="10" r="3" />
+                        </svg>
+                    </div>
+                    <div class="contacts-office__text">
+                        <h2>{% trans "Наш офис" %}</h2>
+                        <p>Islom Karimov ko'chasi, 213 uy</p>
+                        <p class="contacts-office__hint">Mo'ljal: Milliy Bank Ro'parasi, Sim-Sim butik yonida</p>
+                    </div>
+                    <a href="https://share.google/zJojbau53bJOBUhmP" target="_blank" rel="noopener" class="btn-primary contacts-office__btn">
+                        {% trans "Открыть на карте" %}
+                    </a>
+                </div>
+            </section>
+        </div>
+
+        <article class="ct-card contacts-request" data-interactive-card>
             <div class="ct-card__head">
                 <div class="ct-card__icon ct-card__icon--blue">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m22 2-7 20-4-9-9-4Z" />
-                        <path d="M22 2 11 13" />
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 15a4 4 0 0 1-4 4H7l-4 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
                     </svg>
                 </div>
-                <h2>Telegram</h2>
+                <h2>{% trans "Оставить запрос" %}</h2>
             </div>
-            <div class="ct-card__links">
-                <a href="https://t.me/akex1" target="_blank" rel="noopener" class="ct-link ct-link--tg">
-                    <span class="ct-link__tag">Менеджер</span>
-                    <span class="ct-link__value">@akex1</span>
-                </a>
-                <a href="https://t.me/akex2" target="_blank" rel="noopener" class="ct-link ct-link--tg">
-                    <span class="ct-link__tag">Менеджер</span>
-                    <span class="ct-link__value">@akex2</span>
-                </a>
-                <a href="https://t.me/akex7" target="_blank" rel="noopener" class="ct-link ct-link--tg">
-                    <span class="ct-link__tag">Менеджер</span>
-                    <span class="ct-link__value">@akex7</span>
-                </a>
-                <a href="https://t.me/akmalexpress" target="_blank" rel="noopener" class="ct-link ct-link--tg">
-                    <span class="ct-link__tag">Канал</span>
-                    <span class="ct-link__value">@akmalexpress</span>
-                </a>
-                <a href="https://t.me/akexcargo" target="_blank" rel="noopener" class="ct-link ct-link--tg">
-                    <span class="ct-link__tag">Telegram</span>
-                    <span class="ct-link__value">@akexcargo</span>
-                </a>
-            </div>
-        </article>
-
-        <!-- YouTube -->
-        <article class="ct-card" data-interactive-card>
-            <div class="ct-card__head">
-                <div class="ct-card__icon ct-card__icon--red">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                            d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.5 31.5 0 0 0 0 12a31.5 31.5 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14c1.87.55 9.38.55 9.38.55s7.5 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.5 31.5 0 0 0 24 12a31.5 31.5 0 0 0-.5-5.81ZM9.75 15.02V8.98L15.5 12l-5.75 3.02Z" />
-                    </svg>
+            <p class="contacts-request__lead">{% trans "Заполните форму, и мы свяжемся с вами." %}</p>
+            <form method="post" class="contacts-request__form" novalidate>
+                {% csrf_token %}
+                <div class="contacts-request__grid">
+                    <div class="contacts-field">
+                        <label for="{{ contact_form.name.id_for_label }}">{{ contact_form.name.label }}</label>
+                        {{ contact_form.name }}
+                        {% for error in contact_form.name.errors %}
+                        <p class="contacts-field__error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    <div class="contacts-field">
+                        <label for="{{ contact_form.phone.id_for_label }}">{{ contact_form.phone.label }}</label>
+                        {{ contact_form.phone }}
+                        {% for error in contact_form.phone.errors %}
+                        <p class="contacts-field__error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    <div class="contacts-field">
+                        <label for="{{ contact_form.email.id_for_label }}">{{ contact_form.email.label }}</label>
+                        {{ contact_form.email }}
+                        {% for error in contact_form.email.errors %}
+                        <p class="contacts-field__error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    <div class="contacts-field contacts-field--full">
+                        <label for="{{ contact_form.message.id_for_label }}">{{ contact_form.message.label }}</label>
+                        {{ contact_form.message }}
+                        {% for error in contact_form.message.errors %}
+                        <p class="contacts-field__error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
                 </div>
-                <h2>YouTube</h2>
-            </div>
-            <div class="ct-card__links">
-                <a href="https://www.youtube.com/@akmalluz/featured" target="_blank" rel="noopener"
-                    class="ct-link ct-link--yt">
-                    <span class="ct-link__value">@akmalluz</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M7 17l9.2-9.2M17 17V7H7" />
-                    </svg>
-                </a>
-            </div>
+                <button type="submit" class="btn-primary contacts-request__submit">{% trans "Отправить запрос" %}</button>
+            </form>
         </article>
-
     </div>
-
-    <!-- ═══════════════ OFFICE ═══════════════ -->
-    <section class="contacts-office" data-interactive-card>
-        <div class="contacts-office__inner">
-            <div class="contacts-office__icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1 1 16 0Z" />
-                    <circle cx="12" cy="10" r="3" />
-                </svg>
-            </div>
-            <div class="contacts-office__text">
-                <h2>Наш офис</h2>
-                <p>Islom Karimov ko'chasi, 213 uy</p>
-                <p class="contacts-office__hint">Mo'ljal: Milliy Bank Ro'parasi, Sim-Sim butik yonida</p>
-            </div>
-            <a href="https://share.google/zJojbau53bJOBUhmP" target="_blank" rel="noopener"
-                class="btn-primary contacts-office__btn">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1 1 16 0Z" />
-                    <circle cx="12" cy="10" r="3" />
-                </svg>
-                Открыть на карте
-            </a>
-        </div>
-    </section>
-
 </div>
 {% endblock %}
