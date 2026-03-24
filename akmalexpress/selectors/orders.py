@@ -171,8 +171,8 @@ def build_stuck_orders_snapshot(queryset, *, limit=8):
     today = timezone.localdate()
     thresholds_by_status = {
         Order.Status.ACCEPTED: 3,
-        Order.Status.ORDERED: 7,
-        Order.Status.TRANSIT: 14,
+        Order.Status.ORDERED: 10,
+        Order.Status.TRANSIT: 20,
     }
 
     overdue_q = Q(pk__in=[])

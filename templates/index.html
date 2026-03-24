@@ -4,19 +4,33 @@
 {% block title %}{% trans "Главная | AkmalExpress" %}{% endblock %}
 
 {% block content %}
-<section class="search-layout" data-search-layout>
-    <article class="hero-card search-layout__main">
+<section class="search-layout search-layout--public" data-search-layout>
+    <article class="hero-card search-layout__main search-hero--public">
         <div class="search-layout__head">
-            <h1>{% trans "Поиск заказов" %}</h1>
+            <div>
+                <p class="search-hero__eyebrow">{% trans "Точный поиск" %}</p>
+                <h1>{% trans "Поиск заказов" %}</h1>
+            </div>
         </div>
         <p class="section-subtitle">
             {% trans "Поиск работает только по номеру квитанции, ФИО клиента, номеру телефона или трек-номеру." %}
         </p>
+        <div class="search-hero__chips">
+            <span class="search-hero-chip">{% trans "Квитанция" %}</span>
+            <span class="search-hero-chip">{% trans "ФИО" %}</span>
+            <span class="search-hero-chip">{% trans "Телефон" %}</span>
+            <span class="search-hero-chip">{% trans "Трек-номер" %}</span>
+        </div>
 
-        <form class="search-form" method="get" data-loading-form data-loading-message="{% trans 'Ищем подходящие заказы...' %}" data-loading-button="{% trans 'Ищем...' %}">
-            <div class="search-row">
+        <form class="search-form search-form--public" method="get" data-loading-form data-loading-message="{% trans 'Ищем подходящие заказы...' %}" data-loading-button="{% trans 'Ищем...' %}">
+            <div class="search-row search-row--public">
                 <label for="order-search" class="sr-only">{% trans "Поиск заказа" %}</label>
-                <input id="order-search" type="search" name="search" value="{{ search_query }}" placeholder="{% trans '№ квитанции, ФИО, телефон или трек' %}" autocomplete="off">
+                <div class="search-input-shell">
+                    <svg class="search-input-shell__icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="m21 21-4.3-4.3m1.8-5.2a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                    <input id="order-search" type="search" name="search" value="{{ search_query }}" placeholder="{% trans '№ квитанции, ФИО, телефон или трек' %}" autocomplete="off">
+                </div>
                 <button type="submit" class="btn-primary">{% trans "Поиск" %}</button>
             </div>
             <div class="search-filters search-filters--compact">
@@ -32,7 +46,7 @@
 </section>
 
 {% if orders %}
-<section class="content-card search-results-card">
+<section class="content-card search-results-card search-results-card--public">
     <div class="section-head">
         <div>
             <h2 class="section-title">{% trans "Результаты поиска" %}</h2>
@@ -96,6 +110,13 @@
     </div>
 
     {% include 'partials/pagination.html' with page_obj=orders %}
+</section>
+{% endif %}
+
+{% if search_query and not orders %}
+<section class="search-empty">
+    <h3>{% trans "Ничего не найдено" %}</h3>
+    <p>{% trans "Проверьте номер квитанции, ФИО, телефон или трек-номер и попробуйте снова." %}</p>
 </section>
 {% endif %}
 {% endblock %}

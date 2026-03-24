@@ -13,6 +13,7 @@ from django.utils.crypto import get_random_string
 from django.utils import timezone
 
 from .models import Order, OrderAttachment, OrderItem
+from .selectors.orders import build_stuck_orders_snapshot
 from .templatetags.number_format import money
 
 
@@ -195,6 +196,209 @@ class MissingTrackFilterTests(TestCase):
         self.assertContains(response, 'Missing Client')
         self.assertContains(response, 'Mixed Client')
         self.assertNotContains(response, 'Tracked Client')
+
+
+class TrackStatusAutomationTests(TestCase):
+    def setUp(self):
+        password = get_random_string(24)
+        self.staff = User.objects.create_user(
+            username='trackautostaff',
+            password=password,
+            is_staff=True,
+            is_active=True,
+        )
+        self.client.login(username=self.staff.username, password=password)
+
+    def test_create_order_with_track_auto_switches_status_to_transit(self):
+        response = self.client.post(
+            reverse('create_order'),
+            {
+                'receipt_number': '1810',
+                'order_date': timezone.localdate().strftime('%Y-%m-%d'),
+                'first_name': 'Track',
+                'last_name': 'Auto',
+                'phone1': '+998901110810',
+                'phone2': '',
+                'debt': '0',
+                'shipping_method': Order.ShippingMethod.AVIA,
+                'status': Order.Status.ACCEPTED,
+                'usd_rate': '12205',
+                'rmb_rate': '1807',
+                'description': '',
+                'items-TOTAL_FORMS': '1',
+                'items-INITIAL_FORMS': '0',
+                'items-MIN_NUM_FORMS': '0',
+                'items-MAX_NUM_FORMS': '1000',
+                'items-0-product_name': 'Tracked item',
+                'items-0-product_quantity': '1',
+                'items-0-product_price_currency': 'UZS',
+                'items-0-product_price': '100000',
+                'items-0-shipping_method': Order.ShippingMethod.AVIA,
+                'items-0-track_number': 'TRK-AUTO-1810',
+                'items-0-store': 'Taobao',
+                'items-0-link': '',
+                'items-0-DELETE': '',
+            },
+            follow=False,
+        )
+        self.assertEqual(response.status_code, 302)
+        order = Order.objects.get(receipt_number=1810)
+        self.assertEqual(order.status, Order.Status.TRANSIT)
+
+    def test_change_order_with_new_track_auto_switches_status_to_transit(self):
+        order = Order.objects.create(
+            user=self.staff,
+            receipt_number=1811,
+            order_date=timezone.localdate(),
+            first_name='Track',
+            last_name='Edit',
+            phone1=998901110811,
+            status=Order.Status.ACCEPTED,
+        )
+        OrderItem.objects.create(
+            order=order,
+            product_name='Initial item',
+            product_quantity=1,
+            product_price_currency='UZS',
+            product_price='100000.000',
+            shipping_method=Order.ShippingMethod.AVIA,
+            track_number='',
+            store='Taobao',
+        )
+
+        response = self.client.post(
+            reverse('change_order', args=[order.slug]),
+            {
+                'receipt_number': '1811',
+                'order_date': timezone.localdate().strftime('%Y-%m-%d'),
+                'first_name': 'Track',
+                'last_name': 'Edit',
+                'phone1': '998901110811',
+                'phone2': '',
+                'debt': '0',
+                'balance': '0',
+                'manual_total': '',
+                'usd_rate': '12205',
+                'rmb_rate': '1807',
+                'description': '',
+                'status': Order.Status.ACCEPTED,
+                'items-TOTAL_FORMS': '1',
+                'items-INITIAL_FORMS': '0',
+                'items-MIN_NUM_FORMS': '0',
+                'items-MAX_NUM_FORMS': '1000',
+                'items-0-product_name': 'Initial item',
+                'items-0-product_quantity': '1',
+                'items-0-product_price_currency': 'UZS',
+                'items-0-product_price': '100000',
+                'items-0-shipping_method': Order.ShippingMethod.AVIA,
+                'items-0-track_number': 'TRK-EDIT-1811',
+                'items-0-store': 'Taobao',
+                'items-0-link': '',
+                'items-0-DELETE': '',
+            },
+            follow=False,
+        )
+        self.assertEqual(response.status_code, 302)
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.TRANSIT)
+
+
+class BulkOrdersModeTests(TestCase):
+    def setUp(self):
+        password = get_random_string(24)
+        self.staff = User.objects.create_user(
+            username='bulkmodestaff',
+            password=password,
+            is_staff=True,
+            is_active=True,
+        )
+        self.client.login(username=self.staff.username, password=password)
+
+    def test_bulk_updates_selected_orders_status(self):
+        order_one = Order.objects.create(
+            user=self.staff,
+            receipt_number=1820,
+            order_date=timezone.localdate(),
+            first_name='Bulk',
+            last_name='One',
+            phone1=998901111820,
+            status=Order.Status.ACCEPTED,
+        )
+        order_two = Order.objects.create(
+            user=self.staff,
+            receipt_number=1821,
+            order_date=timezone.localdate(),
+            first_name='Bulk',
+            last_name='Two',
+            phone1=998901111821,
+            status=Order.Status.ORDERED,
+        )
+
+        response = self.client.post(
+            reverse('orders'),
+            {
+                'order_ids': [str(order_one.id), str(order_two.id)],
+                'bulk_status': Order.Status.TRANSIT,
+                'next': reverse('orders'),
+            },
+            follow=False,
+        )
+        self.assertEqual(response.status_code, 302)
+        order_one.refresh_from_db()
+        order_two.refresh_from_db()
+        self.assertEqual(order_one.status, Order.Status.TRANSIT)
+        self.assertEqual(order_two.status, Order.Status.TRANSIT)
+
+
+class OverduePanelThresholdTests(TestCase):
+    def test_stuck_orders_snapshot_uses_new_thresholds(self):
+        today = timezone.localdate()
+        Order.objects.create(
+            receipt_number=1830,
+            order_date=today - timedelta(days=4),
+            first_name='Accepted',
+            last_name='Late',
+            phone1=998901111830,
+            status=Order.Status.ACCEPTED,
+        )
+        Order.objects.create(
+            receipt_number=1831,
+            order_date=today - timedelta(days=9),
+            first_name='Ordered',
+            last_name='StillOk',
+            phone1=998901111831,
+            status=Order.Status.ORDERED,
+        )
+        Order.objects.create(
+            receipt_number=1832,
+            order_date=today - timedelta(days=11),
+            first_name='Ordered',
+            last_name='Late',
+            phone1=998901111832,
+            status=Order.Status.ORDERED,
+        )
+        Order.objects.create(
+            receipt_number=1833,
+            order_date=today - timedelta(days=19),
+            first_name='Transit',
+            last_name='StillOk',
+            phone1=998901111833,
+            status=Order.Status.TRANSIT,
+        )
+        Order.objects.create(
+            receipt_number=1834,
+            order_date=today - timedelta(days=21),
+            first_name='Transit',
+            last_name='Late',
+            phone1=998901111834,
+            status=Order.Status.TRANSIT,
+        )
+
+        snapshot = build_stuck_orders_snapshot(Order.objects.all(), limit=20)
+        self.assertEqual(snapshot['by_status'][Order.Status.ACCEPTED], 1)
+        self.assertEqual(snapshot['by_status'][Order.Status.ORDERED], 1)
+        self.assertEqual(snapshot['by_status'][Order.Status.TRANSIT], 1)
+        self.assertEqual(snapshot['total'], 3)
 
 
 class ErrorPageTests(TestCase):

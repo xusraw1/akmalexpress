@@ -72,6 +72,38 @@ def _normalize_track_number(raw_value):
     return ''.join((raw_value or '').strip().upper().split())
 
 
+def _parse_bulk_order_ids(raw_values):
+    parsed_ids = []
+    for raw_value in raw_values:
+        value = str(raw_value or '').strip()
+        if value.isdigit():
+            parsed_ids.append(int(value))
+    return sorted(set(parsed_ids))
+
+
+def _order_has_any_track(order):
+    has_item_track = order.items.exclude(track_number__isnull=True).exclude(track_number='').exists()
+    if has_item_track:
+        return True
+    return bool((order.track_number or '').strip())
+
+
+def _promote_status_to_transit_if_track_added(order, *, had_track_before=False):
+    has_track_now = _order_has_any_track(order)
+    if had_track_before or not has_track_now:
+        return False
+    if order.status not in {Order.Status.ACCEPTED, Order.Status.ORDERED}:
+        return False
+
+    order.status = Order.Status.TRANSIT
+    update_fields = ['status', 'updated_at']
+    if order.come is not None:
+        order.come = None
+        update_fields.append('come')
+    order.save(update_fields=update_fields)
+    return True
+
+
 def _parse_sheet_decimal(raw_value, default='0'):
     normalized = str(raw_value or '').replace(' ', '').replace(',', '.').strip()
     if not normalized:
@@ -234,6 +266,7 @@ def change_order(request, slug):
 
     if request.method == 'POST':
         has_item_formset_post = any(key.startswith('items-') for key in request.POST.keys())
+        had_track_before = _order_has_any_track(orderr) if has_item_formset_post else False
         form = ChangeOrderForm(request.POST, request.FILES, instance=orderr)
         if has_item_formset_post:
             item_formset = configure_order_item_formset(OrderItemFormSet(request.POST, prefix='items'))
@@ -253,6 +286,11 @@ def change_order(request, slug):
             if has_item_formset_post:
                 order.items.all().delete()
                 save_order_items(order, item_formset)
+                if _promote_status_to_transit_if_track_added(order, had_track_before=had_track_before):
+                    messages.info(
+                        request,
+                        _('Трек-номер добавлен: статус заказа автоматически изменен на «В пути».'),
+                    )
 
             remove_attachment_ids = []
             for raw_id in request.POST.getlist('remove_attachment_ids'):
@@ -302,6 +340,11 @@ def create_order(request):
             form.cleaned_data['manual_total'] = resolve_manual_total_value(form, item_formset)
             order = form.save_order(user=request.user)
             save_order_items(order, item_formset)
+            if _promote_status_to_transit_if_track_added(order, had_track_before=False):
+                messages.info(
+                    request,
+                    _('Трек-номер добавлен: статус заказа автоматически изменен на «В пути».'),
+                )
 
             messages.success(request, _('Заказ №%(receipt)s успешно создан') % {'receipt': order.receipt_number})
 
@@ -352,6 +395,48 @@ def create_product(request):
 
 @user_passes_test(is_active_superuser)
 def order_list(request):
+    if request.method == 'POST':
+        fallback_url = reverse('orders')
+        next_url = _safe_next_redirect(request, fallback_url)
+        selected_ids = _parse_bulk_order_ids(request.POST.getlist('order_ids'))
+        requested_status = (request.POST.get('bulk_status') or '').strip()
+        available_statuses = {choice[0] for choice in Order.Status.choices}
+
+        if not selected_ids:
+            messages.warning(request, _('Для bulk-режима выберите хотя бы один заказ.'))
+            return redirect(next_url)
+
+        if requested_status not in available_statuses:
+            messages.warning(request, _('Выберите корректный статус для массового обновления.'))
+            return redirect(next_url)
+
+        selected_orders = Order.objects.filter(id__in=selected_ids).only('id', 'receipt_number', 'status', 'come')
+        updated_count = 0
+        for order in selected_orders:
+            if order.status == requested_status:
+                continue
+            order.status = requested_status
+            if requested_status == Order.Status.ARRIVED:
+                order.come = timezone.now()
+            elif order.come is not None:
+                order.come = None
+            order.save(update_fields=['status', 'come', 'updated_at'])
+            updated_count += 1
+
+        if updated_count:
+            status_label = dict(Order.Status.choices).get(requested_status, requested_status)
+            messages.success(
+                request,
+                _('Bulk-режим: обновлено заказов %(count)s, новый статус — %(status)s.') % {
+                    'count': updated_count,
+                    'status': status_label,
+                },
+            )
+        else:
+            messages.info(request, _('Bulk-режим: выбранные заказы уже имеют указанный статус.'))
+
+        return redirect(next_url)
+
     orders_list = Order.objects.all()
     search_query = (request.GET.get('search') or '').strip()
     missing_track_only = parse_checkbox_flag(request.GET.get('missing_track'))
@@ -395,6 +480,7 @@ def order_list(request):
         'selected_month': selected_month,
         'missing_track_only': missing_track_only,
         'stuck_orders': stuck_orders_snapshot,
+        'status_choices': Order.Status.choices,
     }
     return render(request, 'akmalexpress/orders.html', context)
 

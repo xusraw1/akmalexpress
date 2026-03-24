@@ -44,14 +44,37 @@
         </div>
     </form>
 
+    <form method="post" id="ordersBulkForm" class="orders-bulk-panel table-wrap-spaced-sm">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <div class="orders-bulk-panel__head">
+            <h2 class="orders-bulk-panel__title">{% trans "Bulk-режим заказов" %}</h2>
+            <p class="orders-bulk-panel__meta">{% trans "Выбрано:" %} <b data-bulk-selected-count>0</b></p>
+        </div>
+        <div class="orders-bulk-panel__controls">
+            <label class="orders-bulk-select-all">
+                <input type="checkbox" id="ordersBulkSelectAll">
+                <span>{% trans "Выбрать все на странице" %}</span>
+            </label>
+            <label class="sr-only" for="orders-bulk-status">{% trans "Новый статус" %}</label>
+            <select id="orders-bulk-status" name="bulk_status" required>
+                <option value="">{% trans "Выберите статус" %}</option>
+                {% for value, label in status_choices %}
+                <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn-primary" data-bulk-submit disabled>{% trans "Применить к выбранным" %}</button>
+        </div>
+    </form>
+
     {% if stuck_orders.total %}
     <section class="orders-stuck-panel table-wrap-spaced-sm">
         <div class="orders-stuck-panel__head">
             <div>
-                <h2 class="orders-stuck-panel__title">{% trans "Требуют внимания" %}</h2>
+                <h2 class="orders-stuck-panel__title">{% trans "Панель контроля просрочек" %}</h2>
                 <p class="orders-stuck-panel__subtitle">{% trans "Зависшие заказы в активных статусах:" %} {{ stuck_orders.total }}</p>
             </div>
-            <span class="orders-stuck-panel__hint">{% trans "Порог: Принят 3д, Заказан 7д, В пути 14д" %}</span>
+            <span class="orders-stuck-panel__hint">{% trans "Порог: Принят 3д, Заказан 10д, В пути 20д" %}</span>
         </div>
         <div class="orders-stuck-panel__chips">
             <span class="orders-stuck-chip">{% trans "Принят:" %} <b>{{ stuck_orders.by_status.accepted }}</b></span>
@@ -98,6 +121,9 @@
         <details class="search-order-card search-order-card--{{ order.status }}" {% if forloop.first %}open{% endif %}>
             <summary class="search-order-summary">
                 <div class="search-order-summary__main">
+                    <label class="bulk-order-picker" data-bulk-picker>
+                        <input type="checkbox" class="bulk-order-checkbox" name="order_ids" value="{{ order.id }}" form="ordersBulkForm">
+                    </label>
                     <a class="receipt-link receipt-link--{{ order.status }}" href="{% url 'detail_order' order.slug %}">№{{ order.receipt_number }}</a>
                     <div>
                         <p class="search-order-client">{{ order.first_name }} {{ order.last_name }}</p>
@@ -152,4 +178,48 @@
 
     {% include 'partials/pagination.html' with page_obj=orders %}
 </section>
+
+<script>
+(function () {
+    const bulkForm = document.getElementById('ordersBulkForm');
+    if (!bulkForm) return;
+
+    const selectAll = document.getElementById('ordersBulkSelectAll');
+    const checkboxes = Array.from(document.querySelectorAll('.bulk-order-checkbox'));
+    const selectedCount = bulkForm.querySelector('[data-bulk-selected-count]');
+    const submitButton = bulkForm.querySelector('[data-bulk-submit]');
+
+    const syncBulkState = () => {
+        const total = checkboxes.length;
+        const checked = checkboxes.filter((checkbox) => checkbox.checked).length;
+        if (selectedCount) selectedCount.textContent = String(checked);
+        if (submitButton) submitButton.disabled = checked === 0;
+        if (!selectAll) return;
+        selectAll.checked = total > 0 && checked === total;
+        selectAll.indeterminate = checked > 0 && checked < total;
+    };
+
+    checkboxes.forEach((checkbox) => {
+        checkbox.addEventListener('click', (event) => event.stopPropagation());
+        checkbox.addEventListener('change', syncBulkState);
+    });
+
+    document.querySelectorAll('[data-bulk-picker]').forEach((picker) => {
+        picker.addEventListener('click', (event) => event.stopPropagation());
+    });
+
+    if (selectAll) {
+        selectAll.addEventListener('click', (event) => event.stopPropagation());
+        selectAll.addEventListener('change', () => {
+            const isChecked = !!selectAll.checked;
+            checkboxes.forEach((checkbox) => {
+                checkbox.checked = isChecked;
+            });
+            syncBulkState();
+        });
+    }
+
+    syncBulkState();
+})();
+</script>
 {% endblock %}
