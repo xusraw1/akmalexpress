@@ -11,6 +11,25 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def load_env_file(path: Path) -> None:
+    """Populate os.environ from local .env file if keys are missing."""
+    if not path.exists():
+        return
+    for raw_line in path.read_text(encoding='utf-8').splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith('#') or '=' not in line:
+            continue
+        key, value = line.split('=', 1)
+        key = key.strip()
+        if not key:
+            continue
+        normalized_value = value.strip().strip('"').strip("'")
+        os.environ.setdefault(key, normalized_value)
+
+
+load_env_file(BASE_DIR / '.env')
+
+
 def env_bool(name: str, default: bool = False) -> bool:
     """Read a boolean flag from environment with tolerant parsing."""
     raw_value = os.environ.get(name)
@@ -28,6 +47,12 @@ def env_int(name: str, default: int) -> int:
         return int(raw_value)
     except (TypeError, ValueError):
         return default
+
+
+def env_list(name: str, default: str = '') -> list[str]:
+    """Read a comma-separated env variable as normalized list."""
+    raw_value = os.environ.get(name, default)
+    return [item.strip() for item in str(raw_value).split(',') if item.strip()]
 
 
 SECRET_KEY = os.environ.get(
@@ -185,3 +210,8 @@ PERMISSIONS_POLICY = os.environ.get(
     'accelerometer=(), autoplay=(), camera=(self), geolocation=(), gyroscope=(), '
     'magnetometer=(), microphone=(), payment=(), usb=()',
 )
+
+TELEGRAM_CONTACT_NOTIFICATIONS_ENABLED = env_bool('TELEGRAM_CONTACT_NOTIFICATIONS_ENABLED', True)
+TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '').strip()
+TELEGRAM_CONTACT_CHAT_IDS = env_list('TELEGRAM_CONTACT_CHAT_IDS', '')
+TELEGRAM_CONTACT_THREAD_ID = env_int('TELEGRAM_CONTACT_THREAD_ID', 0) or None
