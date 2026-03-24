@@ -1,3 +1,9 @@
+"""Order forms and item formset validators.
+
+Forms are intentionally kept backend-centric: client-side scripts improve UX,
+but all critical validation and normalization also happen server-side.
+"""
+
 from decimal import Decimal
 
 from django import forms
@@ -10,10 +16,12 @@ from .view_helpers import _calculate_order_totals_payload
 
 
 class MultiFileInput(forms.ClearableFileInput):
+    """File input widget that supports selecting multiple images."""
     allow_multiple_selected = True
 
 
 class MultiFileField(forms.FileField):
+    """Validate a list of uploaded image files with size/content-type checks."""
     widget = MultiFileInput(attrs={'multiple': True, 'accept': 'image/*'})
     max_file_size_bytes = 10 * 1024 * 1024
 
@@ -44,6 +52,7 @@ class MultiFileField(forms.FileField):
 
 
 class CreateOrderForm(forms.Form):
+    """Create order form (header-level data only; items handled by formset)."""
     receipt_number = forms.IntegerField(min_value=1, label='Квитанция')
     order_date = forms.DateField(
         label='Дата заказа',
@@ -147,6 +156,7 @@ class CreateOrderForm(forms.Form):
         return cleaned_data
 
     def save_order(self, user):
+        """Persist order entity and uploaded attachments from cleaned form data."""
         data = self.cleaned_data
         order = Order(
             user=user,
@@ -184,6 +194,7 @@ class CreateOrderForm(forms.Form):
 
 
 class OrderItemForm(forms.Form):
+    """Single order item row for dynamic item formset."""
     product_name = forms.CharField(max_length=140, label='Название товара', required=False)
     product_quantity = forms.IntegerField(min_value=1, initial=1, label='Количество', required=False)
     product_price_currency = forms.ChoiceField(choices=Product.Currency.choices, initial=Product.Currency.UZS, label='Валюта', required=False)
@@ -208,6 +219,7 @@ class OrderItemForm(forms.Form):
 
 
 class BaseOrderItemFormSet(BaseFormSet):
+    """Validate at least one non-empty item row with required fields."""
     def clean(self):
         if any(self.errors):
             return
@@ -274,6 +286,7 @@ OrderItemFormSet = formset_factory(
 
 
 def resolve_manual_total_value(order_form, item_formset):
+    """Store manual total only if it differs from auto-calculated total."""
     payload = {
         'usd_rate': order_form.cleaned_data.get('usd_rate'),
         'rmb_rate': order_form.cleaned_data.get('rmb_rate'),
@@ -313,6 +326,7 @@ def resolve_manual_total_value(order_form, item_formset):
 
 
 def save_order_items(order, item_formset):
+    """Persist normalized items and sync order shipping method with first item."""
     primary_shipping_method = None
 
     for form in item_formset.forms:
@@ -347,6 +361,7 @@ def save_order_items(order, item_formset):
 
 
 class ChangeOrderForm(forms.ModelForm):
+    """Order edit form with support for attaching additional images."""
     attachments = MultiFileField(required=False, label='Фото заказа (добавить новые)')
 
     class Meta:

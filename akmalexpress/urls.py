@@ -1,3 +1,5 @@
+"""Application URL routes for public pages, orders, profiles and admin tools."""
+
 from django.conf import settings
 from django.urls import path
 from .views import (

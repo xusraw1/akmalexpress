@@ -47,23 +47,22 @@
     <form method="post" id="ordersBulkForm" class="orders-bulk-panel table-wrap-spaced-sm">
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ request.get_full_path }}">
-        <div class="orders-bulk-panel__head">
-            <h2 class="orders-bulk-panel__title">{% trans "Bulk-режим заказов" %}</h2>
-            <p class="orders-bulk-panel__meta">{% trans "Выбрано:" %} <b data-bulk-selected-count>0</b></p>
-        </div>
         <div class="orders-bulk-panel__controls">
             <label class="orders-bulk-select-all">
                 <input type="checkbox" id="ordersBulkSelectAll">
                 <span>{% trans "Выбрать все на странице" %}</span>
             </label>
-            <label class="sr-only" for="orders-bulk-status">{% trans "Новый статус" %}</label>
-            <select id="orders-bulk-status" name="bulk_status" required>
-                <option value="">{% trans "Выберите статус" %}</option>
-                {% for value, label in status_choices %}
-                <option value="{{ value }}">{{ label }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="btn-primary" data-bulk-submit disabled>{% trans "Применить к выбранным" %}</button>
+            <div class="orders-bulk-panel__actions">
+                <p class="orders-bulk-panel__meta">{% trans "Выбрано:" %} <b data-bulk-selected-count>0</b></p>
+                <label class="sr-only" for="orders-bulk-status">{% trans "Новый статус" %}</label>
+                <select id="orders-bulk-status" name="bulk_status" required>
+                    <option value="">{% trans "Выберите статус" %}</option>
+                    {% for value, label in status_choices %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn-primary" data-bulk-submit disabled>{% trans "Применить" %}</button>
+            </div>
         </div>
     </form>
 

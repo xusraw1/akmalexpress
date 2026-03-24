@@ -1,3 +1,11 @@
+"""Excel import/export service for orders.
+
+Design goals:
+- Keep column mapping tolerant for real-world operator files.
+- Preserve business rules when importing (status normalization, user assignment).
+- Produce manager-friendly exports with formatting for daily operations.
+"""
+
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
@@ -181,6 +189,7 @@ def _normalize_header(value):
 
 
 def _resolve_excel_headers(header_row):
+    """Map input header row to canonical field keys via alias dictionary."""
     resolved = {}
     for idx, raw_header in enumerate(header_row):
         alias = EXCEL_HEADER_ALIASES.get(_normalize_header(raw_header))
@@ -207,6 +216,7 @@ def _parse_excel_phone(value):
 
 
 def _parse_excel_decimal(value, default=Decimal('0.00'), allow_none=False):
+    """Parse decimal values from user spreadsheets (`1 200,50` friendly)."""
     text = _safe_text(value).replace(' ', '').replace(',', '.')
     if text == '':
         return None if allow_none else default
@@ -281,6 +291,7 @@ def _normalize_excel_currency(value):
 
 
 def _collect_order_items(order):
+    """Return normalized item list, including fallback for legacy single product."""
     items = list(order.items.all())
     if items:
         return [
@@ -321,6 +332,7 @@ def _format_decimal_for_text(value, precision=2):
 
 
 def _build_orders_workbook(orders_queryset):
+    """Build formatted workbook for export (headers, zebra, widths, number formats)."""
     workbook = Workbook()
     worksheet = workbook.active
     worksheet.title = 'Orders'
@@ -398,6 +410,7 @@ def _build_orders_workbook(orders_queryset):
 
 
 def _excel_workbook_response(workbook, filename):
+    """Serialize workbook into HTTP attachment response."""
     output = BytesIO()
     workbook.save(output)
     output.seek(0)
@@ -410,6 +423,7 @@ def _excel_workbook_response(workbook, filename):
 
 
 def _build_export_filename(orders_queryset):
+    """Build export filename with covered order date range when available."""
     period = orders_queryset.order_by().aggregate(period_start=Min('order_date'), period_end=Max('order_date'))
     period_start = period.get('period_start')
     period_end = period.get('period_end')
@@ -419,6 +433,10 @@ def _build_export_filename(orders_queryset):
 
 
 def _import_orders_from_workbook(workbook, acting_user, fallback_user=None):
+    """Import orders/items from workbook with grouping and transactional upsert.
+
+    Returns import summary counters and first validation errors per rows.
+    """
     worksheet = workbook.active
     rows = worksheet.iter_rows(values_only=True)
     header_row = next(rows, None)

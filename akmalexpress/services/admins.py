@@ -1,3 +1,5 @@
+"""Admin analytics service functions used by super-admin dashboard."""
+
 from collections import defaultdict
 from datetime import timedelta
 from decimal import Decimal
@@ -34,6 +36,7 @@ ADMIN_ORDER_STATUS_OPTIONS = [
 
 
 def resolve_admin_period(period, date_from_raw='', date_to_raw=''):
+    """Resolve analytics date boundaries for admin dashboard filters."""
     today = timezone.localdate()
     date_from = parse_date_filter(date_from_raw)
     date_to = parse_date_filter(date_to_raw)
@@ -64,6 +67,7 @@ def resolve_admin_period(period, date_from_raw='', date_to_raw=''):
 
 
 def get_filtered_admin_users(search='', account_status='all'):
+    """Return non-superuser admins filtered by search/account state."""
     users_qs = User.objects.exclude(is_superuser=True)
     if search:
         users_qs = users_qs.filter(
@@ -79,6 +83,7 @@ def get_filtered_admin_users(search='', account_status='all'):
 
 
 def build_admin_analytics(users, date_from=None, date_to=None, sort='orders_desc', order_status='all'):
+    """Build per-admin KPI rows and aggregated summary for selected period."""
     period_orders_qs = orders_with_related(Order.objects.filter(user__in=users))
     if date_from:
         period_orders_qs = period_orders_qs.filter(order_date__gte=date_from)

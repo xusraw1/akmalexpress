@@ -1,3 +1,5 @@
+"""Template context processors used across base layout."""
+
 from django.conf import settings
 from django.utils import translation
 
@@ -7,6 +9,7 @@ TRACK_NOTICE_DISMISS_KEY = 'admin_track_notice_dismissed_until'
 
 
 def language_context(request):
+    """Expose current language code for header/sidebar language switcher."""
     session = getattr(request, 'session', {})
     current_language = normalize_language(
         getattr(request, 'LANGUAGE_CODE', None)

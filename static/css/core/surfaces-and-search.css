@@ -559,39 +559,42 @@
 }
 
 .orders-bulk-panel {
-    border: 1px solid rgba(15, 118, 110, 0.26);
+    border: 1px solid rgba(15, 118, 110, 0.22);
     border-radius: 16px;
-    padding: 0.78rem;
+    padding: 0.72rem 0.78rem;
     background:
-        radial-gradient(circle at 100% 0%, rgba(20, 184, 166, 0.12), transparent 40%),
-        rgba(255, 255, 255, 0.8);
-}
-
-.orders-bulk-panel__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.56rem;
-    flex-wrap: wrap;
-}
-
-.orders-bulk-panel__title {
-    margin: 0;
-    font-size: 1rem;
+        radial-gradient(circle at 100% 0%, rgba(20, 184, 166, 0.1), transparent 42%),
+        rgba(255, 255, 255, 0.86);
 }
 
 .orders-bulk-panel__meta {
     margin: 0;
-    font-size: 0.8rem;
+    font-size: 0.79rem;
     color: var(--ink-700);
+    font-weight: 700;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.32rem 0.52rem;
+    border-radius: 999px;
+    border: 1px solid rgba(15, 118, 110, 0.2);
+    background: rgba(255, 255, 255, 0.84);
 }
 
 .orders-bulk-panel__controls {
-    margin-top: 0.56rem;
-    display: grid;
-    grid-template-columns: minmax(200px, 1fr) minmax(180px, 220px) auto;
-    gap: 0.48rem;
+    display: flex;
     align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.48rem;
+}
+
+.orders-bulk-panel__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.48rem;
+    flex-wrap: wrap;
 }
 
 .orders-bulk-select-all {
@@ -609,12 +612,13 @@
 }
 
 .orders-bulk-panel select {
-    min-height: 40px;
+    min-height: 38px;
+    min-width: 200px;
     border: 1px solid #c7d8e4;
     border-radius: 10px;
     background: #fff;
     color: var(--ink-900);
-    padding: 0.46rem 0.54rem;
+    padding: 0.42rem 0.52rem;
     font-size: 0.82rem;
     font-weight: 700;
 }
@@ -628,17 +632,17 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 8px;
-    background: rgba(15, 118, 110, 0.08);
-    border: 1px solid rgba(15, 118, 110, 0.2);
-    flex: 0 0 24px;
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    background: transparent;
+    border: 0;
+    flex: 0 0 22px;
 }
 
 .bulk-order-checkbox {
-    width: 14px;
-    height: 14px;
+    width: 15px;
+    height: 15px;
     accent-color: var(--accent);
 }
 
@@ -688,21 +692,27 @@
 
 .search-input-shell {
     position: relative;
+    display: flex;
+    align-items: center;
 }
 
 .search-input-shell__icon {
     position: absolute;
-    left: 0.68rem;
+    left: 0.78rem;
     top: 50%;
     transform: translateY(-50%);
-    width: 16px;
-    height: 16px;
+    width: 17px;
+    height: 17px;
     color: var(--ink-500);
     pointer-events: none;
+    z-index: 2;
 }
 
 .search-input-shell input {
-    padding-left: 2.05rem;
+    min-height: 46px;
+    line-height: 1.2;
+    padding-left: 2.45rem;
+    padding-right: 0.78rem;
 }
 
 .search-empty {
@@ -852,9 +862,14 @@ a.orders-stuck-item:focus-visible {
 
 @media (max-width: 720px) {
     .orders-bulk-panel__controls {
-        grid-template-columns: 1fr;
+        align-items: stretch;
     }
 
+    .orders-bulk-panel__actions {
+        width: 100%;
+    }
+
+    .orders-bulk-panel select,
     .orders-bulk-panel [data-bulk-submit] {
         width: 100%;
     }
@@ -866,5 +881,20 @@ a.orders-stuck-item:focus-visible {
 
     .orders-stuck-item__meta {
         justify-content: flex-start;
+    }
+}
+
+@media (max-width: 560px) {
+    .search-row--public {
+        grid-template-columns: 1fr;
+    }
+
+    .search-row--public .btn-primary {
+        width: 100%;
+    }
+
+    .search-input-shell input {
+        min-height: 44px;
+        padding-left: 2.35rem;
     }
 }

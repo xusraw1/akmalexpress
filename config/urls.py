@@ -1,3 +1,10 @@
+"""Root URL configuration.
+
+The project uses language-prefixed routes (`i18n_patterns`) while preserving
+compatibility redirects for legacy `/ru/...` links and hidden default admin
+paths.
+"""
+
 import re
 
 from django.contrib import admin
@@ -14,16 +21,19 @@ handler404 = 'akmalexpress.views.custom_404'
 
 
 def redirect_legacy_ru_prefix(request, legacy_path=''):
+    """Redirect old `/ru/...` URLs to current non-prefixed equivalents."""
     cleaned = (legacy_path or '').lstrip('/')
     destination = f'/{cleaned}' if cleaned else '/'
     return redirect(destination, permanent=False)
 
 
 def redirect_admin_without_slash(request):
+    """Normalize admin URL to a single canonical route with trailing slash."""
     return redirect(f'/{settings.ADMIN_URL}', permanent=False)
 
 
 def hide_default_admin(request):
+    """Return 404 for default `/admin` paths to reduce attack surface noise."""
     return HttpResponseNotFound('Not found')
 
 urlpatterns = [

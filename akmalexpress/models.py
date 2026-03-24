@@ -1,3 +1,5 @@
+"""Domain models for order management, tracking and profile data."""
+
 from decimal import Decimal
 
 from django.contrib.auth.models import User
@@ -76,6 +78,11 @@ class ProductDetail(models.Model):
 
 
 class Order(models.Model):
+    """Order aggregate root.
+
+    New orders are item-based (`OrderItem`), while `product`/`track_number`
+    fields are kept for backward compatibility with legacy data.
+    """
     class Status(models.TextChoices):
         ACCEPTED = 'accepted', 'Принят'
         ORDERED = 'ordered', 'Заказан'
@@ -210,11 +217,13 @@ class Order(models.Model):
         return f"{self.receipt_number} {self.last_name} {self.first_name}"
 
     def _items_cache(self):
+        """Cache prefetched items in-process to reduce repeated relation hits."""
         if not hasattr(self, '_cached_items'):
             self._cached_items = list(self.items.all())
         return self._cached_items
 
     def convert_to_uzs(self, amount, currency):
+        """Convert arbitrary amount from USD/RMB/UZS to UZS using order rates."""
         amount_decimal = Decimal(amount or '0.00')
         currency_code = (currency or Product.Currency.UZS).upper()
         if currency_code == Product.Currency.USD:
@@ -272,6 +281,7 @@ class Order(models.Model):
 
     @property
     def get_final_total(self):
+        """Return manual total override when set, otherwise auto item total."""
         if self.manual_total is not None:
             return Decimal(self.manual_total)
         return self.get_total_price
@@ -295,6 +305,7 @@ class Order(models.Model):
 
     @staticmethod
     def shipping_method_label(method_code):
+        """Resolve shipping method code to display label."""
         return dict(Order.ShippingMethod.choices).get(method_code, method_code or '-')
 
     @property
@@ -352,6 +363,7 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
+    """Line item inside an order, including per-item track/shipping metadata."""
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product_name = models.CharField(max_length=140, verbose_name='Название товара', db_index=True)
     product_quantity = models.PositiveIntegerField(default=1, verbose_name='Количество')
@@ -383,6 +395,7 @@ class OrderItem(models.Model):
 
 
 class OrderAttachment(models.Model):
+    """Image attachment linked to an order."""
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='attachments')
     image = models.ImageField(upload_to='orders/images/')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -397,6 +410,7 @@ class OrderAttachment(models.Model):
 
 
 class UserProfile(models.Model):
+    """Extended user profile data (currently avatar only)."""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     avatar = models.ImageField(upload_to='users/avatars/', blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)

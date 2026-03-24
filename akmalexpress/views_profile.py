@@ -1,3 +1,5 @@
+"""Profile views for admins/staff with inline edit and filtered order history."""
+
 from decimal import Decimal
 from zipfile import BadZipFile
 
@@ -39,6 +41,7 @@ PROFILE_ORDERS_PAGE_SIZE = 8
 
 @user_passes_test(is_active_superuser)
 def my_profile_redirect(request):
+    """Redirect `/profile/` to canonical username-based profile URL."""
     target_url = reverse('profile', kwargs={'user': request.user.username})
     query = request.GET.urlencode()
     if query:
@@ -47,6 +50,7 @@ def my_profile_redirect(request):
 
 
 def _resolve_profile_user(user):
+    """Resolve user by username (case-insensitive, optional leading `@`)."""
     normalized_user = (user or '').strip().lstrip('@')
     if not normalized_user:
         return None
@@ -54,6 +58,7 @@ def _resolve_profile_user(user):
 
 
 def _apply_profile_orders_filters(queryset, request_user, search, status_filter, date_from, date_to, missing_track_only=False):
+    """Apply profile order filters shared by page view and Excel export."""
     queryset = apply_order_search_filter(
         queryset,
         search,
@@ -286,6 +291,7 @@ def profile_view(request, user):
 
 @user_passes_test(is_active_superuser)
 def export_profile_orders_excel(request, user):
+    """Export filtered profile orders into formatted XLSX report."""
     profile = _resolve_profile_user(user)
     if profile is None:
         messages.error(request, _('Пользователь не найден'))
@@ -336,6 +342,7 @@ def export_profile_orders_excel(request, user):
 
 @user_passes_test(is_active_superuser)
 def import_profile_orders_excel(request, user):
+    """Import orders from XLSX into profile context preserving business rules."""
     if request.method != 'POST':
         return HttpResponseNotAllowed(['POST'])
 

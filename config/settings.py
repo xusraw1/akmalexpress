@@ -1,3 +1,10 @@
+"""Django settings for AkmalExpress project.
+
+This settings module is intentionally single-file because the deployment target
+is simple (SQLite + Render). Environment variables control all production
+switches so the same codebase can be reused for local/stage/prod.
+"""
+
 import os
 from pathlib import Path
 
@@ -5,6 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 def env_bool(name: str, default: bool = False) -> bool:
+    """Read a boolean flag from environment with tolerant parsing."""
     raw_value = os.environ.get(name)
     if raw_value is None:
         return default
@@ -12,6 +20,7 @@ def env_bool(name: str, default: bool = False) -> bool:
 
 
 def env_int(name: str, default: int) -> int:
+    """Read an integer setting from environment with safe fallback."""
     raw_value = os.environ.get(name)
     if raw_value is None:
         return default

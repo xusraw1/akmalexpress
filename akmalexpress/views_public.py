@@ -1,3 +1,5 @@
+"""Public-facing views: search, static pages, auth entry, language switch."""
+
 import hashlib
 from datetime import timedelta
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
@@ -25,6 +27,7 @@ from .view_helpers import _safe_next_redirect, is_active_superuser
 
 
 def _staff_login_client_ip(request):
+    """Resolve best-effort client IP from proxy headers for rate limiting."""
     cf_ip = (request.META.get('HTTP_CF_CONNECTING_IP') or '').strip()
     if cf_ip:
         return cf_ip
@@ -37,6 +40,7 @@ def _staff_login_client_ip(request):
 
 
 def _staff_login_limit_keys(request, username):
+    """Return cache keys for both IP-only and IP+username lock dimensions."""
     client_ip = _staff_login_client_ip(request)
     normalized_username = (username or '').strip().lower() or 'anonymous'
     ip_hash = hashlib.sha256(f"ip|{client_ip}".encode('utf-8')).hexdigest()[:24]
@@ -48,6 +52,7 @@ def _staff_login_limit_keys(request, username):
 
 
 def _staff_login_lock_seconds_left(request, username):
+    """Return current lock TTL for this request/user tuple (0 if unlocked)."""
     now_ts = timezone.now().timestamp()
     max_left = 0
     for _fail_key, lock_key in _staff_login_limit_keys(request, username):
@@ -67,6 +72,7 @@ def _staff_login_lock_seconds_left(request, username):
 
 
 def _staff_login_register_failure(request, username):
+    """Increase failure counters and create temporary lock when threshold is hit."""
     attempts_limit = int(getattr(settings, 'STAFF_LOGIN_RATE_LIMIT_ATTEMPTS', 8))
     window_seconds = int(getattr(settings, 'STAFF_LOGIN_RATE_LIMIT_WINDOW_SECONDS', 900))
     lock_seconds = int(getattr(settings, 'STAFF_LOGIN_RATE_LIMIT_LOCK_SECONDS', 900))
@@ -93,6 +99,7 @@ def _staff_login_register_failure(request, username):
 
 
 def _staff_login_clear_failure_state(request, username):
+    """Drop all lock/failure keys after successful authentication."""
     for fail_key, lock_key in _staff_login_limit_keys(request, username):
         cache.delete(fail_key)
         cache.delete(lock_key)
@@ -155,6 +162,7 @@ faq_view = FaqView.as_view()
 
 
 def exchange_rates_view(request):
+    """Expose exchange rates to frontend auto-fill widgets."""
     if request.method != 'GET':
         return HttpResponseNotAllowed(['GET'])
     return JsonResponse(get_exchange_rates())
@@ -233,6 +241,7 @@ def robots_txt(request):
 
 
 def set_language_view(request, lang_code):
+    """Switch language and safely redirect back to previous local URL."""
     language = normalize_language(lang_code)
     request.session[settings.LANGUAGE_COOKIE_NAME] = language
     request.session['site_language'] = language
@@ -289,6 +298,7 @@ def set_language_view(request, lang_code):
 
 
 def login_view(request):
+    """Staff login endpoint with cache-based brute-force throttling."""
     if request.user.is_authenticated:
         return redirect('index')
 

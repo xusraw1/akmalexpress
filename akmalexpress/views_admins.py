@@ -1,3 +1,5 @@
+"""Super-admin views for admin account lifecycle and analytics."""
+
 from django.contrib import messages
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.models import User
@@ -19,6 +21,7 @@ from .view_helpers import superuser_required
 
 @superuser_required
 def toggle_status(request, user_id):
+    """Activate/deactivate staff account from admin management panel."""
     if request.method != 'POST':
         return HttpResponseNotAllowed(['POST'])
 
@@ -44,6 +47,7 @@ def toggle_status(request, user_id):
 
 @superuser_required
 def delete_admin(request, user_id):
+    """Delete non-superuser admin account from management panel."""
     if request.method != 'POST':
         return HttpResponseNotAllowed(['POST'])
 
@@ -64,6 +68,7 @@ def delete_admin(request, user_id):
 
 @superuser_required
 def create_admin(request):
+    """Render admin management page and handle admin account creation."""
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
         password1 = request.POST.get('password1') or ''

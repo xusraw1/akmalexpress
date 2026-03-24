@@ -1,3 +1,9 @@
+"""Cross-view helper functions and access decorators.
+
+This module contains shared logic that does not fit a single feature view:
+URL safety, profile filter options, formset shaping, and access wrappers.
+"""
+
 from datetime import timedelta
 from decimal import Decimal, InvalidOperation
 from functools import wraps
@@ -44,6 +50,7 @@ def _to_bool(value):
 
 
 def _build_order_item_initial(order):
+    """Build initial formset payload for editing an order with legacy fallback."""
     existing_items = list(order.items.all())
     if existing_items:
         return [
@@ -78,6 +85,10 @@ def _build_order_item_initial(order):
 
 
 def _calculate_order_totals_payload(payload):
+    """Compute auto total from line items with per-order exchange rates.
+
+    Returns quantized UZS totals for UI preview/API usage.
+    """
     usd_rate = _to_decimal(payload.get('usd_rate'), '0.00')
     rmb_rate = _to_decimal(payload.get('rmb_rate'), '0.00')
     items = payload.get('items') or []
@@ -143,11 +154,13 @@ PROFILE_PERIOD_OPTIONS = [
 
 
 def _get_or_create_user_profile(user):
+    """Return existing user profile or create an empty one."""
     profile, _ = UserProfile.objects.get_or_create(user=user)
     return profile
 
 
 def _resolve_profile_period(period, date_from_raw='', date_to_raw=''):
+    """Normalize profile period filter and validate optional custom dates."""
     today = timezone.localdate()
     date_from = parse_date_filter(date_from_raw)
     date_to = parse_date_filter(date_to_raw)
@@ -183,6 +196,12 @@ def _resolve_profile_period(period, date_from_raw='', date_to_raw=''):
 
 
 def _safe_next_redirect(request, fallback_url, include_referer=True):
+    """Return validated local redirect URL and strip legacy language artifacts.
+
+    Security note:
+    - Blocks open redirects by validating host/scheme.
+    - Removes legacy `/ru/...` prefixes and duplicated `lang` query params.
+    """
     candidates = [request.POST.get('next'), request.GET.get('next')]
     if include_referer:
         candidates.append(request.META.get('HTTP_REFERER'))
@@ -218,10 +237,12 @@ def _safe_next_redirect(request, fallback_url, include_referer=True):
 
 
 def is_active_superuser(user):
+    """Project-level predicate for any authenticated staff account."""
     return bool(user.is_authenticated and user.is_active and (user.is_staff or user.is_superuser))
 
 
 def user_is_order_creator(view_func):
+    """Allow access to order owner, staff, or superuser only."""
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
         slug = kwargs.get('slug')
@@ -239,6 +260,7 @@ def user_is_order_creator(view_func):
 
 
 def superuser_required(view_func):
+    """Restrict access to superusers and redirect with flash message otherwise."""
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
         if not request.user.is_superuser:

@@ -1,3 +1,5 @@
+"""Custom middleware stack for language and security hardening."""
+
 import logging
 
 from django.conf import settings
@@ -10,6 +12,14 @@ logger = logging.getLogger(__name__)
 
 
 class LanguageMiddleware:
+    """Persist selected language and apply post-render Uzbek text replacement.
+
+    Project historically used a hybrid i18n approach: standard Django i18n tags
+    plus fallback text replacement for hardcoded legacy strings. This middleware
+    keeps the behavior backward-compatible while templates are gradually moved
+    to full `{% trans %}` coverage.
+    """
+
     def __init__(self, get_response):
         self.get_response = get_response
 

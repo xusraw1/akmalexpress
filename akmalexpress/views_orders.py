@@ -1,3 +1,5 @@
+"""Order management views: CRUD, track center, receipts, dispatch and Excel."""
+
 import json
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from zipfile import BadZipFile
@@ -69,10 +71,12 @@ SERVICE_MODES = {
 
 
 def _normalize_track_number(raw_value):
+    """Normalize track number to uppercase contiguous token."""
     return ''.join((raw_value or '').strip().upper().split())
 
 
 def _parse_bulk_order_ids(raw_values):
+    """Parse unique integer IDs for bulk updates from POST payload."""
     parsed_ids = []
     for raw_value in raw_values:
         value = str(raw_value or '').strip()
@@ -82,6 +86,7 @@ def _parse_bulk_order_ids(raw_values):
 
 
 def _order_has_any_track(order):
+    """Check both item-level and legacy order-level tracks."""
     has_item_track = order.items.exclude(track_number__isnull=True).exclude(track_number='').exists()
     if has_item_track:
         return True
@@ -89,6 +94,7 @@ def _order_has_any_track(order):
 
 
 def _promote_status_to_transit_if_track_added(order, *, had_track_before=False):
+    """Auto-switch order to `transit` when track appears for the first time."""
     has_track_now = _order_has_any_track(order)
     if had_track_before or not has_track_now:
         return False
@@ -105,6 +111,7 @@ def _promote_status_to_transit_if_track_added(order, *, had_track_before=False):
 
 
 def _parse_sheet_decimal(raw_value, default='0'):
+    """Parse decimal input from settlement form allowing `1 200,50` style."""
     normalized = str(raw_value or '').replace(' ', '').replace(',', '.').strip()
     if not normalized:
         return Decimal(default)
@@ -118,6 +125,7 @@ def _parse_sheet_decimal(raw_value, default='0'):
 
 
 def _parse_service_mode(raw_value):
+    """Validate service mode from settlement form."""
     mode = (raw_value or SERVICE_MODE_PERCENT_15).strip()
     if mode not in SERVICE_MODES:
         return SERVICE_MODE_PERCENT_15
@@ -125,6 +133,7 @@ def _parse_service_mode(raw_value):
 
 
 def _parse_service_percent(raw_value, default='15'):
+    """Parse custom service percent with sane limits (0..100]."""
     normalized = str(raw_value or '').replace(' ', '').replace(',', '.').strip()
     if not normalized:
         return Decimal(default)
@@ -140,6 +149,7 @@ def _parse_service_percent(raw_value, default='15'):
 
 
 def _calculate_service_cost(product_cost, cargo_cost, mode=SERVICE_MODE_PERCENT_15, custom_percent=None):
+    """Calculate settlement service cost according to selected mode."""
     base_sum = (product_cost or Decimal('0')) + (cargo_cost or Decimal('0'))
     service_mode = _parse_service_mode(mode)
     service_cost = Decimal('0')
@@ -163,6 +173,7 @@ def _calculate_service_cost(product_cost, cargo_cost, mode=SERVICE_MODE_PERCENT_
 
 
 def _build_settlement_initial(order):
+    """Build initial settlement payload from order defaults."""
     full_name = f"{(order.first_name or '').strip()} {(order.last_name or '').strip()}".strip()
     product_cost = Decimal(order.get_total_price or '0')
     cargo_cost = Decimal('0')
@@ -183,6 +194,7 @@ def _build_settlement_initial(order):
 
 
 def detail_order(request, slug):
+    """Render order detail page (staff or public-safe variant)."""
     order = get_object_or_404(orders_with_related(Order.objects.all(), include_attachments=True), slug=slug)
     if request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser):
         return render(request, 'akmalexpress/detail_order.html', {'order': order})
@@ -197,6 +209,7 @@ def print_receipt(request, slug):
 
 @user_passes_test(is_active_superuser)
 def print_settlement_sheet(request, slug):
+    """Render settlement calculator form and printable settlement sheet."""
     order = get_object_or_404(orders_with_related(Order.objects.all(), include_attachments=True), slug=slug)
     sheet = _build_settlement_initial(order)
 
@@ -247,6 +260,7 @@ def print_settlement_sheet(request, slug):
 @user_passes_test(is_active_superuser)
 @user_is_order_creator
 def delete_order(request, slug):
+    """Delete order with ownership/staff access control."""
     order = get_object_or_404(Order, slug=slug)
     if request.method == 'POST':
         order.delete()
@@ -258,6 +272,7 @@ def delete_order(request, slug):
 @user_passes_test(is_active_superuser)
 @user_is_order_creator
 def change_order(request, slug):
+    """Edit order header, replace items, manage attachments."""
     orderr = get_object_or_404(Order, slug=slug)
     form = ChangeOrderForm(instance=orderr)
     item_formset = configure_order_item_formset(
@@ -325,6 +340,7 @@ def change_order(request, slug):
 
 @user_passes_test(is_active_superuser)
 def create_order(request):
+    """Create order with dynamic item formset and optional attachments."""
     last_order = Order.objects.order_by('-receipt_number').first()
     previous_receipt_number = last_order.receipt_number if last_order is not None else None
     next_receipt_number = (last_order.receipt_number + 1) if last_order is not None else 1
@@ -366,6 +382,7 @@ def create_order(request):
 
 @user_passes_test(is_active_superuser)
 def order_total_preview(request):
+    """AJAX endpoint for client-side total preview while editing order items."""
     if request.method != 'POST':
         return HttpResponseNotAllowed(['POST'])
 
@@ -395,6 +412,7 @@ def create_product(request):
 
 @user_passes_test(is_active_superuser)
 def order_list(request):
+    """Main staff order board with search, filters, overdue panel and bulk mode."""
     if request.method == 'POST':
         fallback_url = reverse('orders')
         next_url = _safe_next_redirect(request, fallback_url)
@@ -487,11 +505,13 @@ def order_list(request):
 
 @user_passes_test(is_active_superuser)
 def track_center_view(request):
+    """Track-center page: scan/search track and update matched order status."""
     list_search = (request.GET.get('q') or request.POST.get('q') or '').strip()
     selected_track = _normalize_track_number(request.GET.get('track') or request.POST.get('track'))
     available_statuses = {choice[0] for choice in Order.Status.choices}
 
     def build_redirect_url(extra_params=None):
+        """Rebuild current page URL preserving active list search params."""
         params = {}
         if list_search:
             params['q'] = list_search
@@ -503,6 +523,7 @@ def track_center_view(request):
         return f"{base_url}?{urlencode(params)}" if params else base_url
 
     def find_track_match(track_number):
+        """Find matching order first by item track, then by legacy order track."""
         if not track_number:
             return None
         matched_item = (
@@ -674,6 +695,7 @@ def track_center_view(request):
 
 @user_passes_test(is_active_superuser)
 def export_orders_excel(request):
+    """Export current order list selection to XLSX."""
     orders_qs = Order.objects.all()
     search_query = (request.GET.get('search') or '').strip()
     missing_track_only = parse_checkbox_flag(request.GET.get('missing_track'))
@@ -702,6 +724,7 @@ def export_orders_excel(request):
 
 @user_passes_test(is_active_superuser)
 def import_orders_excel(request):
+    """Import orders and items from uploaded XLSX into database."""
     if request.method != 'POST':
         return HttpResponseNotAllowed(['POST'])
 

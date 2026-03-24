@@ -1,3 +1,9 @@
+"""Reusable order query helpers.
+
+Selectors in this module are intentionally side-effect free and can be reused
+from multiple views (public search, admin list, profile list, exports).
+"""
+
 from datetime import datetime, timedelta
 
 from django.db.models import Count, Exists, OuterRef, Prefetch, Q
@@ -65,6 +71,11 @@ def parse_checkbox_flag(value):
 
 
 def _build_public_search_q(search_query):
+    """Build strict OR-search query for public search form.
+
+    Matching is intentionally conservative (exact for name/phone/track/receipt)
+    to avoid exposing unrelated orders in customer-facing search.
+    """
     cleaned = _normalize_whitespace(search_query)
     if not cleaned:
         return Q(pk__in=[])
@@ -117,6 +128,7 @@ def apply_public_order_search_filter(queryset, search_query):
 
 
 def _base_search_q(search_query):
+    """Common fuzzy search clause used in authenticated admin interfaces."""
     return (
         Q(receipt_number__icontains=search_query)
         | Q(first_name__icontains=search_query)
@@ -143,7 +155,9 @@ def apply_order_search_filter(queryset, search_query, *, include_phone=False, in
 
 def apply_missing_track_filter(queryset, enabled=False):
     """
-    Return orders that still need track numbers:
+    Return orders that still need track numbers.
+
+    Rule:
     - at least one item without track number, or
     - order without items and empty legacy order track.
     """

@@ -1,90 +1,101 @@
 # AkmalExpress
 
-Современная Django-система для управления заказами: создание/редактирование заказов, трек-центр, печать квитанций, профиль администратора, Excel импорт/экспорт.
+Django-проект для ежедневной работы с заказами: создание и изменение заказов, трек-центр, печать квитанций, профиль администраторов, импорт/экспорт Excel и публичный поиск заказа.
 
-## Возможности
-
-- Полный цикл заказа: создание, редактирование, статусы, удаление
-- Товары внутри заказа (несколько позиций)
-- Поиск по квитанции, ФИО, телефону, трек-номеру
-- Трек-центр (скан/быстрое обновление статуса)
-- Печать квитанций и расчетов
-- Профиль с фильтрами и пагинацией
-- Импорт/экспорт Excel (.xlsx)
+## Ключевые функции
+- Заказы с несколькими товарами (`Order` + `OrderItem`)
+- Публичный точный поиск по квитанции/ФИО/телефону/треку
+- Трек-центр с быстрым обновлением статуса
+- Bulk-обновление статусов в списке заказов
+- Панель просрочек по порогам статусов
+- Импорт/экспорт `.xlsx`
 - RU/UZ интерфейс
 
-## Стек
-
+## Технологии
 - Python 3.11+
-- Django
+- Django 6.0.3
 - SQLite
-- Gunicorn
-- WhiteNoise
+- OpenPyXL
+- Pillow
+- WhiteNoise + Gunicorn
+- Tailwind CSS
 
-## Быстрый локальный запуск
+## Структура
+```text
+akmalexpress-main/
+├── akmalexpress/          # Основное приложение (models/views/forms/services/selectors)
+├── config/                # settings/urls/wsgi/asgi
+├── templates/             # Базовые шаблоны проекта
+├── static/                # Статические ресурсы
+├── locale/                # i18n каталоги
+├── docs/                  # Техническая документация
+├── manage.py
+├── requirements.txt
+├── render.yaml
+└── gunicorn.conf.py
+```
 
+Подробный аудит и архитектура: [docs/TECHNICAL_DOCUMENTATION.md](docs/TECHNICAL_DOCUMENTATION.md)
+
+## Локальный запуск
 ```bash
 cd /Users/developer/Desktop/akmalexpress-main
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
+python manage.py createsuperuser
 python manage.py runserver 127.0.0.1:8000
 ```
 
 Открыть:
-
 - Главная: `http://127.0.0.1:8000/`
-- Вход админа: `http://127.0.0.1:8000/staff-login/`
-- Django admin: `http://127.0.0.1:8000/secure-admin/`
+- Вход для админов: `http://127.0.0.1:8000/staff-login/`
+- Django admin: `http://127.0.0.1:8000/secure-admin/` (или `ADMIN_URL`)
 
-## Основные переменные окружения
+## Frontend (опционально)
+```bash
+npm install
+npm run dev
+# или
+npm run build
+```
 
+## Переменные окружения
+Минимальный набор:
 - `SECRET_KEY`
+- `DEBUG`
 - `ALLOWED_HOSTS`
-- `ADMIN_URL` (по умолчанию: `secure-admin/`)
-- `STAFF_LOGIN_URL` (по умолчанию: `staff-login/`)
+
+Часто используемые:
+- `ADMIN_URL` (default: `secure-admin/`)
+- `STAFF_LOGIN_URL` (default: `staff-login/`)
 - `CSRF_TRUSTED_ORIGINS`
-- `SQLITE_PATH` (опционально, путь к SQLite для продакшна)
+- `SQLITE_PATH`
+- `MEDIA_ROOT`
+- `SERVE_MEDIA_FILES`
 - `SECURE_SSL_REDIRECT`
 - `SESSION_COOKIE_SECURE`
 - `CSRF_COOKIE_SECURE`
+- `LANGUAGE_COOKIE_SECURE`
 
-## Деплой на Render
-
-Проект готов для деплоя через `render.yaml`.
-
-1. Запушь код в GitHub.
-2. В Render: `New +` -> `Blueprint` -> выбери репозиторий.
-3. Render применит `render.yaml` автоматически.
-4. После первого деплоя создай суперпользователя в Shell:
-
-```bash
-python manage.py createsuperuser
-```
-
-## Проверки перед релизом
-
+## Проверки перед деплоем
 ```bash
 python manage.py check
 python manage.py check --deploy
-python manage.py migrate
+python manage.py migrate --noinput
 python manage.py collectstatic --noinput
 ```
 
-## Структура проекта
-
-```text
-akmalexpress-main/
-├── akmalexpress/
-├── config/
-├── templates/
-├── static/
-├── staticfiles/
-├── media/
-├── manage.py
-├── requirements.txt
-├── render.yaml
-├── gunicorn.conf.py
-└── README.md
+## Production запуск
+```bash
+python manage.py migrate --noinput
+python manage.py collectstatic --noinput
+gunicorn config.wsgi:application -c gunicorn.conf.py
 ```
+
+## Render
+В проекте есть `render.yaml` c готовыми командами build/start.
+
+## Лицензия
+В репозитории лицензия явно не задана. При публикации добавьте `LICENSE`.

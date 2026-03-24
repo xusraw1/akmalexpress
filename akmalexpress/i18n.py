@@ -1,3 +1,10 @@
+"""Hybrid RU/UZ translation helpers.
+
+This module contains a large compatibility dictionary used to post-process
+legacy hardcoded strings. Long-term target is full Django i18n via `.po/.mo`,
+but this layer keeps historical templates readable in Uzbek meanwhile.
+"""
+
 import re
 from html.parser import HTMLParser
 
@@ -909,6 +916,7 @@ UZ_ITEMS = sorted(UZ_TRANSLATIONS.items(), key=lambda item: len(item[0]), revers
 
 
 def normalize_language(lang_code):
+    """Return supported short language code (`ru` or `uz`)."""
     if not lang_code:
         return 'ru'
     short_code = str(lang_code).split('-')[0].lower()
@@ -918,6 +926,7 @@ def normalize_language(lang_code):
 
 
 def translate_text(text, lang_code='ru'):
+    """Translate plain text token using fallback dictionary."""
     lang = normalize_language(lang_code)
     text_str = str(text)
     if lang == 'ru':
@@ -926,6 +935,7 @@ def translate_text(text, lang_code='ru'):
 
 
 def translate_html_content(content, lang_code='ru'):
+    """Translate HTML text nodes while preserving markup and script/style tags."""
     lang = normalize_language(lang_code)
     if lang == 'ru':
         return content

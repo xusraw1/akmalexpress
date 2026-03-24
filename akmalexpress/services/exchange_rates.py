@@ -1,3 +1,9 @@
+"""External exchange-rate provider integration with cache fallback chain.
+
+Primary source is Ipak Yuli endpoint; CBU is used as secondary fallback.
+Defaults are returned if remote providers are unavailable.
+"""
+
 import json
 import re
 from decimal import Decimal, InvalidOperation
@@ -21,6 +27,7 @@ CBU_RATES_URL = 'https://cbu.uz/uz/arkhiv-kursov-valyut/json/'
 
 
 def _to_decimal(raw_value):
+    """Parse provider value to positive Decimal(0.01) or None."""
     if raw_value in (None, ''):
         return None
     normalized = str(raw_value).strip().replace(' ', '').replace(',', '.')
@@ -59,12 +66,14 @@ def _extract_rate_from_line(text, currency_code):
 
 
 def _fetch_text(url):
+    """Fetch plain text payload from provider with short timeout."""
     request = Request(url, headers={'User-Agent': 'AkmalExpress/1.0'})
     with urlopen(request, timeout=6) as response:
         return response.read().decode('utf-8', errors='ignore')
 
 
 def _fetch_ipakyuli_rates():
+    """Fetch USD/RMB rates from Ipak Yuli endpoint variants."""
     for url in IPAKYULI_RATE_URLS:
         try:
             body = _fetch_text(url)
@@ -90,6 +99,7 @@ def _fetch_ipakyuli_rates():
 
 
 def _fetch_cbu_rates():
+    """Fetch USD/RMB rates from CBU JSON archive endpoint."""
     request = Request(CBU_RATES_URL, headers={'User-Agent': 'AkmalExpress/1.0'})
     with urlopen(request, timeout=6) as response:
         payload = json.loads(response.read().decode('utf-8'))
@@ -122,6 +132,7 @@ def _fetch_cbu_rates():
 
 
 def get_exchange_rates(force_refresh=False):
+    """Return normalized exchange rates payload for UI/API consumption."""
     if not force_refresh:
         cached = cache.get(CACHE_KEY)
         if isinstance(cached, dict):
