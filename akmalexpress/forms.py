@@ -387,6 +387,8 @@ class ChangeOrderForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['order_date'].disabled = True
+        self.fields['order_date'].help_text = 'Дата заказа фиксируется при создании и не меняется при редактировании.'
         self.fields['phone1'].widget.attrs.update({'placeholder': '+998 XX XXX XX XX'})
         self.fields['phone2'].widget.attrs.update({'placeholder': 'Доп. номер (опционально)'})
         self.fields['debt'].widget.attrs.update({'step': '0.01'})
@@ -417,6 +419,8 @@ class ChangeOrderForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
+        if self.instance and self.instance.pk:
+            cleaned_data['order_date'] = self.instance.order_date
         balance = cleaned_data.get('balance') or Decimal('0.00')
 
         cleaned_data['balance'] = balance

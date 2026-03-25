@@ -143,6 +143,17 @@ SHIPPING_IMPORT_MAP = {
     'авиа': Order.ShippingMethod.AVIA,
     'ipost': Order.ShippingMethod.IPOST,
     '17994': Order.ShippingMethod.CARGO_17994,
+    'uzpost': Order.ShippingMethod.UZPOST,
+    'uz post': Order.ShippingMethod.UZPOST,
+    'узпост': Order.ShippingMethod.UZPOST,
+    'uzum': Order.ShippingMethod.UZUM,
+    'meest': Order.ShippingMethod.MEEST,
+    'globbing': Order.ShippingMethod.GLOBBING,
+    'глоббинг': Order.ShippingMethod.GLOBBING,
+    'почта россии': Order.ShippingMethod.RUSSIAN_POST,
+    'россия почта': Order.ShippingMethod.RUSSIAN_POST,
+    'russia post': Order.ShippingMethod.RUSSIAN_POST,
+    'russian post': Order.ShippingMethod.RUSSIAN_POST,
 }
 
 STORE_IMPORT_MAP = {
@@ -156,6 +167,16 @@ STORE_IMPORT_MAP = {
     '95': Product.Store.NINETY_FIVE,
     'made in china': Product.Store.MADE_IN_CHINA,
     'madechina': Product.Store.MADE_IN_CHINA,
+    'amazon': Product.Store.AMAZON,
+    'ebay': Product.Store.EBAY,
+    'america': Product.Store.AMERICA,
+    'америка': Product.Store.AMERICA,
+    'usa': Product.Store.AMERICA,
+    'сша': Product.Store.AMERICA,
+    'china': Product.Store.CHINA,
+    'китай': Product.Store.CHINA,
+    'russia': Product.Store.RUSSIA,
+    'россия': Product.Store.RUSSIA,
 }
 
 CURRENCY_IMPORT_MAP = {

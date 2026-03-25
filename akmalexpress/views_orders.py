@@ -289,6 +289,8 @@ def change_order(request, slug):
         formset_is_valid = item_formset.is_valid() if has_item_formset_post else True
         if form.is_valid() and formset_is_valid:
             order = form.save(commit=False)
+            # Keep the original business order date immutable after creation.
+            order.order_date = orderr.order_date
             if has_item_formset_post:
                 order.product = None
                 order.manual_total = resolve_manual_total_value(form, item_formset)

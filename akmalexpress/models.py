@@ -28,6 +28,11 @@ class Product(models.Model):
         SIX = '1688', '1688'
         NINETY_FIVE = '95', '95'
         MADE_IN_CHINA = 'MadeChina', 'Made in China'
+        AMAZON = 'Amazon', 'Amazon'
+        EBAY = 'eBay', 'eBay'
+        AMERICA = 'America', 'Америка'
+        CHINA = 'China', 'Китай'
+        RUSSIA = 'Russia', 'Россия'
 
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name='Admin')
     product_name = models.CharField(max_length=100, verbose_name='Mahsulot Nomi', db_index=True)
@@ -94,6 +99,11 @@ class Order(models.Model):
         AVIA = 'AVIA', 'АВИА'
         IPOST = 'iPost', 'iPost'
         CARGO_17994 = '17994', '17994'
+        UZPOST = 'UZPOST', 'UzPost'
+        UZUM = 'UZUM', 'Uzum'
+        MEEST = 'MEEST', 'Meest'
+        GLOBBING = 'GLOBBING', 'Globbing'
+        RUSSIAN_POST = 'RUSPOST', 'Почта России'
 
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     # Legacy link for old orders. New orders store items in OrderItem.

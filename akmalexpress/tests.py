@@ -302,6 +302,65 @@ class TrackStatusAutomationTests(TestCase):
         order.refresh_from_db()
         self.assertEqual(order.status, Order.Status.TRANSIT)
 
+    def test_change_order_keeps_original_order_date(self):
+        original_date = timezone.localdate() - timedelta(days=5)
+        order = Order.objects.create(
+            user=self.staff,
+            receipt_number=1812,
+            order_date=original_date,
+            first_name='Date',
+            last_name='Locked',
+            phone1=998901110812,
+            status=Order.Status.ACCEPTED,
+        )
+        OrderItem.objects.create(
+            order=order,
+            product_name='Date item',
+            product_quantity=1,
+            product_price_currency='UZS',
+            product_price='100000.000',
+            shipping_method=Order.ShippingMethod.AVIA,
+            track_number='',
+            store='Taobao',
+        )
+
+        changed_date = timezone.localdate()
+        response = self.client.post(
+            reverse('change_order', args=[order.slug]),
+            {
+                'receipt_number': '1812',
+                'order_date': changed_date.strftime('%Y-%m-%d'),
+                'first_name': 'Date',
+                'last_name': 'Locked',
+                'phone1': '998901110812',
+                'phone2': '',
+                'debt': '0',
+                'balance': '0',
+                'manual_total': '',
+                'usd_rate': '12205',
+                'rmb_rate': '1807',
+                'description': '',
+                'status': Order.Status.ORDERED,
+                'items-TOTAL_FORMS': '1',
+                'items-INITIAL_FORMS': '0',
+                'items-MIN_NUM_FORMS': '0',
+                'items-MAX_NUM_FORMS': '1000',
+                'items-0-product_name': 'Date item',
+                'items-0-product_quantity': '1',
+                'items-0-product_price_currency': 'UZS',
+                'items-0-product_price': '100000',
+                'items-0-shipping_method': Order.ShippingMethod.AVIA,
+                'items-0-track_number': '',
+                'items-0-store': 'Taobao',
+                'items-0-link': '',
+                'items-0-DELETE': '',
+            },
+            follow=False,
+        )
+        self.assertEqual(response.status_code, 302)
+        order.refresh_from_db()
+        self.assertEqual(order.order_date, original_date)
+
 
 class BulkOrdersModeTests(TestCase):
     def setUp(self):
