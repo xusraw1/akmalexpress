@@ -226,6 +226,50 @@ label {
     gap: 0.85rem;
 }
 
+.settlement-order-finance {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.62rem;
+    margin: 0.1rem 0 0.9rem;
+}
+
+.settlement-order-finance__item {
+    border: 1px solid #d4e2ec;
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(246, 250, 255, 0.92));
+    padding: 0.56rem 0.7rem;
+    min-height: 74px;
+    display: grid;
+    align-content: center;
+    gap: 0.16rem;
+}
+
+.settlement-order-finance__item--debt {
+    border-color: rgba(244, 63, 94, 0.28);
+    background: linear-gradient(180deg, rgba(255, 241, 242, 0.9), rgba(255, 255, 255, 0.95));
+}
+
+.settlement-order-finance__item--balance {
+    border-color: rgba(15, 118, 110, 0.32);
+    background: linear-gradient(180deg, rgba(236, 253, 245, 0.88), rgba(255, 255, 255, 0.95));
+}
+
+.settlement-order-finance__label {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-600);
+}
+
+.settlement-order-finance__value {
+    margin: 0;
+    font-size: 1.02rem;
+    font-weight: 800;
+    color: var(--ink-900);
+}
+
 .settlement-actions {
     justify-content: flex-start;
     gap: 0.6rem;
@@ -695,6 +739,10 @@ input[name$="-DELETE"][hidden] {
     .settlement-actions .btn-primary,
     .settlement-actions .btn-ghost {
         width: 100%;
+    }
+
+    .settlement-order-finance {
+        grid-template-columns: 1fr;
     }
 
     .service-custom-percent {

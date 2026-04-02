@@ -19,12 +19,10 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
 
 from .context_processors import TRACK_NOTICE_DISMISS_KEY
-from .forms import ContactRequestForm
 from .i18n import normalize_language
 from .models import Order
 from .selectors.orders import apply_public_order_search_filter, orders_with_related
 from .services.exchange_rates import get_exchange_rates
-from .services.telegram import send_contact_request_notification
 from .view_helpers import _safe_next_redirect, is_active_superuser
 
 PUBLIC_SEARCH_PAGE_SIZE = 10
@@ -147,24 +145,10 @@ def index(request):
 
 
 def contacts_view(request):
-    """Render contacts page and process lightweight callback requests."""
-    contact_form = ContactRequestForm(request.POST or None)
-    if request.method == 'POST':
-        if contact_form.is_valid():
-            cleaned = contact_form.cleaned_data
-            telegram_sent = send_contact_request_notification(
-                name=cleaned['name'],
-                phone=cleaned['phone'],
-                email=cleaned['email'],
-                message=cleaned['message'],
-                page_url=request.build_absolute_uri(request.path),
-            )
-            messages.success(request, _('Запрос отправлен. Мы свяжемся с вами в ближайшее время.'))
-            if not telegram_sent:
-                messages.warning(request, _('Не удалось отправить уведомление в Telegram. Проверьте настройки бота.'))
-            return redirect('contacts')
-        messages.warning(request, _('Проверьте форму: заполните все поля корректно.'))
-    return render(request, 'akmalexpress/contacts.html', {'contact_form': contact_form})
+    """Render static contacts page (contact form is intentionally removed)."""
+    if request.method != 'GET':
+        return HttpResponseNotAllowed(['GET'])
+    return render(request, 'akmalexpress/contacts.html')
 
 
 class AboutView(TemplateView):

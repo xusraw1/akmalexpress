@@ -78,10 +78,6 @@ npm run build
 - `SESSION_COOKIE_SECURE`
 - `CSRF_COOKIE_SECURE`
 - `LANGUAGE_COOKIE_SECURE`
-- `TELEGRAM_CONTACT_NOTIFICATIONS_ENABLED` (`True`/`False`)
-- `TELEGRAM_BOT_TOKEN`
-- `TELEGRAM_CONTACT_CHAT_IDS` (например: `613701273` или `613701273,-1001234567890`)
-- `TELEGRAM_CONTACT_THREAD_ID` (опционально, для topic в группе)
 
 ## Проверки перед деплоем
 ```bash

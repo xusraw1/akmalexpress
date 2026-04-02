@@ -210,8 +210,3 @@ PERMISSIONS_POLICY = os.environ.get(
     'accelerometer=(), autoplay=(), camera=(self), geolocation=(), gyroscope=(), '
     'magnetometer=(), microphone=(), payment=(), usb=()',
 )
-
-TELEGRAM_CONTACT_NOTIFICATIONS_ENABLED = env_bool('TELEGRAM_CONTACT_NOTIFICATIONS_ENABLED', True)
-TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '').strip()
-TELEGRAM_CONTACT_CHAT_IDS = env_list('TELEGRAM_CONTACT_CHAT_IDS', '')
-TELEGRAM_CONTACT_THREAD_ID = env_int('TELEGRAM_CONTACT_THREAD_ID', 0) or None

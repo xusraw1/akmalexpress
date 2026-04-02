@@ -12,6 +12,17 @@
         </div>
     </div>
 
+    <div class="settlement-order-finance" aria-label="Информация по балансу и долгу клиента">
+        <article class="settlement-order-finance__item settlement-order-finance__item--debt">
+            <p class="settlement-order-finance__label">Долг клиента</p>
+            <p class="settlement-order-finance__value">{{ order.get_pickup_due|money:2 }} {{ order.get_current }}</p>
+        </article>
+        <article class="settlement-order-finance__item settlement-order-finance__item--balance">
+            <p class="settlement-order-finance__label">Баланс клиента</p>
+            <p class="settlement-order-finance__value">{{ order.get_balance|money:2 }} {{ order.get_current }}</p>
+        </article>
+    </div>
+
     <form method="post" class="unified-form settlement-form" id="settlementForm">
         {% csrf_token %}
         <div class="form-grid two-col settlement-grid">

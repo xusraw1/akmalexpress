@@ -24,7 +24,17 @@
         </div>
         <div class="meta-item">
             <strong>Телефон</strong>
-            <span>{{ order.phone1 }}</span>
+            <span>
+                {% if order.phone1 and order.phone2 %}
+                {{ order.phone1 }}, {{ order.phone2 }}
+                {% elif order.phone1 %}
+                {{ order.phone1 }}
+                {% elif order.phone2 %}
+                {{ order.phone2 }}
+                {% else %}
+                -
+                {% endif %}
+            </span>
         </div>
         <div class="meta-item">
             <strong>Статус</strong>
