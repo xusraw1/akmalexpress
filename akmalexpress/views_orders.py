@@ -25,7 +25,7 @@ from .forms import (
     resolve_manual_total_value,
     save_order_items,
 )
-from .models import Order, OrderItem
+from .models import Order, OrderItem, Product
 from .selectors.orders import (
     apply_missing_track_filter,
     apply_order_search_filter,
@@ -460,6 +460,10 @@ def order_list(request):
     orders_list = Order.objects.all()
     search_query = (request.GET.get('search') or '').strip()
     missing_track_only = parse_checkbox_flag(request.GET.get('missing_track'))
+    selected_store = (request.GET.get('store') or '').strip()
+    store_choices = [choice for choice in Product.Store.choices if choice[0] != Product.Store.NO]
+    available_store_values = {value for value, _ in store_choices}
+
     orders_list = apply_order_search_filter(
         orders_list,
         search_query,
@@ -467,6 +471,12 @@ def order_list(request):
         include_track=request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser),
     )
     orders_list = apply_missing_track_filter(orders_list, enabled=missing_track_only)
+    if selected_store:
+        if selected_store in available_store_values:
+            orders_list = orders_list.filter(Q(items__store=selected_store) | Q(product__store=selected_store))
+        else:
+            selected_store = ''
+            messages.warning(request, _('Неизвестный магазин в фильтре.'))
 
     selected_month = request.GET.get('month', '').strip()
     month_date = None
@@ -497,6 +507,8 @@ def order_list(request):
     context = {
         'orders': orders,
         'search_query': search_query,
+        'selected_store': selected_store,
+        'store_choices': store_choices,
         'selected_month': selected_month,
         'missing_track_only': missing_track_only,
         'stuck_orders': stuck_orders_snapshot,
@@ -701,6 +713,10 @@ def export_orders_excel(request):
     orders_qs = Order.objects.all()
     search_query = (request.GET.get('search') or '').strip()
     missing_track_only = parse_checkbox_flag(request.GET.get('missing_track'))
+    selected_store = (request.GET.get('store') or '').strip()
+    available_store_values = {
+        value for value, _ in Product.Store.choices if value != Product.Store.NO
+    }
     orders_qs = apply_order_search_filter(
         orders_qs,
         search_query,
@@ -708,6 +724,8 @@ def export_orders_excel(request):
         include_track=request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser),
     )
     orders_qs = apply_missing_track_filter(orders_qs, enabled=missing_track_only)
+    if selected_store and selected_store in available_store_values:
+        orders_qs = orders_qs.filter(Q(items__store=selected_store) | Q(product__store=selected_store))
 
     selected_month = (request.GET.get('month') or '').strip()
     if request.user.is_superuser and selected_month:

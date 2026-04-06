@@ -1084,10 +1084,10 @@
 
 .search-order-card {
     border: 1px solid #d8e5ee;
-    border-radius: 14px;
+    border-radius: 12px;
     background: #fff;
     overflow: hidden;
-    box-shadow: 0 8px 18px rgba(16, 32, 56, 0.05);
+    box-shadow: 0 6px 14px rgba(16, 32, 56, 0.05);
 }
 
 .search-order-card--reveal {
@@ -1120,10 +1120,10 @@
 .search-order-summary {
     list-style: none;
     cursor: pointer;
-    padding: 0.72rem 0.82rem;
+    padding: 0.62rem 0.72rem;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: 0.8rem;
+    gap: 0.62rem;
     align-items: center;
     background: linear-gradient(180deg, #fbfdff, #f5faff);
 }
@@ -1134,7 +1134,7 @@
 
 .search-order-summary__main {
     display: flex;
-    gap: 0.62rem;
+    gap: 0.5rem;
     align-items: center;
     min-width: 0;
 }
@@ -1143,28 +1143,59 @@
     margin: 0;
     font-weight: 700;
     color: var(--ink-900);
+    font-size: 0.9rem;
 }
 
 .search-order-meta {
-    margin: 0.15rem 0 0;
+    margin: 0.1rem 0 0;
     color: var(--ink-500);
-    font-size: 0.78rem;
+    font-size: 0.74rem;
 }
 
 .search-order-summary__side {
     display: grid;
     justify-items: end;
-    gap: 0.35rem;
+    gap: 0.28rem;
 }
 
 .search-order-total {
     color: var(--ink-900);
-    font-size: 0.88rem;
+    font-size: 0.84rem;
+}
+
+.search-order-finance {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.26rem;
+}
+
+.search-order-finance__chip {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.16rem 0.42rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.search-order-finance__chip--debt {
+    color: #9a3412;
+    border: 1px solid rgba(251, 146, 60, 0.3);
+    background: rgba(255, 237, 213, 0.72);
+}
+
+.search-order-finance__chip--balance {
+    color: #166534;
+    border: 1px solid rgba(74, 222, 128, 0.34);
+    background: rgba(220, 252, 231, 0.72);
 }
 
 .search-order-body {
     border-top: 1px solid #e8f0f6;
-    padding: 0.72rem 0.82rem;
+    padding: 0.6rem 0.72rem;
     background: #fdfefe;
 }
 
@@ -1190,34 +1221,36 @@
 
 .search-order-grid {
     display: grid;
-    gap: 0.55rem;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.42rem;
+    grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
 }
 
 .search-order-info {
     border: 1px solid #e3edf4;
-    border-radius: 10px;
-    padding: 0.55rem 0.6rem;
-    background: #f9fcff;
+    border-radius: 9px;
+    padding: 0.42rem 0.5rem;
+    background: linear-gradient(180deg, #fbfdff, #f4f9fd);
 }
 
 .search-order-info h3 {
     margin: 0;
-    font-size: 0.73rem;
+    font-size: 0.67rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--ink-500);
 }
 
 .search-order-info p {
-    margin: 0.35rem 0 0;
+    margin: 0.24rem 0 0;
     font-weight: 700;
     color: var(--ink-900);
+    font-size: 0.82rem;
 }
 
 .search-order-actions {
-    margin-top: 0.62rem;
+    margin-top: 0.5rem;
     justify-content: flex-end;
+    gap: 0.42rem;
 }
 
 .filter-bar {
@@ -2127,6 +2160,10 @@
 
     .search-order-summary__side {
         justify-items: flex-start;
+    }
+
+    .search-order-finance {
+        justify-content: flex-start;
     }
 
     .search-order-grid {
