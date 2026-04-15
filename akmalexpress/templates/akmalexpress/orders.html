@@ -31,11 +31,11 @@
             <label for="orders-search" class="sr-only">{% trans "Поиск заказов" %}</label>
             <input id="orders-search" type="search" name="search" value="{{ search_query }}" placeholder="{% trans 'Квитанция, клиент, телефон, трек или товар' %}" autocomplete="off">
             <button type="submit" class="btn-primary">{% trans "Поиск" %}</button>
-            {% if search_query or missing_track_only or selected_store %}
+            {% if search_query or selected_store or selected_shipping or selected_status %}
             <a href="{% url 'orders' %}" class="btn-ghost">{% trans "Сброс" %}</a>
             {% endif %}
         </div>
-        <div class="search-filters search-filters--compact">
+        <div class="search-filters search-filters--orders">
             <div class="search-filter-field search-filter-field--store">
                 <label for="orders-store">{% trans "Магазин" %}</label>
                 <select id="orders-store" name="store">
@@ -45,11 +45,24 @@
                     {% endfor %}
                 </select>
             </div>
-            <label class="toggle-check">
-                <input type="checkbox" name="missing_track" value="1" {% if missing_track_only %}checked{% endif %}>
-                <span class="toggle-slider" aria-hidden="true"></span>
-                <span class="toggle-text">{% trans "Только без трек-номера" %}</span>
-            </label>
+            <div class="search-filter-field search-filter-field--shipping">
+                <label for="orders-shipping">{% trans "Тип отправки" %}</label>
+                <select id="orders-shipping" name="shipping">
+                    <option value="">{% trans "Все типы отправки" %}</option>
+                    {% for value, label in shipping_choices %}
+                    <option value="{{ value }}" {% if selected_shipping == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="search-filter-field search-filter-field--status">
+                <label for="orders-status">{% trans "Статус" %}</label>
+                <select id="orders-status" name="status">
+                    <option value="">{% trans "Все статусы" %}</option>
+                    {% for value, label in status_filter_choices %}
+                    <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
     </form>
 
@@ -74,66 +87,6 @@
             </div>
         </div>
     </form>
-
-    {% if stuck_orders.total %}
-    <section class="orders-stuck-panel table-wrap-spaced-sm">
-        <div class="orders-stuck-panel__head">
-            <div>
-                <h2 class="orders-stuck-panel__title">{% trans "Панель контроля просрочек" %}</h2>
-                <p class="orders-stuck-panel__subtitle">{% trans "Зависшие заказы в активных статусах:" %} {{ stuck_orders.total }}</p>
-            </div>
-            <span class="orders-stuck-panel__hint">{% trans "Порог: Принят 3д, Заказан 10д, В пути 20д" %}</span>
-        </div>
-        <div class="orders-stuck-panel__chips">
-            <span class="orders-stuck-chip">{% trans "Принят:" %} <b>{{ stuck_orders.by_status.accepted }}</b></span>
-            <span class="orders-stuck-chip">{% trans "Заказан:" %} <b>{{ stuck_orders.by_status.ordered }}</b></span>
-            <span class="orders-stuck-chip">{% trans "В пути:" %} <b>{{ stuck_orders.by_status.transit }}</b></span>
-        </div>
-        <div class="orders-stuck-list">
-            {% for row in stuck_orders.rows %}
-            <div class="orders-stuck-item orders-stuck-item--{{ row.severity }}">
-                {% if row.slug %}
-                <a class="orders-stuck-item__link" href="{% url 'detail_order' row.slug %}">
-                {% else %}
-                <div class="orders-stuck-item__link">
-                {% endif %}
-                    <div class="orders-stuck-item__main">
-                        <b>№{{ row.receipt_number }}</b>
-                        <span>{{ row.full_name|default:'-' }}</span>
-                    </div>
-                    <div class="orders-stuck-item__meta">
-                        <span>{{ row.status_label }}</span>
-                        <span>{{ row.age_days }} {% trans "дн" %}</span>
-                        <span>+{{ row.age_over_threshold }} {% trans "дн" %}</span>
-                    </div>
-                {% if row.slug %}
-                </a>
-                {% else %}
-                </div>
-                {% endif %}
-                {% if row.slug and request.user.is_authenticated %}
-                {% if request.user.is_staff or request.user.is_superuser %}
-                <a
-                    class="orders-stuck-item__edit"
-                    href="{% url 'change_order' row.slug %}"
-                    title="{% trans 'Изменить заказ' %}"
-                    aria-label="{% trans 'Изменить заказ' %}"
-                >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <path d="M12 20h9" />
-                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                    </svg>
-                </a>
-                {% endif %}
-                {% endif %}
-            </div>
-            {% endfor %}
-        </div>
-        {% if stuck_orders.has_more %}
-        <p class="orders-stuck-panel__foot">{% blocktrans with limit=stuck_orders.limit %}Показаны первые {{ limit }} заказов.{% endblocktrans %}</p>
-        {% endif %}
-    </section>
-    {% endif %}
 
     <div class="search-result-stack table-wrap-spaced">
         {% for order in orders %}

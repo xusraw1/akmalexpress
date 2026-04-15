@@ -13,7 +13,6 @@ from django.utils.crypto import get_random_string
 from django.utils import timezone
 
 from .models import Order, OrderAttachment, OrderItem
-from .selectors.orders import build_stuck_orders_snapshot
 from .templatetags.number_format import money
 
 
@@ -196,6 +195,76 @@ class MissingTrackFilterTests(TestCase):
         self.assertContains(response, 'Missing Client')
         self.assertContains(response, 'Mixed Client')
         self.assertNotContains(response, 'Tracked Client')
+
+
+class OrdersFiltersTests(TestCase):
+    def setUp(self):
+        password = get_random_string(24)
+        self.staff = User.objects.create_user(
+            username='ordersfiltersstaff',
+            password=password,
+            is_staff=True,
+            is_active=True,
+        )
+        self.client.login(username=self.staff.username, password=password)
+
+        self.taobao_order = Order.objects.create(
+            user=self.staff,
+            receipt_number=1825,
+            order_date=timezone.localdate(),
+            first_name='Store',
+            last_name='Taobao',
+            phone1=998901111825,
+            status=Order.Status.ORDERED,
+            shipping_method=Order.ShippingMethod.AVIA,
+        )
+        OrderItem.objects.create(
+            order=self.taobao_order,
+            product_name='Item taobao',
+            product_quantity=1,
+            product_price_currency='UZS',
+            product_price='10000.000',
+            store='Taobao',
+            shipping_method=Order.ShippingMethod.AVIA,
+        )
+
+        self.amazon_order = Order.objects.create(
+            user=self.staff,
+            receipt_number=1826,
+            order_date=timezone.localdate(),
+            first_name='Store',
+            last_name='Amazon',
+            phone1=998901111826,
+            status=Order.Status.TRANSIT,
+            shipping_method=Order.ShippingMethod.UZPOST,
+        )
+        OrderItem.objects.create(
+            order=self.amazon_order,
+            product_name='Item amazon',
+            product_quantity=1,
+            product_price_currency='UZS',
+            product_price='12000.000',
+            store='Amazon',
+            shipping_method=Order.ShippingMethod.UZPOST,
+        )
+
+    def test_orders_filter_by_store(self):
+        response = self.client.get(reverse('orders'), {'store': 'Amazon'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Store Amazon')
+        self.assertNotContains(response, 'Store Taobao')
+
+    def test_orders_filter_by_shipping(self):
+        response = self.client.get(reverse('orders'), {'shipping': Order.ShippingMethod.UZPOST})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Store Amazon')
+        self.assertNotContains(response, 'Store Taobao')
+
+    def test_orders_filter_by_status(self):
+        response = self.client.get(reverse('orders'), {'status': Order.Status.TRANSIT})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Store Amazon')
+        self.assertNotContains(response, 'Store Taobao')
 
 
 class TrackStatusAutomationTests(TestCase):
@@ -407,57 +476,6 @@ class BulkOrdersModeTests(TestCase):
         order_two.refresh_from_db()
         self.assertEqual(order_one.status, Order.Status.TRANSIT)
         self.assertEqual(order_two.status, Order.Status.TRANSIT)
-
-
-class OverduePanelThresholdTests(TestCase):
-    def test_stuck_orders_snapshot_uses_new_thresholds(self):
-        today = timezone.localdate()
-        Order.objects.create(
-            receipt_number=1830,
-            order_date=today - timedelta(days=4),
-            first_name='Accepted',
-            last_name='Late',
-            phone1=998901111830,
-            status=Order.Status.ACCEPTED,
-        )
-        Order.objects.create(
-            receipt_number=1831,
-            order_date=today - timedelta(days=9),
-            first_name='Ordered',
-            last_name='StillOk',
-            phone1=998901111831,
-            status=Order.Status.ORDERED,
-        )
-        Order.objects.create(
-            receipt_number=1832,
-            order_date=today - timedelta(days=11),
-            first_name='Ordered',
-            last_name='Late',
-            phone1=998901111832,
-            status=Order.Status.ORDERED,
-        )
-        Order.objects.create(
-            receipt_number=1833,
-            order_date=today - timedelta(days=19),
-            first_name='Transit',
-            last_name='StillOk',
-            phone1=998901111833,
-            status=Order.Status.TRANSIT,
-        )
-        Order.objects.create(
-            receipt_number=1834,
-            order_date=today - timedelta(days=21),
-            first_name='Transit',
-            last_name='Late',
-            phone1=998901111834,
-            status=Order.Status.TRANSIT,
-        )
-
-        snapshot = build_stuck_orders_snapshot(Order.objects.all(), limit=20)
-        self.assertEqual(snapshot['by_status'][Order.Status.ACCEPTED], 1)
-        self.assertEqual(snapshot['by_status'][Order.Status.ORDERED], 1)
-        self.assertEqual(snapshot['by_status'][Order.Status.TRANSIT], 1)
-        self.assertEqual(snapshot['total'], 3)
 
 
 class ErrorPageTests(TestCase):
@@ -733,39 +751,18 @@ class TrackCenterTests(TestCase):
             track_number='TRK-WAIT-001',
             store='Taobao',
         )
-        self.arrived_order = Order.objects.create(
-            user=self.staff,
-            receipt_number=322,
-            order_date=timezone.localdate(),
-            first_name='Arrived',
-            last_name='Client',
-            phone1=998902222222,
-            status=Order.Status.ARRIVED,
-            come=timezone.now(),
-        )
-        OrderItem.objects.create(
-            order=self.arrived_order,
-            product_name='Arrived item',
-            product_quantity=1,
-            product_price_currency='UZS',
-            product_price='12000.000',
-            shipping_method=Order.ShippingMethod.AVIA,
-            track_number='TRK-ARR-001',
-            store='Taobao',
-        )
-
     def test_track_center_requires_staff(self):
         self.client.login(username=self.regular.username, password=self.regular_password)
         response = self.client.get(reverse('track_center'))
         self.assertEqual(response.status_code, 302)
 
-    def test_track_center_renders_arrived_queue_only(self):
+    def test_track_center_shows_empty_hint_before_scan(self):
         self.client.login(username=self.staff.username, password=self.staff_password)
         response = self.client.get(reverse('track_center'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Сканер треков')
-        self.assertContains(response, 'TRK-ARR-001')
-        self.assertNotContains(response, 'TRK-WAIT-001')
+        self.assertContains(response, 'После сканирования здесь появится полная карточка заказа.')
+        self.assertNotContains(response, 'Прибывшие по треку')
 
     def test_track_scan_opens_quick_status_panel(self):
         self.client.login(username=self.staff.username, password=self.staff_password)
@@ -779,6 +776,8 @@ class TrackCenterTests(TestCase):
         quick_panel_response = self.client.get(response.url)
         self.assertEqual(quick_panel_response.status_code, 200)
         self.assertContains(quick_panel_response, 'TRK-WAIT-001')
+        self.assertContains(quick_panel_response, 'Свернуть / развернуть')
+        self.assertContains(quick_panel_response, 'Товары в заказе')
         self.assertContains(quick_panel_response, 'Сохранить статус')
         self.waiting_order.refresh_from_db()
         self.assertEqual(self.waiting_order.status, Order.Status.ORDERED)

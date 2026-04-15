@@ -520,6 +520,16 @@
     align-items: end;
 }
 
+.search-filters--orders {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    align-items: end;
+}
+
+.search-filters--orders .search-filter-field--store {
+    max-width: none;
+}
+
 .search-filter-field {
     display: grid;
     gap: 0.24rem;
@@ -779,165 +789,14 @@
     color: var(--ink-700);
 }
 
-.orders-stuck-panel {
-    border: 1px solid rgba(180, 83, 9, 0.22);
-    border-radius: 14px;
-    padding: 0.68rem 0.72rem;
-    background:
-        radial-gradient(circle at 100% 0%, rgba(251, 191, 36, 0.14), transparent 42%),
-        radial-gradient(circle at 0% 100%, rgba(249, 115, 22, 0.1), transparent 40%),
-        rgba(255, 255, 255, 0.76);
-}
-
-.orders-stuck-panel__head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.orders-stuck-panel__title {
-    margin: 0;
-    font-size: 0.92rem;
-    font-weight: 800;
-}
-
-.orders-stuck-panel__subtitle {
-    margin: 0.18rem 0 0;
-    font-size: 0.74rem;
-    color: var(--ink-700);
-}
-
-.orders-stuck-panel__hint {
-    display: inline-flex;
-    align-items: center;
-    font-size: 0.68rem;
-    color: #9a3412;
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid rgba(194, 65, 12, 0.2);
-    border-radius: 999px;
-    padding: 0.18rem 0.44rem;
-}
-
-.orders-stuck-panel__chips {
-    margin-top: 0.48rem;
-    display: flex;
-    gap: 0.34rem;
-    flex-wrap: wrap;
-}
-
-.orders-stuck-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.22rem;
-    border-radius: 999px;
-    padding: 0.2rem 0.5rem;
-    border: 1px solid rgba(180, 83, 9, 0.2);
-    background: rgba(255, 255, 255, 0.74);
-    color: #9a3412;
-    font-size: 0.72rem;
-    font-weight: 700;
-}
-
-.orders-stuck-list {
-    margin-top: 0.48rem;
-    display: grid;
-    gap: 0.34rem;
-}
-
-.orders-stuck-item {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 0.42rem;
-    border-radius: 10px;
-    padding: 0.42rem 0.5rem;
-    border: 1px solid transparent;
-    background: rgba(255, 255, 255, 0.8);
-}
-
-.orders-stuck-item__link {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.42rem;
-    flex: 1 1 auto;
-    min-width: 0;
-    color: inherit;
-    text-decoration: none;
-}
-
-a.orders-stuck-item__link:hover,
-a.orders-stuck-item__link:focus-visible {
-    outline: none;
-    color: inherit;
-}
-
-.orders-stuck-item--warning {
-    border-color: rgba(217, 119, 6, 0.26);
-}
-
-.orders-stuck-item--critical {
-    border-color: rgba(220, 38, 38, 0.28);
-    background: rgba(255, 241, 242, 0.76);
-}
-
-.orders-stuck-item__main {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    flex-wrap: wrap;
-}
-
-.orders-stuck-item__main b {
-    font-size: 0.8rem;
-}
-
-.orders-stuck-item__main span {
-    font-size: 0.74rem;
-    color: var(--ink-700);
-}
-
-.orders-stuck-item__meta {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.26rem;
-    font-size: 0.7rem;
-    color: var(--ink-700);
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    white-space: nowrap;
-}
-
-.orders-stuck-item__edit {
-    width: 28px;
-    height: 28px;
-    border: 1px solid #d2dde7;
-    border-radius: 8px;
-    background: #ffffff;
-    color: #0f766e;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 28px;
-    transition: border-color 0.2s ease, background-color 0.2s ease;
-}
-
-.orders-stuck-item__edit:hover,
-.orders-stuck-item__edit:focus-visible {
-    border-color: rgba(15, 118, 110, 0.45);
-    background: rgba(15, 118, 110, 0.08);
-    outline: none;
-}
-
-.orders-stuck-panel__foot {
-    margin: 0.36rem 0 0;
-    font-size: 0.68rem;
-    color: var(--ink-500);
+@media (max-width: 980px) {
+    .search-filters--orders {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 720px) {
+    .search-filters--orders,
     .search-filters--compact {
         grid-template-columns: 1fr;
     }
@@ -958,25 +817,6 @@ a.orders-stuck-item__link:focus-visible {
     .orders-bulk-panel select,
     .orders-bulk-panel [data-bulk-submit] {
         width: 100%;
-    }
-
-    .orders-stuck-item {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-
-    .orders-stuck-item__link {
-        width: 100%;
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .orders-stuck-item__meta {
-        justify-content: flex-start;
-    }
-
-    .orders-stuck-item__edit {
-        align-self: flex-end;
     }
 }
 

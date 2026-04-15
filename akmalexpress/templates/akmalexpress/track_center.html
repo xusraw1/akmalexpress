@@ -21,14 +21,12 @@
                 id="track-scan-input"
                 type="search"
                 name="track_number"
+                value="{{ selected_track }}"
                 placeholder="{% trans 'Сканируйте или введите трек-номер' %}"
                 autocomplete="off"
                 autofocus
                 required
             >
-            {% if track_search_query %}
-            <input type="hidden" name="q" value="{{ track_search_query }}">
-            {% endif %}
             <button type="submit" class="btn-primary">{% trans "Найти заказ" %}</button>
         </div>
     </form>
@@ -53,110 +51,104 @@
     </div>
 
     {% if selected_track_match %}
-    <section class="track-status-card">
-        <div class="section-head section-head--compact">
-            <div>
-                <h2 class="section-title">{% trans "Результат поиска" %}</h2>
-                <p class="section-subtitle">{% trans "Трек:" %} <b>{{ selected_track_match.track_number }}</b></p>
+    <details class="track-result-card" open>
+        <summary class="track-result-card__summary">
+            <div class="track-result-card__main">
+                <p class="track-result-card__eyebrow">{% trans "Результат поиска" %}</p>
+                <p class="track-result-card__title">№{{ selected_track_match.order.receipt_number }} · {{ selected_track_match.order.first_name }} {{ selected_track_match.order.last_name }}</p>
+                <p class="track-result-card__track">{% trans "Трек:" %} <b>{{ selected_track_match.track_number }}</b></p>
             </div>
-        </div>
-        <div class="track-status-meta">
-            <p><b>{% trans "Квитанция" %}:</b> №{{ selected_track_match.order.receipt_number }}</p>
-            <p><b>{% trans "Клиент" %}:</b> {{ selected_track_match.order.first_name }} {{ selected_track_match.order.last_name }}</p>
-            {% if selected_track_match.product_name %}
-            <p><b>{% trans "Товар" %}:</b> {{ selected_track_match.product_name }}</p>
-            {% endif %}
-            <p><b>{% trans "Долг" %}:</b> {{ selected_track_match.order.get_pickup_due|money:2 }} {{ selected_track_match.order.get_current }}</p>
-            <p>
-                <b>{% trans "Текущий статус" %}:</b>
+            <div class="track-result-card__side">
                 {% with order=selected_track_match.order %}{% include 'partials/status_badge.html' %}{% endwith %}
-            </p>
-        </div>
-        <form method="post" class="track-status-form">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="update_status">
-            <input type="hidden" name="order_id" value="{{ selected_track_match.order.id }}">
-            <input type="hidden" name="track_number" value="{{ selected_track_match.track_number }}">
-            {% if track_search_query %}
-            <input type="hidden" name="q" value="{{ track_search_query }}">
-            {% endif %}
-            <div class="track-status-form__field">
-                <label for="track-status-select">{% trans "Новый статус" %}</label>
-                <select id="track-status-select" name="status" required>
-                    {% for value, label in status_choices %}
-                    <option value="{{ value }}" {% if selected_track_match.order.status == value %}selected{% endif %}>{{ label }}</option>
-                    {% endfor %}
-                </select>
+                <span class="track-result-card__toggle">{% trans "Свернуть / развернуть" %}</span>
             </div>
-            <button type="submit" class="btn-primary">{% trans "Сохранить статус" %}</button>
-            <a class="btn-ghost" href="{% url 'detail_order' selected_track_match.order.slug %}">{% trans "Открыть заказ" %}</a>
-        </form>
-    </section>
+        </summary>
+
+        <div class="track-result-card__body">
+            <div class="track-result-meta">
+                <article class="track-result-meta__item">
+                    <h3>{% trans "Телефон" %}</h3>
+                    <p>{{ selected_track_match.order.phone1|default:"-" }}</p>
+                </article>
+                <article class="track-result-meta__item">
+                    <h3>{% trans "Доп. телефон" %}</h3>
+                    <p>{% if selected_track_match.order.phone2 %}{{ selected_track_match.order.phone2 }}{% else %}-{% endif %}</p>
+                </article>
+                <article class="track-result-meta__item">
+                    <h3>{% trans "Дата заказа" %}</h3>
+                    <p>{{ selected_track_match.order.order_date|date:"d.m.Y" }}</p>
+                </article>
+                <article class="track-result-meta__item">
+                    <h3>{% trans "Тип отправки" %}</h3>
+                    <p>{{ selected_track_match.order.shipping_method_summary }}</p>
+                </article>
+                <article class="track-result-meta__item">
+                    <h3>{% trans "Итог" %}</h3>
+                    <p>{{ selected_track_match.order.get_final_total|money:2 }} {{ selected_track_match.order.get_current }}</p>
+                </article>
+                <article class="track-result-meta__item">
+                    <h3>{% trans "Долг" %}</h3>
+                    <p>{{ selected_track_match.order.get_pickup_due|money:2 }} {{ selected_track_match.order.get_current }}</p>
+                </article>
+                <article class="track-result-meta__item">
+                    <h3>{% trans "Баланс" %}</h3>
+                    <p>{{ selected_track_match.order.get_balance|money:2 }} {{ selected_track_match.order.get_current }}</p>
+                </article>
+                <article class="track-result-meta__item">
+                    <h3>{% trans "Создан" %}</h3>
+                    <p>{{ selected_track_match.order.created_at|date:"d.m.Y H:i" }}</p>
+                </article>
+            </div>
+
+            <div class="track-result-items">
+                <h3>{% trans "Товары в заказе" %}</h3>
+                <div class="track-result-items__list">
+                    {% for item in selected_track_match.order.items.all %}
+                    <article class="track-result-item">
+                        <div class="track-result-item__main">
+                            <p class="track-result-item__name">{{ item.product_name }}</p>
+                            <p class="track-result-item__qty">{% trans "Кол-во:" %} {{ item.product_quantity }}</p>
+                        </div>
+                        <div class="track-result-item__meta">
+                            <span>{{ item.get_store_display }}</span>
+                            <span>{{ item.get_shipping_method_display }}</span>
+                            <span>
+                                {% trans "Трек-номер" %}:
+                                {% if item.track_number %}
+                                <b>{{ item.track_number }}</b>
+                                {% else %}
+                                {% trans "не указан" %}
+                                {% endif %}
+                            </span>
+                        </div>
+                    </article>
+                    {% empty %}
+                    <p class="track-result-items__empty">{% trans "Товары не указаны." %}</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <form method="post" class="track-status-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_status">
+                <input type="hidden" name="order_id" value="{{ selected_track_match.order.id }}">
+                <input type="hidden" name="track_number" value="{{ selected_track_match.track_number }}">
+                <div class="track-status-form__field">
+                    <label for="track-status-select">{% trans "Новый статус" %}</label>
+                    <select id="track-status-select" name="status" required>
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if selected_track_match.order.status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">{% trans "Сохранить статус" %}</button>
+                <a class="btn-ghost" href="{% url 'detail_order' selected_track_match.order.slug %}">{% trans "Открыть заказ" %}</a>
+            </form>
+        </div>
+    </details>
+    {% else %}
+    <p class="track-result-empty muted">{% trans "После сканирования здесь появится полная карточка заказа." %}</p>
     {% endif %}
-
-    <form method="get" class="search-form search-form--orders table-wrap-spaced-sm">
-        <div class="search-row">
-            <label for="track-list-search" class="sr-only">{% trans "Поиск в прибывших" %}</label>
-            <input
-                id="track-list-search"
-                type="search"
-                name="q"
-                value="{{ track_search_query }}"
-                placeholder="{% trans 'Фильтр: трек или № квитанции среди прибывших' %}"
-                autocomplete="off"
-            >
-            <button type="submit" class="btn-secondary">{% trans "Фильтровать" %}</button>
-            {% if track_search_query %}
-            <a href="{% url 'track_center' %}" class="btn-ghost">{% trans "Сброс" %}</a>
-            {% endif %}
-        </div>
-    </form>
-</section>
-
-<section class="content-card table-wrap-spaced">
-    <div class="section-head">
-        <div>
-            <h2 class="section-title">{% trans "Прибывшие по треку" %}</h2>
-            <p class="section-subtitle">{% trans "Всего:" %} {{ arrived_total_count }}</p>
-        </div>
-    </div>
-    <div class="table-wrap">
-        <table class="data-table data-table--summary">
-            <thead>
-                <tr>
-                    <th>{% trans "Квитанция" %}</th>
-                    <th>{% trans "Клиент" %}</th>
-                    <th>{% trans "Товар" %}</th>
-                    <th>{% trans "Трек" %}</th>
-                    <th>{% trans "Долг" %}</th>
-                    <th>{% trans "Прибыл" %}</th>
-                    <th>{% trans "Действие" %}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in arrived_page %}
-                <tr>
-                    <td data-label="{% trans 'Квитанция' %}">№{{ item.order.receipt_number }}</td>
-                    <td data-label="{% trans 'Клиент' %}">{{ item.order.first_name }} {{ item.order.last_name }}</td>
-                    <td data-label="{% trans 'Товар' %}">{{ item.product_name }}</td>
-                    <td data-label="{% trans 'Трек' %}"><b>{{ item.track_number }}</b></td>
-                    <td data-label="{% trans 'Долг' %}">{{ item.order.get_pickup_due|money:2 }} {{ item.order.get_current }}</td>
-                    <td data-label="{% trans 'Прибыл' %}">
-                        {% if item.order.come %}{{ item.order.come|date:"d.m.Y H:i" }}{% else %}-{% endif %}
-                    </td>
-                    <td data-label="{% trans 'Действие' %}">
-                        <a class="action-print" href="{% url 'detail_order' item.order.slug %}">{% trans "Открыть" %}</a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="7">{% trans "Пока нет прибывших заказов." %}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% include 'partials/pagination.html' with page_obj=arrived_page page_param='arrived_page' %}
 </section>
 
 {% trans "Камера выключена." as i18n_camera_off %}

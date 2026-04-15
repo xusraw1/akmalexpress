@@ -29,7 +29,6 @@ from .models import Order, OrderItem, Product
 from .selectors.orders import (
     apply_missing_track_filter,
     apply_order_search_filter,
-    build_stuck_orders_snapshot,
     orders_with_related,
     parse_checkbox_flag,
     parse_month_filter,
@@ -50,7 +49,6 @@ from .view_helpers import (
     user_is_order_creator,
 )
 
-TRACK_QUEUE_PAGE_SIZE = 10
 SERVICE_THRESHOLD_SUM = Decimal('70000')
 SERVICE_FLAT_LOW = Decimal('10000')
 SERVICE_RATE_HIGH = Decimal('0.15')
@@ -414,7 +412,7 @@ def create_product(request):
 
 @user_passes_test(is_active_superuser)
 def order_list(request):
-    """Main staff order board with search, filters, overdue panel and bulk mode."""
+    """Main staff order board with search, filters and bulk mode."""
     if request.method == 'POST':
         fallback_url = reverse('orders')
         next_url = _safe_next_redirect(request, fallback_url)
@@ -461,8 +459,14 @@ def order_list(request):
     search_query = (request.GET.get('search') or '').strip()
     missing_track_only = parse_checkbox_flag(request.GET.get('missing_track'))
     selected_store = (request.GET.get('store') or '').strip()
+    selected_shipping = (request.GET.get('shipping') or '').strip()
+    selected_status = (request.GET.get('status') or '').strip()
     store_choices = [choice for choice in Product.Store.choices if choice[0] != Product.Store.NO]
+    shipping_choices = list(Order.ShippingMethod.choices)
+    status_filter_choices = list(Order.Status.choices)
     available_store_values = {value for value, _ in store_choices}
+    available_shipping_values = {value for value, _ in shipping_choices}
+    available_status_values = {value for value, _ in status_filter_choices}
 
     orders_list = apply_order_search_filter(
         orders_list,
@@ -477,6 +481,20 @@ def order_list(request):
         else:
             selected_store = ''
             messages.warning(request, _('Неизвестный магазин в фильтре.'))
+    if selected_shipping:
+        if selected_shipping in available_shipping_values:
+            orders_list = orders_list.filter(
+                Q(items__shipping_method=selected_shipping) | Q(shipping_method=selected_shipping)
+            )
+        else:
+            selected_shipping = ''
+            messages.warning(request, _('Неизвестный тип отправки в фильтре.'))
+    if selected_status:
+        if selected_status in available_status_values:
+            orders_list = orders_list.filter(status=selected_status)
+        else:
+            selected_status = ''
+            messages.warning(request, _('Неизвестный статус в фильтре.'))
 
     selected_month = request.GET.get('month', '').strip()
     month_date = None
@@ -489,10 +507,7 @@ def order_list(request):
             messages.warning(request, _('Неверный формат месяца. Используйте YYYY-MM.'))
 
     filtered_orders_qs = orders_list.distinct()
-    stuck_orders_snapshot = build_stuck_orders_snapshot(filtered_orders_qs, limit=8)
-    orders_list = orders_with_related(
-        filtered_orders_qs.order_by('-order_date', '-created_at')
-    )
+    orders_list = orders_with_related(filtered_orders_qs.order_by('-order_date', '-created_at'))
 
     paginator = Paginator(orders_list, 10)
     page_number = request.GET.get('page')
@@ -508,10 +523,13 @@ def order_list(request):
         'orders': orders,
         'search_query': search_query,
         'selected_store': selected_store,
+        'selected_shipping': selected_shipping,
+        'selected_status': selected_status,
         'store_choices': store_choices,
+        'shipping_choices': shipping_choices,
+        'status_filter_choices': status_filter_choices,
         'selected_month': selected_month,
         'missing_track_only': missing_track_only,
-        'stuck_orders': stuck_orders_snapshot,
         'status_choices': Order.Status.choices,
     }
     return render(request, 'akmalexpress/orders.html', context)
@@ -520,15 +538,12 @@ def order_list(request):
 @user_passes_test(is_active_superuser)
 def track_center_view(request):
     """Track-center page: scan/search track and update matched order status."""
-    list_search = (request.GET.get('q') or request.POST.get('q') or '').strip()
     selected_track = _normalize_track_number(request.GET.get('track') or request.POST.get('track'))
     available_statuses = {choice[0] for choice in Order.Status.choices}
 
     def build_redirect_url(extra_params=None):
-        """Rebuild current page URL preserving active list search params."""
+        """Rebuild current page URL preserving active query params."""
         params = {}
-        if list_search:
-            params['q'] = list_search
         if extra_params:
             for key, value in extra_params.items():
                 if value not in (None, ''):
@@ -593,6 +608,31 @@ def track_center_view(request):
                 'product_name': '',
             }
         return None
+
+    def expand_track_match(match_payload):
+        """Attach full order with items/attachments for compact expandable result card."""
+        if match_payload is None:
+            return None
+        order_id = getattr(match_payload.get('order'), 'id', None)
+        if order_id is None:
+            return None
+
+        expanded_order = (
+            orders_with_related(
+                Order.objects.filter(id=order_id),
+                include_attachments=True,
+            )
+            .first()
+        )
+        if expanded_order is None:
+            return None
+
+        return {
+            'order': expanded_order,
+            'item': match_payload.get('item'),
+            'track_number': match_payload.get('track_number') or '',
+            'product_name': match_payload.get('product_name') or '',
+        }
 
     if request.method == 'POST':
         action = (request.POST.get('action') or '').strip()
@@ -661,45 +701,12 @@ def track_center_view(request):
         )
         return redirect(build_redirect_url({'track': scanned_track}))
 
-    selected_track_match = find_track_match(selected_track)
-
-    arrived_qs = (
-        OrderItem.objects.select_related('order')
-        .only(
-            'id',
-            'product_name',
-            'track_number',
-            'order__id',
-            'order__slug',
-            'order__receipt_number',
-            'order__first_name',
-            'order__last_name',
-            'order__status',
-            'order__order_date',
-            'order__come',
-        )
-        .filter(order__status=Order.Status.ARRIVED)
-        .exclude(track_number__isnull=True)
-        .exclude(track_number='')
-    )
-
-    if list_search:
-        queue_search = Q(track_number__icontains=list_search)
-        if list_search.isdigit():
-            queue_search |= Q(order__receipt_number=int(list_search))
-        arrived_qs = arrived_qs.filter(queue_search)
-
-    arrived_qs = arrived_qs.order_by('-order__come', '-order__order_date', '-id')
-    arrived_paginator = Paginator(arrived_qs, TRACK_QUEUE_PAGE_SIZE)
-    arrived_page = arrived_paginator.get_page(request.GET.get('arrived_page'))
+    selected_track_match = expand_track_match(find_track_match(selected_track))
 
     return render(
         request,
         'akmalexpress/track_center.html',
         {
-            'track_search_query': list_search,
-            'arrived_page': arrived_page,
-            'arrived_total_count': arrived_paginator.count,
             'selected_track': selected_track,
             'selected_track_match': selected_track_match,
             'status_choices': Order.Status.choices,
@@ -714,8 +721,16 @@ def export_orders_excel(request):
     search_query = (request.GET.get('search') or '').strip()
     missing_track_only = parse_checkbox_flag(request.GET.get('missing_track'))
     selected_store = (request.GET.get('store') or '').strip()
+    selected_shipping = (request.GET.get('shipping') or '').strip()
+    selected_status = (request.GET.get('status') or '').strip()
     available_store_values = {
         value for value, _ in Product.Store.choices if value != Product.Store.NO
+    }
+    available_shipping_values = {
+        value for value, _ in Order.ShippingMethod.choices
+    }
+    available_status_values = {
+        value for value, _ in Order.Status.choices
     }
     orders_qs = apply_order_search_filter(
         orders_qs,
@@ -726,6 +741,12 @@ def export_orders_excel(request):
     orders_qs = apply_missing_track_filter(orders_qs, enabled=missing_track_only)
     if selected_store and selected_store in available_store_values:
         orders_qs = orders_qs.filter(Q(items__store=selected_store) | Q(product__store=selected_store))
+    if selected_shipping and selected_shipping in available_shipping_values:
+        orders_qs = orders_qs.filter(
+            Q(items__shipping_method=selected_shipping) | Q(shipping_method=selected_shipping)
+        )
+    if selected_status and selected_status in available_status_values:
+        orders_qs = orders_qs.filter(status=selected_status)
 
     selected_month = (request.GET.get('month') or '').strip()
     if request.user.is_superuser and selected_month:

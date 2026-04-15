@@ -6,46 +6,49 @@
 {% block content %}
 <section class="profile-grid">
     <article class="content-card profile-card">
-        <div id="profileAvatarFrame" class="profile-avatar-frame{% if user_profile and user_profile.avatar %} has-image{% endif %}">
-            <img
-                id="profileAvatarPreview"
-                src="{% if user_profile and user_profile.avatar %}{{ user_profile.avatar.url }}{% endif %}"
-                alt="{% blocktrans with username=profile.username %}Фото профиля @{{ username }}{% endblocktrans %}"
-                class="profile-avatar profile-avatar--image"
-            >
-            <span id="profileAvatarPreviewFallback" class="profile-avatar profile-avatar--fallback">{{ profile.username|first|upper }}</span>
+        <div class="profile-hero">
+            <div id="profileAvatarFrame" class="profile-avatar-frame{% if user_profile and user_profile.avatar %} has-image{% endif %}">
+                <img
+                    id="profileAvatarPreview"
+                    src="{% if user_profile and user_profile.avatar %}{{ user_profile.avatar.url }}{% endif %}"
+                    alt="{% blocktrans with username=profile.username %}Фото профиля @{{ username }}{% endblocktrans %}"
+                    class="profile-avatar profile-avatar--image"
+                >
+                <span id="profileAvatarPreviewFallback" class="profile-avatar profile-avatar--fallback">{{ profile.username|first|upper }}</span>
+            </div>
+            <div class="profile-hero__main">
+                <p class="profile-hero__label">{% trans "Профиль" %}</p>
+                <h1 class="section-title section-title-tight profile-hero__username">@{{ profile.username }}</h1>
+                <p class="profile-hero__meta">
+                    {% trans "Должность:" %}
+                    {% if profile.is_superuser %}
+                    {% trans "Главный админ" %}
+                    {% elif profile.is_staff %}
+                    {% trans "Админ" %}
+                    {% else %}
+                    {% trans "Пользователь" %}
+                    {% endif %}
+                </p>
+                <p class="profile-hero__meta">
+                    {% trans "ФИО:" %}
+                    {% if profile.first_name or profile.last_name %}
+                    {{ profile.first_name }} {{ profile.last_name }}
+                    {% else %}
+                    {% trans "не заполнено" %}
+                    {% endif %}
+                </p>
+            </div>
         </div>
 
-        <h1 class="section-title section-title-tight">@{{ profile.username }}</h1>
-        <p class="muted">
-            {% trans "Должность:" %}
-            {% if profile.is_superuser %}
-            {% trans "Главный админ" %}
-            {% elif profile.is_staff %}
-            {% trans "Админ" %}
-            {% else %}
-            {% trans "Пользователь" %}
-            {% endif %}
-        </p>
-
-        <p class="muted">
-            {% trans "ФИО:" %}
-            {% if profile.first_name or profile.last_name %}
-            {{ profile.first_name }} {{ profile.last_name }}
-            {% else %}
-            {% trans "не заполнено" %}
-            {% endif %}
-        </p>
-
-        <div class="profile-stats">
-            <div class="stat-pill">
-                <span>{% trans "Заказы" %}</span>
+        <div class="profile-stats profile-stats--hero">
+            <article class="stat-pill">
+                <span class="stat-pill__label">{% trans "Заказы" %}</span>
                 <b>{{ orders_total_count }}</b>
-            </div>
-            <div class="stat-pill">
-                <span>{% trans "Сумма заказов" %}</span>
+            </article>
+            <article class="stat-pill">
+                <span class="stat-pill__label">{% trans "Сумма заказов" %}</span>
                 <b>{{ profile_total_amount|money:2 }}</b>
-            </div>
+            </article>
         </div>
 
         {% if request.user.is_superuser and profile.is_superuser %}
