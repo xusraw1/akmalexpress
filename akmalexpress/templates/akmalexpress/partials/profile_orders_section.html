@@ -7,17 +7,6 @@
         </div>
         <div class="inline-actions inline-actions--excel">
             <a class="action-print" href="{% url 'profile_export_excel' profile.username %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}">{% trans "Скачать Excel" %}</a>
-            <form method="post" enctype="multipart/form-data" action="{% url 'profile_import_excel' profile.username %}" class="excel-upload-form">
-                {% csrf_token %}
-                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <div class="file-picker file-picker--compact" data-file-picker>
-                    <input class="excel-file-input" type="file" name="excel_file" id="profile-excel-file" accept=".xlsx" data-file-input required>
-                    <label class="file-picker__button" for="profile-excel-file">{% trans "Выбрать файл" %}</label>
-                    <span class="file-picker__name" data-file-name>{% trans "Файл не выбран" %}</span>
-                    <button type="button" class="file-picker__clear" data-file-clear title="{% trans 'Очистить файл' %}" aria-label="{% trans 'Очистить файл' %}" hidden>×</button>
-                </div>
-                <button type="submit" class="action-edit">{% trans "Загрузить Excel" %}</button>
-            </form>
         </div>
     </div>
 
@@ -81,7 +70,6 @@
                     <th>{% trans "Продукт" %}</th>
                     <th>{% trans "Дата" %}</th>
                     <th>{% trans "Статус" %}</th>
-                    <th>{% trans "Долг" %}</th>
                     <th>{% trans "Итог" %}</th>
                     {% if request.user.is_staff or request.user.is_superuser %}
                     <th>{% trans "Действия" %}</th>
@@ -98,21 +86,38 @@
                     <td data-label="{% trans 'Продукт' %}">{{ order.get_display_product_name }}</td>
                     <td data-label="{% trans 'Дата' %}">{{ order.order_date|date:"d.m.Y" }}</td>
                     <td data-label="{% trans 'Статус' %}">{% include 'partials/status_badge.html' %}</td>
-                    <td data-label="{% trans 'Долг' %}"><b>{{ order.get_pickup_due|money:2 }} {{ order.get_current }}</b></td>
                     <td data-label="{% trans 'Итог' %}"><b>{{ order.get_final_total|money:2 }} {{ order.get_current }}</b></td>
                     {% if request.user.is_staff or request.user.is_superuser %}
                     <td data-label="{% trans 'Действия' %}">
-                        <div class="inline-actions">
-                            <a class="action-print" href="{% url 'print_settlement_sheet' order.slug %}">{% trans "Расчет" %}</a>
-                            <a class="action-edit" href="{% url 'change_order' order.slug %}">{% trans "Изменить" %}</a>
-                            <a class="action-delete" href="{% url 'delete_order' order.slug %}">{% trans "Удалить" %}</a>
+                        <div class="inline-actions profile-order-actions">
+                            <a class="action-print profile-order-action" href="{% url 'print_settlement_sheet' order.slug %}">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M4 7h16M4 12h10M4 17h8"/>
+                                </svg>
+                                <span>{% trans "Расчет" %}</span>
+                            </a>
+                            <a class="action-edit profile-order-action" href="{% url 'change_order' order.slug %}">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M12 20h9"/>
+                                    <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+                                </svg>
+                                <span>{% trans "Изменить" %}</span>
+                            </a>
+                            <a class="action-delete profile-order-action" href="{% url 'delete_order' order.slug %}">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M3 6h18"/>
+                                    <path d="M8 6V4h8v2"/>
+                                    <path d="M6 6l1 14h10l1-14"/>
+                                </svg>
+                                <span>{% trans "Удалить" %}</span>
+                            </a>
                         </div>
                     </td>
                     {% endif %}
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="{% if request.user.is_staff or request.user.is_superuser %}8{% else %}7{% endif %}">{% trans "По выбранным фильтрам заказы не найдены." %}</td>
+                    <td colspan="{% if request.user.is_staff or request.user.is_superuser %}7{% else %}6{% endif %}">{% trans "По выбранным фильтрам заказы не найдены." %}</td>
                 </tr>
                 {% endfor %}
             </tbody>

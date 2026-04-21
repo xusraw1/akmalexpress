@@ -192,9 +192,13 @@ EXPORT_EXCEL_HEADERS = [
     'Имя и фамилия',
     'Номер телефона',
     'Товары',
+    'Ссылки',
+    'Описание',
+    'Тип отправки',
     'Себестоимость товаров',
     'Статус',
     'Долг',
+    'Баланс',
     'Общая сумма',
 ]
 
@@ -321,6 +325,7 @@ def _collect_order_items(order):
                 'quantity': item.product_quantity,
                 'currency': item.product_price_currency,
                 'price': item.product_price,
+                'link': item.link,
             }
             for item in items
         ]
@@ -332,6 +337,7 @@ def _collect_order_items(order):
                 'quantity': order.product.product_quantity,
                 'currency': order.product.product_price_currency,
                 'price': order.product.product_price,
+                'link': order.product.link,
             }
         ]
     return []
@@ -378,10 +384,16 @@ def _build_orders_workbook(orders_queryset):
             f'{item["name"]} × {item["quantity"]}'
             for item in order_items
         ) or '-'
+        goods_links = '\n'.join(
+            str(item.get('link') or '').strip()
+            for item in order_items
+            if str(item.get('link') or '').strip()
+        ) or '-'
         goods_costs = '\n'.join(
             f'{_format_decimal_for_text(item["price"], precision=3)} {item["currency"]}'
             for item in order_items
         ) or '-'
+        order_description = str(order.description or '').strip() or '-'
 
         worksheet.append(
             [
@@ -390,9 +402,13 @@ def _build_orders_workbook(orders_queryset):
                 f'{(order.first_name or "").strip()} {(order.last_name or "").strip()}'.strip(),
                 str(order.phone1 or order.phone2 or ''),
                 goods,
+                goods_links,
+                order_description,
+                order.shipping_method_summary,
                 goods_costs,
                 order.get_status_display(),
                 order.debt if order.debt is not None else Decimal('0.00'),
+                order.get_balance,
                 order.get_final_total,
             ]
         )
@@ -404,15 +420,16 @@ def _build_orders_workbook(orders_queryset):
         for col_idx in range(1, len(EXPORT_EXCEL_HEADERS) + 1):
             cell = worksheet.cell(row=row_idx, column=col_idx)
             cell.fill = row_fill
-            if col_idx in {5, 6}:
+            if col_idx in {5, 6, 7, 9}:
                 cell.alignment = wrap_alignment
             else:
                 cell.alignment = plain_alignment
 
     for row_idx in range(2, worksheet.max_row + 1):
         worksheet.cell(row=row_idx, column=1).number_format = 'yyyy-mm-dd hh:mm'
-        worksheet.cell(row=row_idx, column=8).number_format = '#,##0.00 "UZS"'
-        worksheet.cell(row=row_idx, column=9).number_format = '#,##0.00 "UZS"'
+        worksheet.cell(row=row_idx, column=11).number_format = '#,##0.00 "UZS"'
+        worksheet.cell(row=row_idx, column=12).number_format = '#,##0.00 "UZS"'
+        worksheet.cell(row=row_idx, column=13).number_format = '#,##0.00 "UZS"'
 
     for col_idx, title in enumerate(EXPORT_EXCEL_HEADERS, start=1):
         max_length = len(title)

@@ -1,12 +1,14 @@
 """External exchange-rate provider integration with cache fallback chain.
 
-Primary source is Ipak Yuli endpoint; CBU is used as secondary fallback.
-Defaults are returned if remote providers are unavailable.
+Primary source is Ipak Yuli endpoint; CBU and open public APIs are used as
+fallback providers. Defaults are returned only when all providers fail.
 """
 
 import json
 import re
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
+from email.utils import parsedate_to_datetime
 from urllib.error import URLError
 from urllib.request import Request, urlopen
 
@@ -24,6 +26,8 @@ IPAKYULI_RATE_URLS = (
     'http://wi.ipakyulibank.uz/kurs/kurs4.php',
 )
 CBU_RATES_URL = 'https://cbu.uz/uz/arkhiv-kursov-valyut/json/'
+OPEN_ER_API_USD_URL = 'https://open.er-api.com/v6/latest/USD'
+FRANKFURTER_USD_URL = 'https://api.frankfurter.app/latest?from=USD&to=UZS,CNY'
 
 
 def _to_decimal(raw_value):
@@ -70,6 +74,12 @@ def _fetch_text(url):
     request = Request(url, headers={'User-Agent': 'AkmalExpress/1.0'})
     with urlopen(request, timeout=6) as response:
         return response.read().decode('utf-8', errors='ignore')
+
+
+def _fetch_json(url):
+    request = Request(url, headers={'User-Agent': 'AkmalExpress/1.0'})
+    with urlopen(request, timeout=7) as response:
+        return json.loads(response.read().decode('utf-8'))
 
 
 def _fetch_ipakyuli_rates():
@@ -131,6 +141,122 @@ def _fetch_cbu_rates():
     }
 
 
+def _format_iso_date_for_ui(raw_value):
+    text = str(raw_value or '').strip()
+    if not text:
+        return ''
+    try:
+        parsed_email_date = parsedate_to_datetime(text)
+    except (TypeError, ValueError):
+        parsed_email_date = None
+    if parsed_email_date is not None:
+        return parsed_email_date.strftime('%d.%m.%Y')
+    for fmt in ('%Y-%m-%d', '%Y-%m-%dT%H:%M:%S%z', '%Y-%m-%d %H:%M:%S'):
+        try:
+            parsed = datetime.strptime(text, fmt)
+            return parsed.strftime('%d.%m.%Y')
+        except ValueError:
+            continue
+    return ''
+
+
+def _derive_cny_to_uzs_rate(usd_to_uzs, usd_to_cny):
+    if usd_to_uzs is None or usd_to_cny is None or usd_to_cny <= 0:
+        return None
+    try:
+        return (usd_to_uzs / usd_to_cny).quantize(Decimal('0.01'))
+    except (InvalidOperation, ZeroDivisionError):
+        return None
+
+
+def _fetch_open_er_api_rates():
+    payload = _fetch_json(OPEN_ER_API_USD_URL)
+    if not isinstance(payload, dict):
+        return {
+            'usd_rate': None,
+            'rmb_rate': None,
+            'provider': 'open_er_api_unavailable',
+            'url': OPEN_ER_API_USD_URL,
+            'updated_on': '',
+        }
+
+    rates = payload.get('rates')
+    if not isinstance(rates, dict):
+        return {
+            'usd_rate': None,
+            'rmb_rate': None,
+            'provider': 'open_er_api_unavailable',
+            'url': OPEN_ER_API_USD_URL,
+            'updated_on': '',
+        }
+
+    usd_rate = _to_decimal(rates.get('UZS'))
+    usd_to_cny = _to_decimal(rates.get('CNY'))
+    rmb_rate = _derive_cny_to_uzs_rate(usd_rate, usd_to_cny)
+    updated_on = _format_iso_date_for_ui(payload.get('time_last_update_utc'))
+
+    return {
+        'usd_rate': usd_rate,
+        'rmb_rate': rmb_rate,
+        'provider': 'open_er_api',
+        'url': OPEN_ER_API_USD_URL,
+        'updated_on': updated_on,
+    }
+
+
+def _fetch_frankfurter_rates():
+    payload = _fetch_json(FRANKFURTER_USD_URL)
+    if not isinstance(payload, dict):
+        return {
+            'usd_rate': None,
+            'rmb_rate': None,
+            'provider': 'frankfurter_unavailable',
+            'url': FRANKFURTER_USD_URL,
+            'updated_on': '',
+        }
+
+    rates = payload.get('rates')
+    if not isinstance(rates, dict):
+        return {
+            'usd_rate': None,
+            'rmb_rate': None,
+            'provider': 'frankfurter_unavailable',
+            'url': FRANKFURTER_USD_URL,
+            'updated_on': '',
+        }
+
+    usd_rate = _to_decimal(rates.get('UZS'))
+    usd_to_cny = _to_decimal(rates.get('CNY'))
+    rmb_rate = _derive_cny_to_uzs_rate(usd_rate, usd_to_cny)
+    updated_on = _format_iso_date_for_ui(payload.get('date'))
+
+    return {
+        'usd_rate': usd_rate,
+        'rmb_rate': rmb_rate,
+        'provider': 'frankfurter',
+        'url': FRANKFURTER_USD_URL,
+        'updated_on': updated_on,
+    }
+
+
+def _resolve_rate_with_source(*providers, field):
+    for provider in providers:
+        value = provider.get(field)
+        if value is not None:
+            return value, provider.get('provider')
+    return None, None
+
+
+def _source_label_for_currency(provider_name, currency_code):
+    mapping = {
+        'ipakyuli': f'{currency_code}:Ipakyuli',
+        'cbu': f'{currency_code}:CBU',
+        'open_er_api': f'{currency_code}:OpenERAPI',
+        'frankfurter': f'{currency_code}:Frankfurter',
+    }
+    return mapping.get(provider_name, f'{currency_code}:default')
+
+
 def get_exchange_rates(force_refresh=False):
     """Return normalized exchange rates payload for UI/API consumption."""
     if not force_refresh:
@@ -147,34 +273,58 @@ def get_exchange_rates(force_refresh=False):
         'url': CBU_RATES_URL,
         'updated_on': '',
     }
+    open_er_api_data = {
+        'usd_rate': None,
+        'rmb_rate': None,
+        'provider': 'open_er_api_unavailable',
+        'url': OPEN_ER_API_USD_URL,
+        'updated_on': '',
+    }
+    frankfurter_data = {
+        'usd_rate': None,
+        'rmb_rate': None,
+        'provider': 'frankfurter_unavailable',
+        'url': FRANKFURTER_USD_URL,
+        'updated_on': '',
+    }
     try:
         cbu_data = _fetch_cbu_rates()
     except (URLError, TimeoutError, OSError, json.JSONDecodeError, ValueError):
         pass
+    try:
+        open_er_api_data = _fetch_open_er_api_rates()
+    except (URLError, TimeoutError, OSError, json.JSONDecodeError, ValueError):
+        pass
+    try:
+        frankfurter_data = _fetch_frankfurter_rates()
+    except (URLError, TimeoutError, OSError, json.JSONDecodeError, ValueError):
+        pass
+    providers_chain = (ipakyuli_data, cbu_data, open_er_api_data, frankfurter_data)
 
-    usd_rate = ipakyuli_data['usd_rate'] or cbu_data['usd_rate'] or DEFAULT_USD_RATE
-    rmb_rate = ipakyuli_data['rmb_rate'] or cbu_data['rmb_rate'] or DEFAULT_RMB_RATE
+    usd_rate, usd_provider = _resolve_rate_with_source(*providers_chain, field='usd_rate')
+    rmb_rate, rmb_provider = _resolve_rate_with_source(*providers_chain, field='rmb_rate')
+    usd_rate = usd_rate or DEFAULT_USD_RATE
+    rmb_rate = rmb_rate or DEFAULT_RMB_RATE
 
-    source_parts = []
-    if ipakyuli_data['usd_rate'] is not None:
-        source_parts.append('USD:Ipakyuli')
-    elif cbu_data['usd_rate'] is not None:
-        source_parts.append('USD:CBU')
-    else:
-        source_parts.append('USD:default')
+    source_parts = [
+        _source_label_for_currency(usd_provider, 'USD'),
+        _source_label_for_currency(rmb_provider, 'RMB'),
+    ]
 
-    if ipakyuli_data['rmb_rate'] is not None:
-        source_parts.append('RMB:Ipakyuli')
-    elif cbu_data['rmb_rate'] is not None:
-        source_parts.append('RMB:CBU')
-    else:
-        source_parts.append('RMB:default')
+    source_date = ''
+    for provider in providers_chain:
+        updated = str(provider.get('updated_on') or '').strip()
+        if updated:
+            source_date = updated
+            break
+    if not source_date:
+        source_date = timezone.localdate().strftime('%d.%m.%Y')
 
     result = {
         'usd_rate': f'{usd_rate:.2f}',
         'rmb_rate': f'{rmb_rate:.2f}',
         'source': ', '.join(source_parts),
-        'source_date': cbu_data.get('updated_on') or timezone.localdate().strftime('%d.%m.%Y'),
+        'source_date': source_date,
         'fetched_at': timezone.now().isoformat(),
     }
     cache.set(CACHE_KEY, result, CACHE_TTL_SECONDS)

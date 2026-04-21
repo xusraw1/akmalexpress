@@ -13,6 +13,7 @@
         <div class="inline-actions">
             {% include 'partials/status_badge.html' %}
             <a href="{% url 'print_receipt' order.slug %}" target="_blank" rel="noopener" class="action-edit">Печать квитанции</a>
+            <a href="{% url 'print_settlement_sheet' order.slug %}" class="action-print">Расчет</a>
         </div>
     </div>
 

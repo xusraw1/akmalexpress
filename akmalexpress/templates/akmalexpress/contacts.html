@@ -17,6 +17,11 @@
             </div>
             <h1 class="contacts-hero__title">{% trans "Контакты" %}</h1>
             <p class="contacts-hero__lead">{% trans "Позвоните или напишите в Telegram — мы ответим максимально быстро." %}</p>
+            <div class="contacts-hero__actions">
+                <a href="tel:+998913227747" class="btn-ghost contacts-hero__action">+998 91 322 77 47</a>
+                <a href="https://t.me/akexcargo" target="_blank" rel="noopener" class="btn-ghost contacts-hero__action">Telegram @akexcargo</a>
+                <a href="https://share.google/zJojbau53bJOBUhmP" target="_blank" rel="noopener" class="btn-ghost contacts-hero__action">{% trans "Открыть на карте" %}</a>
+            </div>
         </div>
     </section>
 
@@ -71,7 +76,8 @@
                     </a>
                 </div>
             </article>
-
+        </div>
+        <aside class="contacts-side">
             <section class="contacts-office" data-interactive-card>
                 <div class="contacts-office__inner">
                     <div class="contacts-office__icon">
@@ -91,8 +97,34 @@
                     </a>
                 </div>
             </section>
-        </div>
 
+            <article class="ct-card contacts-hours" data-interactive-card>
+                <div class="ct-card__head">
+                    <div class="ct-card__icon ct-card__icon--teal">
+                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M12 7v5l3 2" />
+                        </svg>
+                    </div>
+                    <h2>{% trans "График работы" %}</h2>
+                </div>
+                <div class="ct-list">
+                    <div class="ct-row">
+                        <span class="ct-row__label">{% trans "Пн–Сб" %}</span>
+                        <span class="ct-row__value">09:00 – 19:00</span>
+                    </div>
+                    <div class="ct-row">
+                        <span class="ct-row__label">{% trans "Воскресенье" %}</span>
+                        <span class="ct-row__value">{% trans "Выходной" %}</span>
+                    </div>
+                    <div class="ct-row">
+                        <span class="ct-row__label">{% trans "Ответ в Telegram" %}</span>
+                        <span class="ct-row__value">{% trans "Обычно в течение 5–15 минут" %}</span>
+                    </div>
+                </div>
+            </article>
+        </aside>
     </div>
 </div>
 {% endblock %}

@@ -12,17 +12,6 @@
         </div>
         <div class="inline-actions inline-actions--excel">
             <a class="action-print" href="{% url 'orders_export_excel' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}">{% trans "Скачать Excel" %}</a>
-            <form method="post" enctype="multipart/form-data" action="{% url 'orders_import_excel' %}" class="excel-upload-form">
-                {% csrf_token %}
-                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <div class="file-picker file-picker--compact" data-file-picker>
-                    <input class="excel-file-input" type="file" name="excel_file" id="orders-excel-file" accept=".xlsx" data-file-input required>
-                    <label class="file-picker__button" for="orders-excel-file">{% trans "Выбрать файл" %}</label>
-                    <span class="file-picker__name" data-file-name>{% trans "Файл не выбран" %}</span>
-                    <button type="button" class="file-picker__clear" data-file-clear title="{% trans 'Очистить файл' %}" aria-label="{% trans 'Очистить файл' %}" hidden>×</button>
-                </div>
-                <button type="submit" class="action-edit">{% trans "Загрузить Excel" %}</button>
-            </form>
         </div>
     </div>
 
